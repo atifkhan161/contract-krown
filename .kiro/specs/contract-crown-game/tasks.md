@@ -130,7 +130,7 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - **Property 13: Trick Winner Leads Next**
     - **Validates: Requirements 3.8**
 
-- [ ] 5. Checkpoint - Ensure all tests pass
+- [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Implement Crown Rule and scoring system
