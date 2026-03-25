@@ -1,7 +1,7 @@
 // Contract Crown Game Engine
 // Core game logic implementation
 
-import { Card, GameState, Player, Suit, Rank, GamePhase } from './types.js';
+import { Card, GameState, Player, Suit, Rank, GamePhase, Trick, PlayedCard } from './types.js';
 
 // Rank values for comparison (higher = stronger)
 const RANK_VALUES: Record<Rank, number> = {
@@ -239,4 +239,149 @@ export function declareTrump(state: GameState, suit: Suit): void {
   // Update game state with trump suit
   state.trumpSuit = suit;
   state.phase = 'DEALING_FINAL';
+}
+
+/**
+ * Sets up the first trick leader after final dealing
+ * The lead player for the first trick is the player left of the dealer
+ */
+export function setFirstTrickLeader(state: GameState): void {
+  // First trick leader is player left of dealer
+  state.currentTrick.leadPlayer = (state.dealer + 1) % 4;
+  state.currentPlayer = state.currentTrick.leadPlayer;
+}
+
+/**
+ * Advances the current player to the next player clockwise
+ */
+export function advanceTurn(state: GameState): void {
+  state.currentPlayer = (state.currentPlayer + 1) % 4;
+}
+
+/**
+ * Checks if a card can be legally played by a player
+ * - If player is leading: all cards are playable
+ * - If player is following: must follow suit if possible
+ * - If player cannot follow suit: all cards are playable
+ */
+export function canPlayCard(state: GameState, playerIndex: number, card: Card): boolean {
+  const player = state.players[playerIndex];
+  
+  // Check if player has the card
+  if (!player.hand.some(c => c.suit === card.suit && c.rank === card.rank)) {
+    return false;
+  }
+
+  // If player is leading (trick is empty), all cards are playable
+  if (state.currentTrick.cards.length === 0) {
+    return true;
+  }
+
+  // Get the led suit
+  const ledSuit = state.currentTrick.cards[0].card.suit;
+
+  // Check if player has any cards of the led suit
+  const hasLedSuit = player.hand.some(c => c.suit === ledSuit);
+
+  // If player has led suit, must play led suit
+  if (hasLedSuit) {
+    return card.suit === ledSuit;
+  }
+
+  // If player doesn't have led suit, any card is playable
+  return true;
+}
+
+/**
+ * Plays a card from a player's hand
+ * - Validates the card can be played
+ * - Removes the card from the player's hand
+ * - Adds the card to the current trick
+ * - Advances the turn
+ */
+export function playCard(state: GameState, playerIndex: number, card: Card): void {
+  // Validate it's the player's turn
+  if (state.currentPlayer !== playerIndex) {
+    throw new Error('Not your turn');
+  }
+
+  // Validate game phase
+  if (state.phase !== 'TRICK_PLAY') {
+    throw new Error('Cards can only be played during trick play phase');
+  }
+
+  // Validate the card can be played
+  if (!canPlayCard(state, playerIndex, card)) {
+    throw new Error('Card cannot be played');
+  }
+
+  // Find and remove the card from player's hand
+  const player = state.players[playerIndex];
+  const cardIndex = player.hand.findIndex(c => c.suit === card.suit && c.rank === card.rank);
+  if (cardIndex === -1) {
+    throw new Error('Card not in hand');
+  }
+  player.hand.splice(cardIndex, 1);
+
+  // Add card to current trick
+  state.currentTrick.cards.push({ card, player: playerIndex });
+
+  // Check if trick is complete (4 cards played)
+  if (state.currentTrick.cards.length === 4) {
+    // Resolve the trick
+    const winner = resolveTrick(state.currentTrick, state.trumpSuit!);
+    state.currentTrick.winner = winner;
+    
+    // Add to completed tricks
+    state.completedTricks.push({ ...state.currentTrick });
+    
+    // Check if round is complete (8 tricks played)
+    if (state.completedTricks.length === 8) {
+      state.phase = 'ROUND_END';
+    } else {
+      // Start new trick with winner as lead
+      state.currentTrick = { leadPlayer: winner, cards: [], winner: null };
+      state.currentPlayer = winner;
+    }
+  } else {
+    // Advance to next player
+    advanceTurn(state);
+  }
+}
+
+/**
+ * Resolves a trick and determines the winner
+ * - If any trump cards played: highest trump wins
+ * - Otherwise: highest card of led suit wins
+ */
+export function resolveTrick(trick: Trick, trumpSuit: Suit): number {
+  if (trick.cards.length !== 4) {
+    throw new Error('Trick must have exactly 4 cards');
+  }
+
+  const ledSuit = trick.cards[0].card.suit;
+  
+  // Find all trump cards
+  const trumpCards = trick.cards.filter(pc => pc.card.suit === trumpSuit);
+  
+  if (trumpCards.length > 0) {
+    // Highest trump wins
+    let highestTrump = trumpCards[0];
+    for (const pc of trumpCards) {
+      if (RANK_VALUES[pc.card.rank] > RANK_VALUES[highestTrump.card.rank]) {
+        highestTrump = pc;
+      }
+    }
+    return highestTrump.player;
+  }
+  
+  // No trump played, highest led suit wins
+  const ledSuitCards = trick.cards.filter(pc => pc.card.suit === ledSuit);
+  let highestLedSuit = ledSuitCards[0];
+  for (const pc of ledSuitCards) {
+    if (RANK_VALUES[pc.card.rank] > RANK_VALUES[highestLedSuit.card.rank]) {
+      highestLedSuit = pc;
+    }
+  }
+  return highestLedSuit.player;
 }

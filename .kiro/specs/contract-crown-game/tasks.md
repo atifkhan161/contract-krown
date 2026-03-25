@@ -76,57 +76,57 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - **Property 6: Trump Declaration**
     - **Validates: Requirements 2.3**
 
-- [ ] 4. Implement trick-taking core logic
-  - [ ] 4.1 Implement first trick leader determination
+- [x] 4. Implement trick-taking core logic
+  - [x] 4.1 Implement first trick leader determination
     - Calculate (dealer + 1) % 4 as first lead player
     - _Requirements: 3.1_
   
-  - [ ]* 4.2 Write property test for first trick leader
+  - [x] 4.2 Write property test for first trick leader
     - **Property 7: First Trick Leader**
     - **Validates: Requirements 3.1**
   
-  - [ ] 4.3 Implement turn order progression
+  - [x] 4.3 Implement turn order progression
     - Advance current player clockwise after each card play
     - _Requirements: 3.2_
   
-  - [ ]* 4.4 Write property test for turn order progression
+  - [x] 4.4 Write property test for turn order progression
     - **Property 8: Turn Order Progression**
     - **Validates: Requirements 3.2**
   
-  - [ ] 4.5 Implement canPlayCard() validation function
+  - [x] 4.5 Implement canPlayCard() validation function
     - Check if player is leading (all cards playable)
     - Check suit-following requirements when following
     - Check if player has no cards of led suit (all cards playable)
     - _Requirements: 3.3, 3.4, 3.5_
   
-  - [ ]* 4.6 Write property tests for card playability rules
+  - [x] 4.6 Write property tests for card playability rules
     - **Property 9: Lead Player Freedom**
     - **Property 10: Suit Following Requirement**
     - **Property 11: No Suit Following Freedom**
     - **Validates: Requirements 3.3, 3.4, 3.5, 8.4**
   
-  - [ ] 4.7 Implement playCard() function
+  - [x] 4.7 Implement playCard() function
     - Validate card can be played
     - Remove card from player hand
     - Add card to current trick
     - Advance turn
     - _Requirements: 3.2_
   
-  - [ ] 4.8 Implement resolveTrick() function
+  - [x] 4.8 Implement resolveTrick() function
     - Determine highest trump card if any trump played
     - Otherwise determine highest card of led suit
     - Return winner player index
     - _Requirements: 3.6, 3.7_
   
-  - [ ]* 4.9 Write property test for trick resolution
+  - [x] 4.9 Write property test for trick resolution
     - **Property 12: Trick Resolution Correctness**
     - **Validates: Requirements 3.6, 3.7**
   
-  - [ ] 4.10 Implement trick winner leads next logic
+  - [x] 4.10 Implement trick winner leads next logic
     - Set next trick's lead player to previous trick winner
     - _Requirements: 3.8_
   
-  - [ ]* 4.11 Write property test for trick winner leads next
+  - [x] 4.11 Write property test for trick winner leads next
     - **Property 13: Trick Winner Leads Next**
     - **Validates: Requirements 3.8**
 

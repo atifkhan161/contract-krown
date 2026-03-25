@@ -2,8 +2,8 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 
-import { createDeck, shuffle, createInitialState, createPlayers, dealInitial, dealFinal, validateDeal, checkForExtremeHand, validateAndDeal, declareTrump } from '@src/engine/index.js';
-import type { Card, Suit } from '@src/engine/index.js';
+import { createDeck, shuffle, createInitialState, createPlayers, dealInitial, dealFinal, validateDeal, checkForExtremeHand, validateAndDeal, declareTrump, setFirstTrickLeader, advanceTurn, canPlayCard, playCard, resolveTrick } from '@src/engine/index.js';
+import type { Card, Suit, GameState } from '@src/engine/index.js';
 
 // Feature: contract-crown-game, Property 1: Deck Composition
 describe('Property 1: Deck Composition', () => {
@@ -275,6 +275,250 @@ describe('Property 6: Trump Declaration', () => {
     expect(() => {
       declareTrump(state, 'INVALID' as Suit);
     }).toThrow('Invalid suit selected');
+  });
+});
+
+// Feature: contract-crown-game, Property 7: First Trick Leader
+describe('Property 7: First Trick Leader', () => {
+  it('first trick leader is player left of dealer', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 3 }), // dealer position
+        (dealer: number) => {
+          const state = createInitialState();
+          state.dealer = dealer;
+          dealInitial(state);
+          declareTrump(state, 'HEARTS');
+          dealFinal(state);
+          setFirstTrickLeader(state);
+
+          // First trick leader should be player left of dealer
+          expect(state.currentTrick.leadPlayer).toBe((dealer + 1) % 4);
+          expect(state.currentPlayer).toBe((dealer + 1) % 4);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 8: Turn Order Progression
+describe('Property 8: Turn Order Progression', () => {
+  it('current player advances clockwise after each card play', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 3 }), // starting player
+        (startingPlayer: number) => {
+          const state = createInitialState();
+          state.currentPlayer = startingPlayer;
+
+          // Advance turn 4 times (full rotation)
+          advanceTurn(state);
+          expect(state.currentPlayer).toBe((startingPlayer + 1) % 4);
+          
+          advanceTurn(state);
+          expect(state.currentPlayer).toBe((startingPlayer + 2) % 4);
+          
+          advanceTurn(state);
+          expect(state.currentPlayer).toBe((startingPlayer + 3) % 4);
+          
+          advanceTurn(state);
+          expect(state.currentPlayer).toBe(startingPlayer); // Full circle
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 9: Lead Player Freedom
+describe('Property 9: Lead Player Freedom', () => {
+  it('all cards are playable when leading a trick', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom('HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'), // trump suit
+        (trumpSuit: Suit) => {
+          const state = createInitialState();
+          dealInitial(state);
+          declareTrump(state, trumpSuit);
+          dealFinal(state);
+          setFirstTrickLeader(state);
+
+          // Get the leader's hand
+          const leaderIndex = state.currentPlayer;
+          const leaderHand = state.players[leaderIndex].hand;
+
+          // All cards should be playable when leading
+          for (const card of leaderHand) {
+            expect(canPlayCard(state, leaderIndex, card)).toBe(true);
+          }
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 10: Suit Following Requirement
+describe('Property 10: Suit Following Requirement', () => {
+  it('must follow led suit if player has cards of that suit', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom('HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'), // trump suit
+        (trumpSuit: Suit) => {
+          const state = createInitialState();
+          dealInitial(state);
+          declareTrump(state, trumpSuit);
+          dealFinal(state);
+          setFirstTrickLeader(state);
+
+          // Simulate a card being played
+          const leaderIndex = state.currentPlayer;
+          const leaderHand = state.players[leaderIndex].hand;
+          const ledCard = leaderHand[0];
+          
+          // Play the card
+          playCard(state, leaderIndex, ledCard);
+          
+          // Now check the next player
+          const nextPlayerIndex = state.currentPlayer;
+          const nextPlayerHand = state.players[nextPlayerIndex].hand;
+          
+          // Check if next player has the led suit
+          const hasLedSuit = nextPlayerHand.some(c => c.suit === ledCard.suit);
+          
+          if (hasLedSuit) {
+            // Only cards of led suit should be playable
+            for (const card of nextPlayerHand) {
+              if (card.suit === ledCard.suit) {
+                expect(canPlayCard(state, nextPlayerIndex, card)).toBe(true);
+              } else {
+                expect(canPlayCard(state, nextPlayerIndex, card)).toBe(false);
+              }
+            }
+          }
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 11: No Suit Following Freedom
+describe('Property 11: No Suit Following Freedom', () => {
+  it('all cards are playable if player cannot follow suit', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom('HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'), // trump suit
+        (trumpSuit: Suit) => {
+          const state = createInitialState();
+          dealInitial(state);
+          declareTrump(state, trumpSuit);
+          dealFinal(state);
+          setFirstTrickLeader(state);
+
+          // Simulate a card being played
+          const leaderIndex = state.currentPlayer;
+          const leaderHand = state.players[leaderIndex].hand;
+          const ledCard = leaderHand[0];
+          
+          // Play the card
+          playCard(state, leaderIndex, ledCard);
+          
+          // Now check the next player
+          const nextPlayerIndex = state.currentPlayer;
+          const nextPlayerHand = state.players[nextPlayerIndex].hand;
+          
+          // Check if next player has the led suit
+          const hasLedSuit = nextPlayerHand.some(c => c.suit === ledCard.suit);
+          
+          if (!hasLedSuit) {
+            // All cards should be playable if cannot follow suit
+            for (const card of nextPlayerHand) {
+              expect(canPlayCard(state, nextPlayerIndex, card)).toBe(true);
+            }
+          }
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 12: Trick Resolution Correctness
+describe('Property 12: Trick Resolution Correctness', () => {
+  it('highest trump wins if any trump played', () => {
+    const trumpSuit: Suit = 'HEARTS';
+    
+    // Create a trick with trump cards
+    const trick = {
+      leadPlayer: 0,
+      cards: [
+        { card: { suit: 'DIAMONDS' as Suit, rank: 'A' as const }, player: 0 },
+        { card: { suit: 'HEARTS' as Suit, rank: '7' as const }, player: 1 },
+        { card: { suit: 'CLUBS' as Suit, rank: 'K' as const }, player: 2 },
+        { card: { suit: 'HEARTS' as Suit, rank: '10' as const }, player: 3 }
+      ],
+      winner: null
+    };
+
+    const winner = resolveTrick(trick, trumpSuit);
+    
+    // Player 3 played highest trump (10 of Hearts), should win
+    expect(winner).toBe(3);
+  });
+
+  it('highest led suit wins if no trump played', () => {
+    const trumpSuit: Suit = 'SPADES';
+    
+    // Create a trick with no trump cards
+    const trick = {
+      leadPlayer: 0,
+      cards: [
+        { card: { suit: 'HEARTS' as Suit, rank: 'A' as const }, player: 0 },
+        { card: { suit: 'HEARTS' as Suit, rank: '7' as const }, player: 1 },
+        { card: { suit: 'CLUBS' as Suit, rank: 'K' as const }, player: 2 },
+        { card: { suit: 'HEARTS' as Suit, rank: '10' as const }, player: 3 }
+      ],
+      winner: null
+    };
+
+    const winner = resolveTrick(trick, trumpSuit);
+    
+    // Player 0 played highest led suit (Ace of Hearts), should win
+    expect(winner).toBe(0);
+  });
+});
+
+// Feature: contract-crown-game, Property 13: Trick Winner Leads Next
+describe('Property 13: Trick Winner Leads Next', () => {
+  it('trick winner becomes lead player for next trick', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom('HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'), // trump suit
+        (trumpSuit: Suit) => {
+          const state = createInitialState();
+          dealInitial(state);
+          declareTrump(state, trumpSuit);
+          dealFinal(state);
+          setFirstTrickLeader(state);
+
+          // Play 4 cards to complete a trick
+          for (let i = 0; i < 4; i++) {
+            const currentPlayer = state.currentPlayer;
+            const hand = state.players[currentPlayer].hand;
+            const playableCards = hand.filter(c => canPlayCard(state, currentPlayer, c));
+            playCard(state, currentPlayer, playableCards[0]);
+          }
+
+          // The winner of the completed trick should be the lead for the next trick
+          const completedTrick = state.completedTricks[state.completedTricks.length - 1];
+          expect(completedTrick.winner).toBe(state.currentTrick.leadPlayer);
+          expect(completedTrick.winner).toBe(state.currentPlayer);
+        }
+      ),
+      { numRuns: 100 }
+    );
   });
 });
 
