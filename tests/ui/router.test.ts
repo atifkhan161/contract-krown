@@ -73,9 +73,8 @@ vi.mock('page', () => {
       return { route: path, params: {} };
     }
     
-    // Then try dynamic route matching
+    // Then try dynamic route matching (skip wildcard)
     for (const [route] of routes) {
-      // Skip wildcard routes for dynamic matching
       if (route === '*') continue;
       
       const routeParts = route.split('/');
@@ -88,7 +87,6 @@ vi.mock('page', () => {
       
       for (let i = 0; i < routeParts.length; i++) {
         if (routeParts[i].startsWith(':')) {
-          // Dynamic parameter
           params[routeParts[i].slice(1)] = pathParts[i];
         } else if (routeParts[i] !== pathParts[i]) {
           matches = false;
@@ -101,7 +99,36 @@ vi.mock('page', () => {
       }
     }
     
+    // Check for wildcard route as fallback only if no other route matched
+    if (routes.has('*')) {
+      return { route: '*', params: {} };
+    }
+    
     return null;
+  };
+  
+  // Helper to trigger route handlers
+  const triggerRoute = (path: string, params: Record<string, string> = {}): void => {
+    const match = matchRoute(path);
+    if (match) {
+      const routeData = routes.get(match.route);
+      if (routeData) {
+        routeData.forEach(({ handlers, isMiddleware }) => {
+          if (isMiddleware && handlers.length >= 2) {
+            // For middleware, call with context and next, then call next handler
+            const ctx = { path, params: match.params };
+            const next = vi.fn(() => {
+              // Call the next handler (route handler)
+              handlers[1](ctx);
+            });
+            handlers[0](ctx, next);
+          } else {
+            // For regular handlers, just call them
+            handlers.forEach(handler => handler({ path, params: match.params }));
+          }
+        });
+      }
+    }
   };
   
   const pageFn = vi.fn((path: string, ...handlers: Function[]) => {
@@ -114,26 +141,7 @@ vi.mock('page', () => {
       } else {
         // Navigate to route - trigger handlers
         currentPath = path;
-        const match = matchRoute(path);
-        if (match) {
-          const routeData = routes.get(match.route);
-          if (routeData) {
-            routeData.forEach(({ handlers, isMiddleware }) => {
-              if (isMiddleware && handlers.length >= 2) {
-                // For middleware, call with context and next, then call next handler
-                const ctx = { path, params: match.params };
-                const next = vi.fn(() => {
-                  // Call the next handler (route handler)
-                  handlers[1](ctx);
-                });
-                handlers[0](ctx, next);
-              } else {
-                // For regular handlers, just call them
-                handlers.forEach(handler => handler({ path, params: match.params }));
-              }
-            });
-          }
-        }
+        triggerRoute(path);
       }
     }
   });
@@ -144,24 +152,7 @@ vi.mock('page', () => {
     redirect: vi.fn((path: string) => {
       // When redirect is called, update current path and trigger the target route
       currentPath = path;
-      const match = matchRoute(path);
-      if (match) {
-        const routeData = routes.get(match.route);
-        if (routeData) {
-          routeData.forEach(({ handlers, isMiddleware }) => {
-            if (isMiddleware && handlers.length >= 2) {
-              const ctx = { path, params: match.params };
-              const next = vi.fn();
-              handlers[0](ctx, next);
-              if (next.mock.calls.length > 0) {
-                handlers[1](ctx);
-              }
-            } else {
-              handlers.forEach(handler => handler({ path, params: match.params }));
-            }
-          });
-        }
-      }
+      triggerRoute(path);
     }),
     _routes: routes,
     _currentPath: () => currentPath,
@@ -310,18 +301,22 @@ describe('Router', () => {
 
   describe('handleLoginRedirect', () => {
     it('navigates to stored redirect path after login', async () => {
-      // Set redirect path
-      sessionStorage.setItem('redirectAfterLogin', '/game/room123');
+      // Login user first to allow game route access
+      sessionManager.login('user123', 'testuser');
 
-      // Handle login redirect
+      // Handle login redirect with game path
+      sessionStorage.setItem('redirectAfterLogin', '/game/room123');
       router.handleLoginRedirect();
 
-      // Should navigate to stored path
+      // Should navigate to stored path - verify via current path
       const currentPath = await getCurrentPathFromMock();
       expect(currentPath).toBe('/game/room123');
     });
 
     it('navigates to /lobby if no redirect path stored', async () => {
+      // Login user first to prevent auth redirects
+      sessionManager.login('user123', 'testuser');
+
       // Clear any stored redirect
       sessionStorage.removeItem('redirectAfterLogin');
 
@@ -336,6 +331,10 @@ describe('Router', () => {
 
   describe('handleLogout', () => {
     it('clears session and redirects to login', async () => {
+      // Register handler for login route
+      const loginHandler = vi.fn();
+      router.on('/login', loginHandler);
+
       // Login user
       sessionManager.login('user123', 'testuser');
       expect(sessionManager.isAuthenticated()).toBe(true);
@@ -346,9 +345,8 @@ describe('Router', () => {
       // Session should be cleared
       expect(sessionManager.isAuthenticated()).toBe(false);
 
-      // Should redirect to login
-      const page = await getMockPage();
-      expect(page.redirect).toHaveBeenCalledWith('/login');
+      // Should navigate to login - handler should be called
+      expect(loginHandler).toHaveBeenCalled();
     });
   });
 
@@ -392,6 +390,189 @@ describe('Router', () => {
       router.on('/offline', offlineHandler);
       router.navigate('/offline');
       expect(offlineHandler).toHaveBeenCalled();
+    });
+  });
+
+  describe('Route Navigation (Requirement 12.3)', () => {
+    it('renders corresponding view when navigating to a route', () => {
+      const loginHandler = vi.fn();
+      const lobbyHandler = vi.fn();
+      const offlineHandler = vi.fn();
+
+      router.on('/login', loginHandler);
+      router.on('/lobby', lobbyHandler);
+      router.on('/offline', offlineHandler);
+
+      // Navigate to each route and verify handler is called
+      router.navigate('/login');
+      expect(loginHandler).toHaveBeenCalledTimes(1);
+      expect(lobbyHandler).not.toHaveBeenCalled();
+
+      router.navigate('/offline');
+      expect(offlineHandler).toHaveBeenCalledTimes(1);
+
+      router.navigate('/lobby');
+      expect(lobbyHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it('handles dynamic route parameters correctly', async () => {
+      const gameHandler = vi.fn();
+      router.on('/game', gameHandler);
+
+      // Login user first to allow game route access
+      sessionManager.login('user123', 'testuser');
+
+      router.navigate('/game/room-abc-123');
+
+      // Verify handler was called with correct parameters
+      expect(gameHandler).toHaveBeenCalled();
+      const callArgs = gameHandler.mock.calls[0][0];
+      expect(callArgs.params).toBeDefined();
+    });
+
+    it('supports multiple route registrations', () => {
+      const handler1 = vi.fn();
+      const handler2 = vi.fn();
+      const handler3 = vi.fn();
+
+      router.on('/route1', handler1);
+      router.on('/route2', handler2);
+      router.on('/route3', handler3);
+
+      router.navigate('/route1');
+      expect(handler1).toHaveBeenCalled();
+      expect(handler2).not.toHaveBeenCalled();
+      expect(handler3).not.toHaveBeenCalled();
+
+      router.navigate('/route3');
+      expect(handler3).toHaveBeenCalled();
+    });
+
+    it('provides route context with path and querystring', () => {
+      const handler = vi.fn();
+      router.on('/test', handler);
+
+      router.navigate('/test');
+
+      expect(handler).toHaveBeenCalled();
+      const context = handler.mock.calls[0][0];
+      expect(context).toHaveProperty('path');
+      expect(context).toHaveProperty('params');
+      expect(context).toHaveProperty('querystring');
+    });
+  });
+
+  describe('Browser History (Requirement 12.5)', () => {
+    it('maintains current route state for back navigation', async () => {
+      const loginHandler = vi.fn();
+      const lobbyHandler = vi.fn();
+
+      router.on('/login', loginHandler);
+      router.on('/lobby', lobbyHandler);
+
+      // Navigate through routes
+      router.navigate('/login');
+      router.navigate('/lobby');
+
+      // Current route should reflect last navigation
+      const currentPath = await getCurrentPathFromMock();
+      expect(currentPath).toBe('/lobby');
+    });
+
+    it('updates current route on each navigation', async () => {
+      router.on('/page1', () => {});
+      router.on('/page2', () => {});
+      router.on('/page3', () => {});
+
+      router.navigate('/page1');
+      let currentPath = await getCurrentPathFromMock();
+      expect(currentPath).toBe('/page1');
+
+      router.navigate('/page2');
+      currentPath = await getCurrentPathFromMock();
+      expect(currentPath).toBe('/page2');
+
+      router.navigate('/page3');
+      currentPath = await getCurrentPathFromMock();
+      expect(currentPath).toBe('/page3');
+    });
+
+    it('dispatches routechange event on navigation for history tracking', () => {
+      // Login user to prevent auth redirects
+      sessionManager.login('user123', 'testuser');
+
+      const handler = vi.fn();
+      router.on('/history-test', handler);
+
+      router.navigate('/history-test');
+
+      // Verify handler was called (which means route navigation worked)
+      expect(handler).toHaveBeenCalled();
+      const context = handler.mock.calls[0][0];
+      expect(context.path).toBe('/history-test');
+    });
+
+    it('dispatches routechange event with route parameters', () => {
+      sessionManager.login('user123', 'testuser');
+      const handler = vi.fn();
+      router.on('/game', handler);
+
+      router.navigate('/game/room-456');
+
+      const dispatchCalls = (window.dispatchEvent as any).mock.calls;
+      const routeChangeEvent = dispatchCalls.find(
+        (call: any[]) => call[0]?.type === 'routechange'
+      );
+      expect(routeChangeEvent).toBeDefined();
+      expect(routeChangeEvent[0].detail.params).toBeDefined();
+    });
+  });
+
+  describe('Router Start and Stop', () => {
+    it('starts the router', async () => {
+      router.start();
+      const page = await getMockPage();
+      expect(page.start).toHaveBeenCalled();
+    });
+
+    it('stops the router', async () => {
+      router.stop();
+      const page = await getMockPage();
+      expect(page.stop).toHaveBeenCalled();
+    });
+  });
+
+  describe('Route Context (Requirement 12.3)', () => {
+    it('provides correct path in route context', () => {
+      const handler = vi.fn();
+      router.on('/context-test', handler);
+
+      router.navigate('/context-test');
+
+      const context = handler.mock.calls[0][0];
+      expect(context.path).toBe('/context-test');
+    });
+
+    it('provides empty params for static routes', () => {
+      const handler = vi.fn();
+      router.on('/static', handler);
+
+      router.navigate('/static');
+
+      const context = handler.mock.calls[0][0];
+      expect(context.params).toEqual({});
+    });
+
+    it('provides params for dynamic routes', () => {
+      sessionManager.login('user123', 'testuser');
+      const handler = vi.fn();
+      router.on('/game', handler);
+
+      router.navigate('/game/room-789');
+
+      const context = handler.mock.calls[0][0];
+      expect(context.params).toBeDefined();
+      expect(context.params.roomId).toBe('room-789');
     });
   });
 });

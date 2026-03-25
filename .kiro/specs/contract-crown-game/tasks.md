@@ -208,28 +208,28 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
 - [x] 8. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Implement PWA Shell and routing
-  - [ ] 9.1 Create manifest.json for PWA
+- [x] 9. Implement PWA Shell and routing
+  - [x] 9.1 Create manifest.json for PWA
     - Define app name, icons, display mode (standalone)
     - Configure theme colors and orientation
     - _Requirements: 6.1, 6.2_
   
-  - [ ] 9.2 Implement Page.js routing
+  - [x] 9.2 Implement Page.js routing
     - Set up routes: /login, /lobby, /game/:roomId, /offline
     - Implement route handlers
     - _Requirements: 12.1, 12.2, 12.3_
   
-  - [ ] 9.3 Implement authentication guard middleware
+  - [x] 9.3 Implement authentication guard middleware
     - Check session on protected routes
     - Redirect to /login if not authenticated
     - Allow /offline route without authentication
     - _Requirements: 12.4_
   
-  - [ ]* 9.4 Write property test for unauthenticated redirect
+  - [x]* 9.4 Write property test for unauthenticated redirect
     - **Property 27: Unauthenticated Redirect**
     - **Validates: Requirements 12.4**
   
-  - [ ]* 9.5 Write unit tests for routing
+  - [x] 9.5 Write unit tests for routing
     - Test route navigation
     - Test authentication guard
     - Test browser history
