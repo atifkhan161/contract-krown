@@ -164,7 +164,7 @@ describe('Property 5: Crown Holder Identification', () => {
     fc.assert(
       fc.property(
         fc.integer({ min: 0, max: 3 }), // dealer position
-        (dealer) => {
+        (dealer: number) => {
           const state = createInitialState();
           state.dealer = dealer;
           dealInitial(state);
@@ -185,7 +185,7 @@ describe('Property 5: Crown Holder Identification', () => {
     fc.assert(
       fc.property(
         fc.integer({ min: 0, max: 3 }), // dealer position
-        (dealer) => {
+        (dealer: number) => {
           const state = createInitialState();
           state.dealer = dealer;
           dealInitial(state);

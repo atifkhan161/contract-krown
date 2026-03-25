@@ -57,13 +57,13 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - **Property 4.1: Re-Deal on Extreme Hand Condition**
     - **Validates: Requirements 1.6, 21.1, 21.2, 21.3, 21.4, 21.5**
 
-- [-] 3. Implement trump declaration system
-  - [-] 3.1 Implement crown holder identification logic
+- [x] 3. Implement trump declaration system
+  - [x] 3.1 Implement crown holder identification logic
     - Track crown holder in game state
     - Initialize crown holder at game start
     - _Requirements: 2.1_
   
-  - [ ]* 3.2 Write property test for crown holder identification
+  - [x] 3.2 Write property test for crown holder identification
     - **Property 5: Crown Holder Identification**
     - **Validates: Requirements 2.1**
   
