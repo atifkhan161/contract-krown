@@ -67,12 +67,12 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - **Property 5: Crown Holder Identification**
     - **Validates: Requirements 2.1**
   
-  - [ ] 3.3 Implement declareTrump() function
+  - [x] 3.3 Implement declareTrump() function
     - Validate crown holder can declare trump
     - Update game state with selected trump suit
     - _Requirements: 2.3_
   
-  - [ ]* 3.4 Write property test for trump declaration
+  - [x] 3.4 Write property test for trump declaration
     - **Property 6: Trump Declaration**
     - **Validates: Requirements 2.3**
 

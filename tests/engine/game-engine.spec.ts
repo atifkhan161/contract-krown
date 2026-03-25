@@ -2,8 +2,8 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 
-import { createDeck, shuffle, createInitialState, createPlayers, dealInitial, dealFinal, validateDeal, checkForExtremeHand, validateAndDeal } from '@src/engine/index.js';
-import type { Card } from '@src/engine/index.js';
+import { createDeck, shuffle, createInitialState, createPlayers, dealInitial, dealFinal, validateDeal, checkForExtremeHand, validateAndDeal, declareTrump } from '@src/engine/index.js';
+import type { Card, Suit } from '@src/engine/index.js';
 
 // Feature: contract-crown-game, Property 1: Deck Composition
 describe('Property 1: Deck Composition', () => {
@@ -210,6 +210,71 @@ describe('Property 5: Crown Holder Identification', () => {
 
     // All 4 players should have been crown holder at some point
     expect(crownHolders.size).toBe(4);
+  });
+});
+
+// Feature: contract-crown-game, Property 6: Trump Declaration
+describe('Property 6: Trump Declaration', () => {
+  it('trump suit is updated when crown holder declares trump', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom('HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'), // suit to declare
+        (suit: Suit) => {
+          const state = createInitialState();
+          dealInitial(state);
+
+          // Verify we're in TRUMP_DECLARATION phase
+          expect(state.phase).toBe('TRUMP_DECLARATION');
+
+          // Verify trump is not set yet
+          expect(state.trumpSuit).toBeNull();
+
+          // Crown holder declares trump
+          declareTrump(state, suit);
+
+          // Verify trump suit is now set to the declared suit
+          expect(state.trumpSuit).toBe(suit);
+
+          // Verify phase moved to DEALING_FINAL
+          expect(state.phase).toBe('DEALING_FINAL');
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('only crown holder can declare trump', () => {
+    const state = createInitialState();
+    dealInitial(state);
+
+    // Try to have a non-crown holder declare trump
+    const nonCrownHolder = (state.crownHolder + 1) % 4;
+    state.currentPlayer = nonCrownHolder;
+
+    expect(() => {
+      declareTrump(state, 'HEARTS');
+    }).toThrow('Only the crown holder can declare trump');
+  });
+
+  it('trump can only be declared during TRUMP_DECLARATION phase', () => {
+    const state = createInitialState();
+    dealInitial(state);
+
+    // Move to a different phase
+    state.phase = 'TRICK_PLAY';
+
+    expect(() => {
+      declareTrump(state, 'HEARTS');
+    }).toThrow('Trump can only be declared during the trump declaration phase');
+  });
+
+  it('rejects invalid suit', () => {
+    const state = createInitialState();
+    dealInitial(state);
+
+    expect(() => {
+      declareTrump(state, 'INVALID' as Suit);
+    }).toThrow('Invalid suit selected');
   });
 });
 
