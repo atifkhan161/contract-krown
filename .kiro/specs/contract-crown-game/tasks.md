@@ -235,52 +235,52 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Test browser history
     - _Requirements: 12.3, 12.4, 12.5_
 
-- [ ] 10. Implement Mobile UI with Felt Grid layout
-  - [ ] 10.1 Create base GameView component structure
+- [x] 10. Implement Mobile UI with Felt Grid layout
+  - [x] 10.1 Create base GameView component structure
     - Set up portrait-first CSS Grid layout
     - Define viewport sections: header (10%), partner (15%), play area (45%), user hand (30%)
     - _Requirements: 6.3, 6.4, 7.1, 7.2, 7.3, 7.4_
   
-  - [ ] 10.2 Implement GameHeader component
+  - [x] 10.2 Implement GameHeader component
     - Display trump suit indicator
     - Display crown holder indicator
     - Display team scores
     - _Requirements: 7.5, 4.4, 5.5_
   
-  - [ ] 10.3 Implement FeltGrid component
+  - [x] 10.3 Implement FeltGrid component
     - Create PartnerDisplay (top position)
     - Create OpponentDisplay (left and right positions)
     - Create TrickArea (center)
     - Create UserHand (bottom, thumb-zone)
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
   
-  - [ ] 10.4 Implement card playability visualization
+  - [x] 10.4 Implement card playability visualization
     - Calculate playable cards using canPlayCard()
     - Apply dimming styles to unplayable cards
     - Apply full brightness to playable cards
     - Disable click handlers on unplayable cards
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
   
-  - [ ] 10.4.1 Implement re-dealing UI message
+  - [x] 10.4.1 Implement re-dealing UI message
     - Display "Re-dealing..." message when re-deal is triggered
     - Show message during re-deal validation loop
     - Clear message when valid deal is achieved
     - _Requirements: 21.6_
   
-  - [ ]* 10.5 Write property test for playability calculation
+  - [x]* 10.5 Write property test for playability calculation
     - **Property 21: Playability Calculation Correctness**
     - **Validates: Requirements 8.1**
   
-  - [ ]* 10.6 Write property tests for card styling
+  - [x]* 10.6 Write property tests for card styling
     - **Property 22: Unplayable Card Styling**
     - **Property 23: Playable Card Styling**
     - **Validates: Requirements 8.2, 8.3**
   
-  - [ ] 10.7 Implement active player turn indication
+  - [x] 10.7 Implement active player turn indication
     - Display pulsing ring animation around active player avatar
     - _Requirements: 9.1_
   
-  - [ ]* 10.8 Write property test for active player indication
+  - [x]* 10.8 Write property test for active player indication
     - **Property 24: Active Player Indication**
     - **Validates: Requirements 9.1**
 
