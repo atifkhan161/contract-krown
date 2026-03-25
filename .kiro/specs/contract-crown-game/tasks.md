@@ -380,337 +380,386 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Verify crown rotation works correctly
     - _Requirements: 10.1, 10.2, 10.4, 10.5_
 
-- [ ] 16. Implement login and lobby views
-  - [ ] 16.1 Create LoginView component
+- [x] 16. Set up PWA shell for browser testing
+  - [x] 16.1 Create index.html app shell
+    - Create public/index.html with viewport meta tags
+    - Include viewport-fit=cover for safe area insets
+    - Add mount point div for app content
+    - Link manifest.json
+    - _Requirements: 6.1, 6.2, 6.3_
+
+  - [x] 16.2 Set up TailwindCSS configuration
+    - Create tailwind.config.ts with DaisyUI plugin
+    - Create postcss.config.js
+    - Create src/ui/styles/main.css with Tailwind directives
+    - Configure content paths for tree-shaking
+    - _Requirements: 6.3_
+
+  - [x] 16.3 Create CSS styles for Felt Grid layout
+    - Define CSS Grid for .felt-grid (portrait layout)
+    - Style header, partner, opponents, trick area, user hand
+    - Style card elements (playable/unplayable states)
+    - Style modals (trump selector, round end, victory)
+    - Style animations (pulsing ring, card flight)
+    - _Requirements: 6.3, 6.4, 7.1, 7.2, 7.3, 7.4, 7.5, 8.2, 8.3_
+
+  - [x] 16.4 Create app bootstrap entry point
+    - Create src/ui/app.ts that mounts UI to DOM
+    - Initialize router, create OfflineGameView
+    - Wire /offline route to launch game view
+    - Handle root redirect to /offline for quick testing
+    - _Requirements: 12.1, 12.2, 12.3_
+
+  - [x] 16.5 Update build script for CSS processing
+    - Add TailwindCSS build step to build:client script
+    - Ensure CSS is output to dist/client/styles.css
+    - Update index.html to reference built CSS
+    - _Requirements: 18.4_
+
+  - [x] 16.6 Set up Elysia static file serving
+    - Configure Elysia to serve dist/client/ as static
+    - Serve index.html as fallback for SPA routes
+    - Update dev script to watch and rebuild client
+    - _Requirements: 20.3_
+
+  - [x] 16.7 Verify browser testing works
+    - Run bun run dev and open http://localhost:3000
+    - Verify offline game renders with Felt Grid layout
+    - Verify cards are clickable and game progresses
+    - Verify mobile viewport renders correctly
+    - _Requirements: 6.3, 7.1, 8.1, 10.4_
+
+- [ ] 17. Implement login and lobby views
+  - [ ] 17.1 Create LoginView component
     - Username and password input fields
     - Login button with SessionManager integration
     - Registration link
     - _Requirements: 12.1, 13.1_
-  
-  - [ ] 16.2 Create LobbyView component
+
+  - [ ] 17.2 Create LobbyView component
     - Display user statistics (if logged in)
     - "Create Game" button (if logged in)
     - "Join Game" button (if logged in)
     - "Play Offline" button (always available)
     - Logout button (if logged in)
     - _Requirements: 12.1_
-  
-  - [ ]* 16.3 Write unit tests for login and lobby
+
+  - [ ]* 17.3 Write unit tests for login and lobby
     - Test login form submission
     - Test navigation to offline game
     - Test offline mode launch without authentication
     - _Requirements: 12.1, 12.2, 12.3, 13.1_
 
-- [ ] 17. Checkpoint - Ensure offline play is fully functional
+- [ ] 18. Checkpoint - Ensure offline play is fully functional
   - Test complete offline game flow from lobby to victory
   - Verify all game rules work correctly
   - Verify UI responsiveness and animations
   - Ask the user if they want to proceed with online multiplayer
 
-- [ ] 18. Implement Session Manager
-  - [ ] 18.1 Create SessionManager class
+- [ ] 19. Implement Session Manager
+  - [ ] 19.1 Create SessionManager class
     - Implement login() function with token creation
     - Implement logout() function with token clearing
     - Implement getSession() to retrieve from localStorage
     - Implement isAuthenticated() check
     - _Requirements: 13.1, 13.2, 13.3, 13.5_
-  
-  - [ ]* 18.2 Write property test for session token expiration
+
+  - [ ]* 19.2 Write property test for session token expiration
     - **Property 28: Session Token Expiration**
     - **Validates: Requirements 13.2**
-  
-  - [ ]* 18.3 Write property test for expired token redirect
+
+  - [ ]* 19.3 Write property test for expired token redirect
     - **Property 29: Expired Token Redirect**
     - **Validates: Requirements 13.4**
-  
-  - [ ]* 18.4 Write unit tests for session management
+
+  - [ ]* 19.4 Write unit tests for session management
     - Test token creation and storage
     - Test auto-authentication on app load
     - Test logout functionality
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
 
-- [ ] 19. Implement LokiJS persistence layer
-  - [ ] 19.1 Set up LokiJS database
+- [ ] 20. Implement LokiJS persistence layer
+  - [ ] 20.1 Set up LokiJS database
     - Create users collection
     - Create games collection
     - Create statistics collection
     - Configure auto-save every 5 minutes
     - Configure load on startup
     - _Requirements: 14.1, 14.3, 14.4_
-  
-  - [ ] 19.2 Implement user authentication with LokiJS
+
+  - [ ] 20.2 Implement user authentication with LokiJS
     - Create user registration function
     - Create user login function with password hashing
     - Integrate with SessionManager
     - _Requirements: 13.1_
-  
-  - [ ] 19.3 Implement game result persistence
+
+  - [ ] 20.3 Implement game result persistence
     - Save game record on completion
     - Store player IDs, winner, scores, rounds, timestamp
     - _Requirements: 14.2_
-  
-  - [ ]* 19.4 Write property test for game result persistence
+
+  - [ ]* 20.4 Write property test for game result persistence
     - **Property 30: Game Result Persistence**
     - **Validates: Requirements 14.2**
-  
-  - [ ] 19.5 Implement statistics tracking
+
+  - [ ] 20.5 Implement statistics tracking
     - Update games played count
     - Update games won count
     - Update total points scored
     - Calculate average points per game
     - _Requirements: 14.5_
-  
-  - [ ]* 19.6 Write property test for statistics update
+
+  - [ ]* 20.6 Write property test for statistics update
     - **Property 31: Statistics Update**
     - **Validates: Requirements 14.5**
-  
-  - [ ]* 19.7 Write unit tests for persistence layer
+
+  - [ ]* 20.7 Write unit tests for persistence layer
     - Test user CRUD operations
     - Test game record creation
     - Test statistics calculations
     - Test auto-save and load
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
-- [ ] 20. Checkpoint - Ensure all tests pass
+- [ ] 21. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 21. Implement Colyseus server with CrownRoom
-  - [ ] 21.1 Set up Colyseus server with ElysiaJS
+- [ ] 22. Implement Colyseus server with CrownRoom
+  - [ ] 22.1 Set up Colyseus server with ElysiaJS
     - Initialize Colyseus server
     - Configure WebSocket transport
     - Register CrownRoom
     - _Requirements: 11.1, 11.6_
-  
-  - [ ] 21.2 Implement CrownRoom class
+
+  - [ ] 22.2 Implement CrownRoom class
     - Implement onCreate() - initialize game state
     - Implement onJoin() - add player to game
     - Implement onLeave() - handle disconnection
     - Implement onDispose() - cleanup
     - _Requirements: 11.1_
-  
-  - [ ] 21.3 Implement declareTrump command with validation
+
+  - [ ] 22.3 Implement declareTrump command with validation
     - Validate player is crown holder
     - Validate game phase is TRUMP_DECLARATION
     - Apply trump declaration to state
     - Broadcast state update
     - _Requirements: 11.2_
-  
-  - [ ] 21.4 Implement playCard command with validation
+
+  - [ ] 22.4 Implement playCard command with validation
     - Validate it's player's turn
     - Validate card is in player's hand
     - Validate card can be played (suit following)
     - Apply card play to state
     - Broadcast state update
     - _Requirements: 11.2_
-  
-  - [ ]* 21.5 Write property test for server action validation
+
+  - [ ]* 22.5 Write property test for server action validation
     - **Property 26: Server Action Validation**
     - **Validates: Requirements 11.2**
-  
-  - [ ] 21.6 Implement state synchronization
+
+  - [ ] 22.6 Implement state synchronization
     - Broadcast state updates within 100ms
     - Send full state on player join
     - _Requirements: 11.3_
-  
-  - [ ] 21.7 Implement reconnection handling
+
+  - [ ] 22.7 Implement reconnection handling
     - Pause game on player disconnect
     - Wait 60 seconds for reconnection
     - Resume game on reconnection
     - Replace with bot after timeout
     - _Requirements: 11.4, 11.5_
-  
-  - [ ]* 21.8 Write unit tests for Colyseus server
+
+  - [ ]* 22.8 Write unit tests for Colyseus server
     - Test room creation and joining
     - Test action validation
     - Test state broadcasting
     - Test reconnection logic
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
 
-- [ ] 22. Implement online multiplayer client integration
-  - [ ] 22.1 Create Colyseus client wrapper
+- [ ] 23. Implement online multiplayer client integration
+  - [ ] 23.1 Create Colyseus client wrapper
     - Connect to Colyseus server via WebSocket
     - Handle connection state changes
     - Send actions to server
     - Receive state updates from server
     - _Requirements: 11.1, 11.3_
-  
-  - [ ] 22.2 Implement online game controller
+
+  - [ ] 23.2 Implement online game controller
     - Initialize connection to game room
     - Send declareTrump action to server
     - Send playCard action to server
     - Update UI on state changes from server
     - _Requirements: 11.2, 11.3_
-  
-  - [ ] 22.3 Implement reconnection UI
+
+  - [ ] 23.3 Implement reconnection UI
     - Display reconnection indicator on disconnect
     - Show countdown timer (60s)
     - Restore game state on reconnection
     - _Requirements: 11.4, 19.1, 19.2_
-  
-  - [ ]* 22.4 Write integration tests for online mode
+
+  - [ ]* 23.4 Write integration tests for online mode
     - Test full multiplayer game with 4 connected clients
     - Verify state synchronization across all clients
     - Verify reconnection handling
     - Verify bot replacement on timeout
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
 
-- [ ] 23. Implement headless testing script
-  - [ ] 23.1 Create headless test script
+- [ ] 24. Implement headless testing script
+  - [ ] 24.1 Create headless test script
     - Simulate 3 bot players joining room
     - Run full game to completion
     - Verify game rules enforced by server
     - Target completion time < 10 seconds
     - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5_
-  
-  - [ ]* 23.2 Write integration test using headless script
+
+  - [ ]* 24.2 Write integration test using headless script
     - Test server processes game correctly
     - Test all phases transition
     - Test scoring and crown rotation
     - _Requirements: 17.2, 17.3, 17.4_
 
-- [ ] 24. Implement error handling and recovery
-  - [ ] 24.1 Implement client-side error handling
+- [ ] 25. Implement error handling and recovery
+  - [ ] 25.1 Implement client-side error handling
     - Add global error boundary
     - Handle network errors with retry logic
     - Handle invalid state errors
     - Display user-friendly error messages
     - _Requirements: 19.1, 19.2, 19.4_
-  
-  - [ ] 24.2 Implement server-side error handling
+
+  - [ ] 25.2 Implement server-side error handling
     - Validate game state invariants
     - Handle database errors with retry
     - Log all errors with context
     - _Requirements: 19.3_
-  
-  - [ ] 24.3 Implement error reporting
+
+  - [ ] 25.3 Implement error reporting
     - Create error report interface
     - Capture error details (stack, state, context)
     - Provide "Report Issue" button
     - _Requirements: 19.5_
-  
-  - [ ]* 24.4 Write unit tests for error handling
+
+  - [ ]* 25.4 Write unit tests for error handling
     - Test network error recovery
     - Test state validation
     - Test error reporting
     - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5_
 
-- [ ] 25. Implement performance optimizations
-  - [ ] 25.1 Optimize initial load time
+- [ ] 26. Implement performance optimizations
+  - [ ] 26.1 Optimize initial load time
     - Code splitting for routes
     - Lazy load non-critical components
     - Compress assets
     - Target < 2s on 3G connection
     - _Requirements: 18.1, 18.4_
-  
-  - [ ] 25.2 Optimize card play response time
+
+  - [ ] 26.2 Optimize card play response time
     - Debounce touch events
     - Optimize state updates
     - Target < 100ms response
     - _Requirements: 18.2_
-  
-  - [ ] 25.3 Optimize animation performance
+
+  - [ ] 26.3 Optimize animation performance
     - Use CSS transforms for GPU acceleration
     - Reduce layout thrashing
     - Target 60 FPS
     - _Requirements: 18.3_
-  
-  - [ ] 25.4 Optimize game engine performance
+
+  - [ ] 26.4 Optimize game engine performance
     - Profile trick resolution logic
     - Optimize card validation
     - Target < 50ms processing time
     - _Requirements: 18.5_
-  
-  - [ ]* 25.5 Write performance tests
+
+  - [ ]* 26.5 Write performance tests
     - Test initial load time
     - Test card play response time
     - Test animation frame rate
     - Test bundle size
     - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5_
 
-- [ ] 26. Checkpoint - Ensure all tests pass
+- [ ] 27. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 27. Set up deployment configuration
-  - [ ] 27.1 Create Dockerfile for Render deployment
+- [ ] 28. Set up deployment configuration
+  - [ ] 28.1 Create Dockerfile for Render deployment
     - Use Bun as base image
     - Copy source files
     - Install dependencies
     - Expose WebSocket port
     - _Requirements: 20.1, 20.4_
-  
-  - [ ] 27.2 Configure LokiJS persistence for ephemeral filesystem
+
+  - [ ] 28.2 Configure LokiJS persistence for ephemeral filesystem
     - Set up periodic backups
     - Configure external volume mounting
     - Implement restore on startup
     - _Requirements: 20.2_
-  
-  - [ ] 27.3 Configure static file serving
+
+  - [ ] 28.3 Configure static file serving
     - Serve PWA assets from same Render instance
     - Configure HTTPS
     - _Requirements: 20.3_
-  
-  - [ ] 27.4 Configure automatic restart on crash
+
+  - [ ] 28.4 Configure automatic restart on crash
     - Set up health check endpoint
     - Configure restart policy
     - _Requirements: 20.5_
-  
-  - [ ]* 27.5 Write deployment verification tests
+
+  - [ ]* 28.5 Write deployment verification tests
     - Test Docker build succeeds
     - Test server starts correctly
     - Test static files served
     - _Requirements: 20.1, 20.3, 20.4, 20.5_
 
-- [ ] 28. Create E2E tests for mobile UI
-  - [ ]* 28.1 Set up Playwright with mobile viewport
+- [ ] 29. Create E2E tests for mobile UI
+  - [ ]* 29.1 Set up Playwright with mobile viewport
     - Configure 375x667 viewport
     - Set up touch event simulation
     - _Requirements: 18.1_
-  
-  - [ ]* 28.2 Write E2E tests for offline game flow
+
+  - [ ]* 29.2 Write E2E tests for offline game flow
     - Test offline game creation
     - Test card play interactions
     - Test trump declaration
     - Test round completion
     - _Requirements: 6.3, 8.1, 15.5_
-  
-  - [ ]* 28.3 Write E2E tests for online game flow
+
+  - [ ]* 29.3 Write E2E tests for online game flow
     - Test online game creation
     - Test multiplayer card play
     - Test reconnection flow
     - _Requirements: 11.1, 11.3, 11.4_
-  
-  - [ ]* 28.4 Write E2E tests for PWA installation
+
+  - [ ]* 29.4 Write E2E tests for PWA installation
     - Test manifest.json served correctly
     - Test standalone mode launch
     - _Requirements: 6.1, 6.2_
-  
-  - [ ]* 28.5 Write E2E tests for navigation
+
+  - [ ]* 29.5 Write E2E tests for navigation
     - Test route transitions
     - Test authentication guard
     - Test back button navigation
     - _Requirements: 12.2, 12.3, 12.4, 12.5_
 
-- [ ] 29. Final integration and polish
-  - [ ] 29.1 Integrate all components into complete application
+- [ ] 30. Final integration and polish
+  - [ ] 30.1 Integrate all components into complete application
     - Wire offline mode with UI
     - Wire online mode with UI
     - Connect login/lobby/game views
     - Test full user journey
     - _Requirements: All_
-  
-  - [ ] 29.2 Add Tailwind styling and DaisyUI components
+
+  - [ ] 30.2 Add Tailwind styling and DaisyUI components
     - Style all UI components
     - Ensure mobile-first responsive design
     - Apply theme colors
     - _Requirements: 6.3, 6.4_
-  
-  - [ ] 29.3 Test cross-browser compatibility
+
+  - [ ] 30.3 Test cross-browser compatibility
     - Test on Chrome Mobile
     - Test on Safari iOS
     - Test on Firefox Mobile
     - _Requirements: 18.1, 18.2, 18.3_
-  
-  - [ ]* 29.4 Run full test suite
+
+  - [ ]* 30.4 Run full test suite
     - Run all unit tests
     - Run all property tests (32 properties)
     - Run all integration tests
@@ -718,7 +767,7 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Verify 100% property test coverage
     - _Requirements: All_
 
-- [ ] 30. Final checkpoint - Ensure all tests pass
+- [ ] 31. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, verify deployment readiness, ask the user if questions arise.
 
 ## Notes
@@ -731,4 +780,4 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
 - **NEW WORKFLOW**: Implementation now prioritizes offline play testing before online multiplayer
 - Implementation follows phased approach: Core Engine → PWA Shell → Mobile UI → Offline Mode → Login/Lobby → Session/Persistence → Online Mode → Deployment
 - Testing strategy combines unit tests (specific examples) with property tests (universal correctness)
-- Task 17 is a critical checkpoint to test offline play before proceeding with online features
+- Task 18 is a critical checkpoint to test offline play before proceeding with online features
