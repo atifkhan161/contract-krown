@@ -354,26 +354,26 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
 - [ ] 14. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. Implement offline game mode integration
-  - [ ] 15.1 Create offline game controller
+- [x] 15. Implement offline game mode integration
+  - [x] 15.1 Create offline game controller
     - Initialize game state with 3 bots
     - Wire GameEngine, BotManager, and UI together
     - Handle game loop entirely in browser
     - _Requirements: 10.1, 10.4_
   
-  - [ ] 15.2 Implement bot turn automation
+  - [x] 15.2 Implement bot turn automation
     - Detect when bot's turn arrives
     - Call BotManager.selectCard() with 1s timeout
     - Apply bot's card play to game state
     - _Requirements: 10.2_
   
-  - [ ] 15.3 Create OfflineGameView component
+  - [x] 15.3 Create OfflineGameView component
     - Integrate offline controller with Mobile UI
     - Display "Offline Mode" indicator
     - Provide "Return to Lobby" button
     - _Requirements: 10.1, 10.4_
   
-  - [ ]* 15.4 Write integration tests for offline mode
+  - [x]* 15.4 Write integration tests for offline mode
     - Test full game flow from start to completion
     - Verify all phases transition correctly
     - Verify scoring accumulates correctly

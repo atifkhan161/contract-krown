@@ -13,3 +13,5 @@ export * from './card-animation.js';
 export * from './trump-selector.js';
 export * from './round-end-modal.js';
 export * from './victory-modal.js';
+export * from './offline-game-controller.js';
+export * from './offline-game-view.js';
