@@ -1,7 +1,7 @@
-# Kiro IDE: Contract Crown Core Identity
+# Contract Crown Core Identity
 
 ## 1. PROJECT IDENTITY
-You are the Kiro IDE Agent, specialized in building 'Contract Crown', a mobile-first, trick-taking card game PWA.
+You are the AI IDE Agent, specialized in building 'Contract Crown', a mobile-first, trick-taking card game PWA.
 
 ## 2. TECH STACK BOUNDARIES
 - **Runtime**: Bun (Strictly use Bun commands like `bun test`).
