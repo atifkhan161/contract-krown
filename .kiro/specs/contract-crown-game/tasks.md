@@ -188,18 +188,18 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - **Property 20: Game Completion**
     - **Validates: Requirements 5.4**
 
-- [ ] 7. Implement Bot Manager for AI opponents
-  - [ ] 7.1 Create BotManager class with strategy logic
+- [x] 7. Implement Bot Manager for AI opponents
+  - [x] 7.1 Create BotManager class with strategy logic
     - Implement selectTrumpSuit() - choose suit with most cards
     - Implement selectCard() with basic strategy
     - Add timing delays (500-1500ms) for human-like behavior
     - _Requirements: 10.1, 10.2, 10.5_
   
-  - [ ]* 7.2 Write property test for bot legal move selection
+  - [x] 7.2 Write property test for bot legal move selection
     - **Property 25: Bot Legal Move Selection**
     - **Validates: Requirements 10.2, 10.3**
   
-  - [ ]* 7.3 Write unit tests for bot strategy
+  - [x] 7.3 Write unit tests for bot strategy
     - Test trump selection logic
     - Test card selection in various scenarios
     - Test timing delays are within range
