@@ -133,58 +133,58 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
 - [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Implement Crown Rule and scoring system
-  - [ ] 6.1 Implement crown retention logic
+- [x] 6. Implement Crown Rule and scoring system
+  - [x] 6.1 Implement crown retention logic
     - Check if declaring team won >= 5 tricks
     - Retain crown holder if condition met
     - _Requirements: 4.1_
   
-  - [ ]* 6.2 Write property test for crown retention
+  - [x] 6.2 Write property test for crown retention
     - **Property 14: Crown Retention on Success**
     - **Validates: Requirements 4.1**
   
-  - [ ] 6.3 Implement crown rotation logic
+  - [x] 6.3 Implement crown rotation logic
     - Pass crown clockwise if declaring team won < 5 tricks
     - Calculate (currentCrownHolder + 1) % 4
     - _Requirements: 4.2_
   
-  - [ ]* 6.4 Write property test for crown rotation
+  - [x] 6.4 Write property test for crown rotation
     - **Property 15: Crown Rotation on Failure**
     - **Validates: Requirements 4.2**
   
-  - [ ] 6.5 Implement dealer rotation logic
+  - [x] 6.5 Implement dealer rotation logic
     - Rotate dealer clockwise every round
     - Calculate (currentDealer + 1) % 4
     - _Requirements: 4.3_
   
-  - [ ]* 6.6 Write property test for dealer rotation
+  - [x] 6.6 Write property test for dealer rotation
     - **Property 16: Dealer Rotation**
     - **Validates: Requirements 4.3**
   
-  - [ ] 6.7 Implement winner-takes-all scoring
+  - [x] 6.7 Implement winner-takes-all scoring
     - Award T points to declaring team if T >= 5
     - Award challenging team's trick count if declaring team < 5
     - _Requirements: 5.1, 5.2_
   
-  - [ ]* 6.8 Write property tests for scoring rules
+  - [x] 6.8 Write property tests for scoring rules
     - **Property 17: Declaring Team Success Scoring**
     - **Property 18: Challenging Team Success Scoring**
     - **Validates: Requirements 5.1, 5.2**
   
-  - [ ] 6.9 Implement score accumulation
+  - [x] 6.9 Implement score accumulation
     - Maintain cumulative scores across rounds
     - _Requirements: 5.3_
   
-  - [ ]* 6.10 Write property test for score accumulation
+  - [x] 6.10 Write property test for score accumulation
     - **Property 19: Score Accumulation**
     - **Validates: Requirements 5.3**
   
-  - [ ] 6.11 Implement game completion detection
+  - [x] 6.11 Implement game completion detection
     - Check if either team >= 52 points
     - Transition to GAME_END phase
     - _Requirements: 5.4_
   
-  - [ ]* 6.12 Write property test for game completion
+  - [x] 6.12 Write property test for game completion
     - **Property 20: Game Completion**
     - **Validates: Requirements 5.4**
 

@@ -385,3 +385,106 @@ export function resolveTrick(trick: Trick, trumpSuit: Suit): number {
   }
   return highestLedSuit.player;
 }
+
+/**
+ * Counts the number of tricks won by each team
+ * Returns [team0Tricks, team1Tricks]
+ */
+export function countTricksByTeam(state: GameState): [number, number] {
+  let team0Tricks = 0;
+  let team1Tricks = 0;
+
+  for (const trick of state.completedTricks) {
+    if (trick.winner !== null) {
+      const winnerTeam = state.players[trick.winner].team;
+      if (winnerTeam === 0) {
+        team0Tricks++;
+      } else {
+        team1Tricks++;
+      }
+    }
+  }
+
+  return [team0Tricks, team1Tricks];
+}
+
+/**
+ * Updates the crown holder based on round results
+ * - If declaring team won >= 5 tricks: crown holder stays the same
+ * - If declaring team won < 5 tricks: crown rotates clockwise
+ */
+export function updateCrown(state: GameState): void {
+  const [team0Tricks, team1Tricks] = countTricksByTeam(state);
+  const declaringTeam = state.players[state.crownHolder].team;
+  const declaringTeamTricks = declaringTeam === 0 ? team0Tricks : team1Tricks;
+
+  // If declaring team won fewer than 5 tricks, rotate crown clockwise
+  if (declaringTeamTricks < 5) {
+    state.crownHolder = (state.crownHolder + 1) % 4;
+  }
+  // Otherwise, crown holder stays the same (no change needed)
+}
+
+/**
+ * Rotates the dealer clockwise for the next round
+ */
+export function rotateDeal(state: GameState): void {
+  state.dealer = (state.dealer + 1) % 4;
+}
+
+/**
+ * Calculates scores for the round using winner-takes-all system
+ * - If declaring team won T tricks where T >= 5: declaring team gets T points
+ * - If declaring team won < 5 tricks: challenging team gets their trick count
+ */
+export function calculateScore(state: GameState): void {
+  const [team0Tricks, team1Tricks] = countTricksByTeam(state);
+  const declaringTeam = state.players[state.crownHolder].team;
+  const declaringTeamTricks = declaringTeam === 0 ? team0Tricks : team1Tricks;
+  const challengingTeamTricks = declaringTeam === 0 ? team1Tricks : team0Tricks;
+
+  if (declaringTeamTricks >= 5) {
+    // Declaring team succeeded: they get T points
+    state.scores[declaringTeam] += declaringTeamTricks;
+  } else {
+    // Declaring team failed: challenging team gets their trick count
+    const challengingTeam = declaringTeam === 0 ? 1 : 0;
+    state.scores[challengingTeam] += challengingTeamTricks;
+  }
+}
+
+/**
+ * Checks if the game is complete (either team has >= 52 points)
+ * Returns true if game is complete, false otherwise
+ */
+export function isGameComplete(state: GameState): boolean {
+  return state.scores[0] >= 52 || state.scores[1] >= 52;
+}
+
+/**
+ * Starts a new round
+ * - Rotates dealer
+ * - Updates crown
+ * - Calculates scores from previous round
+ * - Resets for new round
+ */
+export function startNewRound(state: GameState): void {
+  // Calculate scores from previous round
+  calculateScore(state);
+
+  // Check if game is complete
+  if (isGameComplete(state)) {
+    state.phase = 'GAME_END';
+    return;
+  }
+
+  // Rotate dealer and crown
+  rotateDeal(state);
+  updateCrown(state);
+
+  // Reset for new round
+  state.completedTricks = [];
+  state.currentTrick = { leadPlayer: 0, cards: [], winner: null };
+  state.trumpSuit = null;
+  state.phase = 'DEALING_INITIAL';
+}

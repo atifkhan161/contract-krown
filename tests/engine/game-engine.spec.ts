@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 
-import { createDeck, shuffle, createInitialState, createPlayers, dealInitial, dealFinal, validateDeal, checkForExtremeHand, validateAndDeal, declareTrump, setFirstTrickLeader, advanceTurn, canPlayCard, playCard, resolveTrick } from '@src/engine/index.js';
+import { createDeck, shuffle, createInitialState, createPlayers, dealInitial, dealFinal, validateDeal, checkForExtremeHand, validateAndDeal, declareTrump, setFirstTrickLeader, advanceTurn, canPlayCard, playCard, resolveTrick, countTricksByTeam, updateCrown, rotateDeal, calculateScore, isGameComplete, startNewRound } from '@src/engine/index.js';
 import type { Card, Suit, GameState } from '@src/engine/index.js';
 
 // Feature: contract-crown-game, Property 1: Deck Composition
@@ -515,6 +515,313 @@ describe('Property 13: Trick Winner Leads Next', () => {
           const completedTrick = state.completedTricks[state.completedTricks.length - 1];
           expect(completedTrick.winner).toBe(state.currentTrick.leadPlayer);
           expect(completedTrick.winner).toBe(state.currentPlayer);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 14: Crown Retention on Success
+describe('Property 14: Crown Retention on Success', () => {
+  it('crown holder stays the same when declaring team wins 5+ tricks', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 3 }), // crown holder
+        fc.integer({ min: 5, max: 8 }), // declaring team tricks (5-8)
+        (crownHolder: number, declaringTricks: number) => {
+          const state = createInitialState();
+          state.crownHolder = crownHolder;
+          state.players = createPlayers();
+          
+          // Create completed tricks where declaring team wins the specified number
+          const declaringTeam = state.players[crownHolder].team;
+          const challengingTeam = declaringTeam === 0 ? 1 : 0;
+          
+          // Add tricks for declaring team
+          for (let i = 0; i < declaringTricks; i++) {
+            const winner = declaringTeam === 0 ? (i % 2 === 0 ? 0 : 2) : (i % 2 === 0 ? 1 : 3);
+            state.completedTricks.push({
+              leadPlayer: 0,
+              cards: [],
+              winner
+            });
+          }
+          
+          // Add remaining tricks for challenging team
+          const remainingTricks = 8 - declaringTricks;
+          for (let i = 0; i < remainingTricks; i++) {
+            const winner = challengingTeam === 0 ? (i % 2 === 0 ? 0 : 2) : (i % 2 === 0 ? 1 : 3);
+            state.completedTricks.push({
+              leadPlayer: 0,
+              cards: [],
+              winner
+            });
+          }
+          
+          const originalCrownHolder = state.crownHolder;
+          updateCrown(state);
+          
+          // Crown holder should stay the same when declaring team wins 5+ tricks
+          expect(state.crownHolder).toBe(originalCrownHolder);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 15: Crown Rotation on Failure
+describe('Property 15: Crown Rotation on Failure', () => {
+  it('crown rotates clockwise when declaring team wins fewer than 5 tricks', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 3 }), // crown holder
+        fc.integer({ min: 0, max: 4 }), // declaring team tricks (0-4)
+        (crownHolder: number, declaringTricks: number) => {
+          const state = createInitialState();
+          state.crownHolder = crownHolder;
+          state.players = createPlayers();
+          
+          // Create completed tricks where declaring team wins the specified number
+          const declaringTeam = state.players[crownHolder].team;
+          const challengingTeam = declaringTeam === 0 ? 1 : 0;
+          
+          // Add tricks for declaring team
+          for (let i = 0; i < declaringTricks; i++) {
+            const winner = declaringTeam === 0 ? (i % 2 === 0 ? 0 : 2) : (i % 2 === 0 ? 1 : 3);
+            state.completedTricks.push({
+              leadPlayer: 0,
+              cards: [],
+              winner
+            });
+          }
+          
+          // Add remaining tricks for challenging team
+          const remainingTricks = 8 - declaringTricks;
+          for (let i = 0; i < remainingTricks; i++) {
+            const winner = challengingTeam === 0 ? (i % 2 === 0 ? 0 : 2) : (i % 2 === 0 ? 1 : 3);
+            state.completedTricks.push({
+              leadPlayer: 0,
+              cards: [],
+              winner
+            });
+          }
+          
+          const originalCrownHolder = state.crownHolder;
+          updateCrown(state);
+          
+          // Crown should rotate clockwise when declaring team wins fewer than 5 tricks
+          expect(state.crownHolder).toBe((originalCrownHolder + 1) % 4);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 16: Dealer Rotation
+describe('Property 16: Dealer Rotation', () => {
+  it('dealer rotates clockwise after each round', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 3 }), // current dealer
+        (dealer: number) => {
+          const state = createInitialState();
+          state.dealer = dealer;
+          
+          const originalDealer = state.dealer;
+          rotateDeal(state);
+          
+          // Dealer should rotate clockwise
+          expect(state.dealer).toBe((originalDealer + 1) % 4);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 17: Declaring Team Success Scoring
+describe('Property 17: Declaring Team Success Scoring', () => {
+  it('declaring team gets T points when winning T tricks (T >= 5)', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 3 }), // crown holder
+        fc.integer({ min: 5, max: 8 }), // declaring team tricks (5-8)
+        (crownHolder: number, declaringTricks: number) => {
+          const state = createInitialState();
+          state.crownHolder = crownHolder;
+          state.players = createPlayers();
+          state.scores = [0, 0];
+          
+          // Create completed tricks where declaring team wins the specified number
+          const declaringTeam = state.players[crownHolder].team;
+          const challengingTeam = declaringTeam === 0 ? 1 : 0;
+          
+          // Add tricks for declaring team
+          for (let i = 0; i < declaringTricks; i++) {
+            const winner = declaringTeam === 0 ? (i % 2 === 0 ? 0 : 2) : (i % 2 === 0 ? 1 : 3);
+            state.completedTricks.push({
+              leadPlayer: 0,
+              cards: [],
+              winner
+            });
+          }
+          
+          // Add remaining tricks for challenging team
+          const remainingTricks = 8 - declaringTricks;
+          for (let i = 0; i < remainingTricks; i++) {
+            const winner = challengingTeam === 0 ? (i % 2 === 0 ? 0 : 2) : (i % 2 === 0 ? 1 : 3);
+            state.completedTricks.push({
+              leadPlayer: 0,
+              cards: [],
+              winner
+            });
+          }
+          
+          calculateScore(state);
+          
+          // Declaring team should get exactly T points
+          expect(state.scores[declaringTeam]).toBe(declaringTricks);
+          expect(state.scores[challengingTeam]).toBe(0);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 18: Challenging Team Success Scoring
+describe('Property 18: Challenging Team Success Scoring', () => {
+  it('challenging team gets their trick count when declaring team wins fewer than 5', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 3 }), // crown holder
+        fc.integer({ min: 0, max: 4 }), // declaring team tricks (0-4)
+        (crownHolder: number, declaringTricks: number) => {
+          const state = createInitialState();
+          state.crownHolder = crownHolder;
+          state.players = createPlayers();
+          state.scores = [0, 0];
+          
+          // Create completed tricks where declaring team wins the specified number
+          const declaringTeam = state.players[crownHolder].team;
+          const challengingTeam = declaringTeam === 0 ? 1 : 0;
+          
+          // Add tricks for declaring team
+          for (let i = 0; i < declaringTricks; i++) {
+            const winner = declaringTeam === 0 ? (i % 2 === 0 ? 0 : 2) : (i % 2 === 0 ? 1 : 3);
+            state.completedTricks.push({
+              leadPlayer: 0,
+              cards: [],
+              winner
+            });
+          }
+          
+          // Add remaining tricks for challenging team
+          const challengingTricks = 8 - declaringTricks;
+          for (let i = 0; i < challengingTricks; i++) {
+            const winner = challengingTeam === 0 ? (i % 2 === 0 ? 0 : 2) : (i % 2 === 0 ? 1 : 3);
+            state.completedTricks.push({
+              leadPlayer: 0,
+              cards: [],
+              winner
+            });
+          }
+          
+          calculateScore(state);
+          
+          // Challenging team should get their trick count
+          expect(state.scores[challengingTeam]).toBe(challengingTricks);
+          expect(state.scores[declaringTeam]).toBe(0);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 19: Score Accumulation
+describe('Property 19: Score Accumulation', () => {
+  it('scores accumulate across multiple rounds', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.integer({ min: 5, max: 8 }), { minLength: 1, maxLength: 3 }), // declaring team tricks per round
+        (roundsTricks: number[]) => {
+          const state = createInitialState();
+          state.players = createPlayers();
+          state.scores = [0, 0];
+          
+          let expectedTeam0Score = 0;
+          let expectedTeam1Score = 0;
+          
+          for (const declaringTricks of roundsTricks) {
+            state.crownHolder = 0; // Team 0 always declares for simplicity
+            state.completedTricks = [];
+            
+            // Add tricks for declaring team (team 0)
+            for (let i = 0; i < declaringTricks; i++) {
+              state.completedTricks.push({
+                leadPlayer: 0,
+                cards: [],
+                winner: i % 2 === 0 ? 0 : 2
+              });
+            }
+            
+            // Add remaining tricks for challenging team (team 1)
+            const remainingTricks = 8 - declaringTricks;
+            for (let i = 0; i < remainingTricks; i++) {
+              state.completedTricks.push({
+                leadPlayer: 0,
+                cards: [],
+                winner: i % 2 === 0 ? 1 : 3
+              });
+            }
+            
+            calculateScore(state);
+            expectedTeam0Score += declaringTricks;
+          }
+          
+          // Scores should accumulate correctly
+          expect(state.scores[0]).toBe(expectedTeam0Score);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: contract-crown-game, Property 20: Game Completion
+describe('Property 20: Game Completion', () => {
+  it('game ends when either team reaches 52 points', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 52, max: 100 }), // team 0 score
+        fc.integer({ min: 0, max: 51 }), // team 1 score
+        (team0Score: number, team1Score: number) => {
+          const state = createInitialState();
+          state.scores = [team0Score, team1Score];
+          
+          // Game should be complete when either team reaches 52 points
+          expect(isGameComplete(state)).toBe(true);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('game continues when both teams have fewer than 52 points', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 51 }), // team 0 score
+        fc.integer({ min: 0, max: 51 }), // team 1 score
+        (team0Score: number, team1Score: number) => {
+          const state = createInitialState();
+          state.scores = [team0Score, team1Score];
+          
+          // Game should continue when both teams have fewer than 52 points
+          expect(isGameComplete(state)).toBe(false);
         }
       ),
       { numRuns: 100 }
