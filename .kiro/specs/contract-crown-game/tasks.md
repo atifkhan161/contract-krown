@@ -284,36 +284,36 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - **Property 24: Active Player Indication**
     - **Validates: Requirements 9.1**
 
-- [ ] 11. Implement card animation system
-  - [ ] 11.1 Create card animation utilities
+- [x] 11. Implement card animation system
+  - [x] 11.1 Create card animation utilities
     - Implement CSS transform-based animations
     - Create animateCardPlay() function
     - Ensure 60 FPS performance with GPU acceleration
     - _Requirements: 15.1, 15.2, 15.4_
   
-  - [ ] 11.2 Implement card play animation
+  - [x] 11.2 Implement card play animation
     - Animate card from player hand to trick area
     - Duration: 500ms
     - _Requirements: 15.1, 15.4_
   
-  - [ ] 11.3 Implement trick collection animation
+  - [x] 11.3 Implement trick collection animation
     - Animate all trick cards to winner's position
     - Duration: 500ms
     - _Requirements: 15.3, 15.4_
   
-  - [ ] 11.4 Implement touch gesture handling
+  - [x] 11.4 Implement touch gesture handling
     - Handle tap events on cards
     - Handle swipe gestures for card selection
     - _Requirements: 15.5_
   
-  - [ ]* 11.5 Write unit tests for animations
+  - [x] 11.5 Write unit tests for animations
     - Test animation timing
     - Test animation completion callbacks
     - Test touch event handling
     - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5_
 
-- [ ] 12. Implement Haptic Controller
-  - [ ] 12.1 Create HapticController class
+- [x] 12. Implement Haptic Controller
+  - [x] 12.1 Create HapticController class
     - Check for Vibration API support
     - Implement triggerYourTurn() - single 50ms pulse
     - Implement triggerTrickWon() - double pulse pattern
@@ -321,31 +321,31 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Implement triggerVictory() - celebration pattern
     - _Requirements: 2.5, 9.2, 9.3, 9.4, 16.3_
   
-  - [ ]* 12.2 Write unit tests for haptic patterns
+  - [x] 12.2 Write unit tests for haptic patterns
     - Test each vibration pattern
     - Test graceful degradation when API unavailable
     - _Requirements: 2.5, 9.2, 9.3, 9.4_
 
-- [ ] 13. Implement TrumpSelector and modal components
-  - [ ] 13.1 Create TrumpSelector modal component
+- [x] 13. Implement TrumpSelector and modal components
+  - [x] 13.1 Create TrumpSelector modal component
     - Display 4 suit options to crown holder
     - Handle suit selection
     - Trigger trump declaration animation
     - _Requirements: 2.2, 2.4_
   
-  - [ ] 13.2 Create RoundEndModal component
+  - [x] 13.2 Create RoundEndModal component
     - Display round winner and points awarded
     - Show updated scores
     - Provide "Continue" button
     - _Requirements: 16.1_
   
-  - [ ] 13.3 Create VictoryModal component
+  - [x] 13.3 Create VictoryModal component
     - Display winning team and final scores
     - Trigger victory haptic pattern
     - Provide "New Game" and "Return to Lobby" buttons
     - _Requirements: 16.2, 16.3, 16.4, 16.5_
   
-  - [ ]* 13.4 Write unit tests for modal components
+  - [x] 13.4 Write unit tests for modal components
     - Test modal display logic
     - Test button interactions
     - Test data display

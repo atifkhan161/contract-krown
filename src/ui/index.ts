@@ -9,3 +9,7 @@ export * from './felt-grid.js';
 export * from './card-display.js';
 export * from './modals.js';
 export * from './haptic-controller.js';
+export * from './card-animation.js';
+export * from './trump-selector.js';
+export * from './round-end-modal.js';
+export * from './victory-modal.js';

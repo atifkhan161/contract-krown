@@ -6,6 +6,17 @@ import type { UIState, CardTapHandler, TrumpSelectionHandler } from './types.js'
 import { FeltGrid } from './felt-grid.js';
 import { GameHeader } from './game-header.js';
 import { HapticController } from './haptic-controller.js';
+import { TrumpSelector } from './trump-selector.js';
+import { RoundEndModal } from './round-end-modal.js';
+import { VictoryModal } from './victory-modal.js';
+import { 
+  animateCardPlay, 
+  animateTrickCollection, 
+  TouchGestureHandler,
+  getElementPosition,
+  getTrickAreaPosition,
+  getPlayerPosition
+} from './card-animation.js';
 import { canPlayCard, declareTrump } from '../engine/index.js';
 
 export class GameView {
@@ -13,6 +24,10 @@ export class GameView {
   private header: GameHeader;
   private feltGrid: FeltGrid;
   private hapticController: HapticController;
+  private trumpSelector: TrumpSelector;
+  private roundEndModal: RoundEndModal;
+  private victoryModal: VictoryModal;
+  private touchGestureHandler: TouchGestureHandler | null = null;
   private userPlayerIndex: number = 0;
   private onCardTap: CardTapHandler | null = null;
   private onTrumpSelect: TrumpSelectionHandler | null = null;
@@ -22,6 +37,9 @@ export class GameView {
     this.header = new GameHeader();
     this.feltGrid = new FeltGrid();
     this.hapticController = new HapticController();
+    this.trumpSelector = new TrumpSelector();
+    this.roundEndModal = new RoundEndModal();
+    this.victoryModal = new VictoryModal();
     this.uiState = {
       gameState: this.createEmptyGameState(),
       selectedCard: null,
@@ -34,6 +52,7 @@ export class GameView {
     };
     this.createElements();
     this.setupEventListeners();
+    this.setupModalHandlers();
   }
 
   /**
@@ -77,6 +96,11 @@ export class GameView {
     if (feltGridContainer) {
       this.container.appendChild(feltGridContainer);
     }
+
+    // Set container for modals
+    this.trumpSelector.setContainer(this.container);
+    this.roundEndModal.setContainer(this.container);
+    this.victoryModal.setContainer(this.container);
   }
 
   /**
@@ -104,6 +128,41 @@ export class GameView {
         }
       }
     });
+
+    // Set up touch gesture handler
+    const feltGridContainer = this.feltGrid.getContainer();
+    if (feltGridContainer) {
+      this.touchGestureHandler = new TouchGestureHandler(feltGridContainer);
+      this.touchGestureHandler.setCardTapHandler((card) => {
+        this.handleCardClick(card);
+      });
+    }
+  }
+
+  /**
+   * Sets up modal handlers
+   */
+  private setupModalHandlers(): void {
+    // Set up trump selection handler
+    this.trumpSelector.setTrumpSelectionHandler((suit) => {
+      if (this.onTrumpSelect) {
+        this.onTrumpSelect(suit);
+      }
+    });
+
+    // Set up round end handler
+    this.roundEndModal.setContinueHandler(() => {
+      this.hideRoundEndModal();
+    });
+
+    // Set up victory handlers
+    this.victoryModal.setNewGameHandler(() => {
+      this.hideVictoryModal();
+    });
+
+    this.victoryModal.setReturnToLobbyHandler(() => {
+      this.hideVictoryModal();
+    });
   }
 
   /**
@@ -127,10 +186,81 @@ export class GameView {
     // Trigger haptic feedback
     this.hapticController.triggerYourTurn();
 
+    // Animate card play
+    this.animateCardPlay(card);
+
     // Call the card tap handler
     if (this.onCardTap) {
       this.onCardTap(card);
     }
+  }
+
+  /**
+   * Animates a card being played to the trick area
+   * Requirement 15.1: Animate card from player hand to trick area
+   */
+  private async animateCardPlay(card: Card): Promise<void> {
+    if (!this.container) return;
+
+    // Find the card element in the user's hand
+    const cardElement = this.container.querySelector(
+      `.user-hand .card[data-suit="${card.suit}"][data-rank="${card.rank}"]`
+    ) as HTMLElement;
+
+    if (!cardElement) return;
+
+    // Get positions
+    const trickArea = this.container.querySelector('.trick-area') as HTMLElement;
+    if (!trickArea) return;
+
+    const fromPosition = getElementPosition(cardElement, this.container);
+    const toPosition = getTrickAreaPosition(trickArea);
+
+    // Create a copy for animation
+    const animatingCard = cardElement.cloneNode(true) as HTMLElement;
+    animatingCard.classList.add('animating');
+    this.container.appendChild(animatingCard);
+
+    // Hide original card
+    cardElement.style.opacity = '0.3';
+
+    // Animate the card
+    await animateCardPlay(animatingCard, fromPosition, toPosition, 500);
+
+    // Remove animated card
+    if (animatingCard.parentNode) {
+      animatingCard.parentNode.removeChild(animatingCard);
+    }
+  }
+
+  /**
+   * Animates trick collection to the winner
+   * Requirement 15.3: Animate all trick cards to winner's position
+   */
+  public async animateTrickCollection(winnerIndex: number): Promise<void> {
+    if (!this.container) return;
+
+    const trickCards = this.container.querySelectorAll('.trick-area .card') as NodeListOf<HTMLElement>;
+    if (trickCards.length === 0) return;
+
+    // Get winner's display element
+    let winnerDisplay: HTMLElement | null = null;
+    if (winnerIndex === this.userPlayerIndex) {
+      winnerDisplay = this.container.querySelector('.user-hand') as HTMLElement;
+    } else if (winnerIndex === (this.userPlayerIndex + 2) % 4) {
+      winnerDisplay = this.container.querySelector('.partner-display') as HTMLElement;
+    } else if (winnerIndex === (this.userPlayerIndex + 1) % 4) {
+      winnerDisplay = this.container.querySelector('.left-opponent') as HTMLElement;
+    } else if (winnerIndex === (this.userPlayerIndex + 3) % 4) {
+      winnerDisplay = this.container.querySelector('.right-opponent') as HTMLElement;
+    }
+
+    if (!winnerDisplay) return;
+
+    const winnerPosition = getPlayerPosition(winnerDisplay, this.container);
+    const cardsArray = Array.from(trickCards);
+
+    await animateTrickCollection(cardsArray, winnerPosition, 500);
   }
 
   /**
@@ -204,57 +334,15 @@ export class GameView {
    * Shows the trump selector modal
    * Requirement 2.2: Display 4 trump suit options to Crown Holder
    */
-  private showTrumpSelector(): void {
-    if (!this.container) return;
-
-    // Check if document is available (browser environment)
-    if (typeof document === 'undefined') {
-      return;
-    }
-
-    // Create modal overlay
-    const modal = document.createElement('div');
-    modal.className = 'modal trump-selector-modal';
-    modal.innerHTML = `
-      <div class="modal-content">
-        <h2>Select Trump Suit</h2>
-        <div class="suit-options">
-          <button class="suit-button hearts" data-suit="HEARTS">♥ Hearts</button>
-          <button class="suit-button diamonds" data-suit="DIAMONDS">♦ Diamonds</button>
-          <button class="suit-button clubs" data-suit="CLUBS">♣ Clubs</button>
-          <button class="suit-button spades" data-suit="SPADES">♠ Spades</button>
-        </div>
-      </div>
-    `;
-
-    // Add event listeners for suit selection
-    const suitButtons = modal.querySelectorAll('.suit-button');
-    suitButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const suit = (button as HTMLElement).dataset.suit as Suit;
-        if (suit && this.onTrumpSelect) {
-          this.onTrumpSelect(suit);
-          this.hideTrumpSelector();
-          
-          // Trigger haptic feedback for trump declaration
-          this.hapticController.triggerTrumpDeclared();
-        }
-      });
-    });
-
-    this.container.appendChild(modal);
+  public showTrumpSelector(): void {
+    this.trumpSelector.show();
   }
 
   /**
    * Hides the trump selector modal
    */
   public hideTrumpSelector(): void {
-    if (!this.container) return;
-
-    const modal = this.container.querySelector('.trump-selector-modal');
-    if (modal) {
-      modal.remove();
-    }
+    this.trumpSelector.hide();
     this.uiState.showTrumpSelector = false;
   }
 
@@ -262,73 +350,15 @@ export class GameView {
    * Shows the round end modal
    * Requirement 16.1: Display round winner and points awarded
    */
-  private showRoundEndModal(): void {
-    if (!this.container) return;
-
-    // Check if document is available (browser environment)
-    if (typeof document === 'undefined') {
-      return;
-    }
-
-    const state = this.uiState.gameState;
-    const [team0Tricks, team1Tricks] = this.countTricksByTeam(state);
-    const declaringTeam = state.players[state.crownHolder].team;
-    const declaringTeamTricks = declaringTeam === 0 ? team0Tricks : team1Tricks;
-    const challengingTeamTricks = declaringTeam === 0 ? team1Tricks : team0Tricks;
-
-    let resultText = '';
-    let pointsAwarded = 0;
-
-    if (declaringTeamTricks >= 5) {
-      resultText = `Team ${declaringTeam + 1} wins!`;
-      pointsAwarded = declaringTeamTricks;
-    } else {
-      const challengingTeam = declaringTeam === 0 ? 1 : 0;
-      resultText = `Team ${challengingTeam + 1} wins!`;
-      pointsAwarded = challengingTeamTricks;
-    }
-
-    const modal = document.createElement('div');
-    modal.className = 'modal round-end-modal';
-    modal.innerHTML = `
-      <div class="modal-content">
-        <h2>Round Complete</h2>
-        <div class="round-result">
-          <p class="result-text">${resultText}</p>
-          <p class="points-text">Points awarded: ${pointsAwarded}</p>
-          <div class="scores">
-            <p>Team 1: ${state.scores[0]} points</p>
-            <p>Team 2: ${state.scores[1]} points</p>
-          </div>
-        </div>
-        <button class="continue-button">Continue</button>
-      </div>
-    `;
-
-    // Add event listener for continue button
-    const continueButton = modal.querySelector('.continue-button');
-    if (continueButton) {
-      continueButton.addEventListener('click', () => {
-        this.hideRoundEndModal();
-      });
-    }
-
-    this.container.appendChild(modal);
-
-    // Trigger haptic feedback for trick win
-    this.hapticController.triggerTrickWon();
+  public showRoundEndModal(): void {
+    this.roundEndModal.show(this.uiState.gameState);
   }
 
   /**
    * Hides the round end modal
    */
   public hideRoundEndModal(): void {
-    if (!this.container) return;
-
-    const modal = this.container.querySelector('.round-end-modal');
-    if (modal) {
-      modal.remove();
-    }
+    this.roundEndModal.hide();
     this.uiState.showRoundEnd = false;
   }
 
@@ -336,99 +366,16 @@ export class GameView {
    * Shows the victory modal
    * Requirement 16.2: Display winning team and final scores
    */
-  private showVictoryModal(): void {
-    if (!this.container) return;
-
-    // Check if document is available (browser environment)
-    if (typeof document === 'undefined') {
-      return;
-    }
-
-    const state = this.uiState.gameState;
-    const winningTeam = state.scores[0] >= 52 ? 1 : 2;
-
-    const modal = document.createElement('div');
-    modal.className = 'modal victory-modal';
-    modal.innerHTML = `
-      <div class="modal-content">
-        <h2>Game Over!</h2>
-        <div class="victory-result">
-          <p class="winner-text">Team ${winningTeam} wins!</p>
-          <div class="final-scores">
-            <p>Final Score:</p>
-            <p>Team 1: ${state.scores[0]} points</p>
-            <p>Team 2: ${state.scores[1]} points</p>
-          </div>
-        </div>
-        <div class="victory-actions">
-          <button class="new-game-button">New Game</button>
-          <button class="lobby-button">Return to Lobby</button>
-        </div>
-      </div>
-    `;
-
-    // Add event listeners for buttons
-    const newGameButton = modal.querySelector('.new-game-button');
-    const lobbyButton = modal.querySelector('.lobby-button');
-
-    if (newGameButton) {
-      newGameButton.addEventListener('click', () => {
-        this.hideVictoryModal();
-        // Dispatch new game event
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('newgame'));
-        }
-      });
-    }
-
-    if (lobbyButton) {
-      lobbyButton.addEventListener('click', () => {
-        this.hideVictoryModal();
-        // Navigate to lobby
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('routechange', { detail: { route: '/lobby' } }));
-        }
-      });
-    }
-
-    this.container.appendChild(modal);
-
-    // Trigger victory haptic pattern
-    this.hapticController.triggerVictory();
+  public showVictoryModal(): void {
+    this.victoryModal.show(this.uiState.gameState);
   }
 
   /**
    * Hides the victory modal
    */
   public hideVictoryModal(): void {
-    if (!this.container) return;
-
-    const modal = this.container.querySelector('.victory-modal');
-    if (modal) {
-      modal.remove();
-    }
+    this.victoryModal.hide();
     this.uiState.showVictory = false;
-  }
-
-  /**
-   * Counts tricks won by each team
-   */
-  private countTricksByTeam(state: GameState): [number, number] {
-    let team0Tricks = 0;
-    let team1Tricks = 0;
-
-    for (const trick of state.completedTricks) {
-      if (trick.winner !== null) {
-        const winnerTeam = state.players[trick.winner].team;
-        if (winnerTeam === 0) {
-          team0Tricks++;
-        } else {
-          team1Tricks++;
-        }
-      }
-    }
-
-    return [team0Tricks, team1Tricks];
   }
 
   /**
@@ -459,5 +406,26 @@ export class GameView {
    */
   public getUIState(): UIState {
     return this.uiState;
+  }
+
+  /**
+   * Gets the touch gesture handler
+   */
+  public getTouchGestureHandler(): TouchGestureHandler | null {
+    return this.touchGestureHandler;
+  }
+
+  /**
+   * Cleans up the game view
+   */
+  public destroy(): void {
+    this.trumpSelector.destroy();
+    this.roundEndModal.destroy();
+    this.victoryModal.destroy();
+    if (this.touchGestureHandler) {
+      this.touchGestureHandler.destroy();
+    }
+    this.onCardTap = null;
+    this.onTrumpSelect = null;
   }
 }
