@@ -205,7 +205,7 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Test timing delays are within range
     - _Requirements: 10.2, 10.5_
 
-- [ ] 8. Checkpoint - Ensure all tests pass
+- [x] 8. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Implement PWA Shell and routing
