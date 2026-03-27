@@ -273,7 +273,7 @@ export class FeltGrid {
 
   /**
    * Renders the trick area in the center
-   * Now supports a display buffer for played cards
+   * Now supports circular card arrangement with player labels
    */
   private renderTrickArea(state: GameState): void {
     if (!this.trickArea) return;
@@ -285,10 +285,19 @@ export class FeltGrid {
       return;
     }
 
-    // Render cards in the trick
+    // Render cards in circular arrangement with player labels
     let cardsHtml = '<div class="trick-cards">';
     for (const playedCard of trickCards) {
-      cardsHtml += this.renderCard(playedCard.card, false, false);
+      const position = this.getCardPosition(playedCard.player);
+      const playerLabel = this.getPlayerLabel(playedCard.player);
+      const isWinner = state.currentTrick.winner === playedCard.player;
+      
+      cardsHtml += `
+        <div class="trick-card-slot ${position}">
+          ${this.renderCard(playedCard.card, false, false)}
+          <span class="card-player-label ${isWinner ? 'winner' : ''}">${playerLabel}</span>
+        </div>
+      `;
     }
     cardsHtml += '</div>';
 
@@ -299,7 +308,7 @@ export class FeltGrid {
    * Renders trick cards from a display buffer (used during animations)
    * Requirement 15.1, 15.3: Keep cards visible until collection animation completes
    */
-  public renderTrickDisplayBuffer(displayCards: Card[]): void {
+  public renderTrickDisplayBuffer(displayCards: { card: Card; player: number }[], winner: number | null = null): void {
     if (!this.trickArea) return;
 
     if (displayCards.length === 0) {
@@ -308,12 +317,51 @@ export class FeltGrid {
     }
 
     let cardsHtml = '<div class="trick-cards">';
-    for (const card of displayCards) {
-      cardsHtml += this.renderCard(card, false, false);
+    for (const playedCard of displayCards) {
+      const position = this.getCardPosition(playedCard.player);
+      const playerLabel = this.getPlayerLabel(playedCard.player);
+      const isWinner = winner === playedCard.player;
+      
+      cardsHtml += `
+        <div class="trick-card-slot ${position}">
+          ${this.renderCard(playedCard.card, false, false)}
+          <span class="card-player-label ${isWinner ? 'winner' : ''}">${playerLabel}</span>
+        </div>
+      `;
     }
     cardsHtml += '</div>';
 
     this.trickArea.innerHTML = cardsHtml;
+  }
+
+  /**
+   * Gets the CSS position class for a card based on player index
+   * Positions are relative to the user (player 0 = bottom)
+   */
+  private getCardPosition(playerIndex: number): string {
+    // Map player index to position relative to user
+    // Player 0 (user) = bottom, Player 2 (partner) = top
+    // Player 1 (left opponent) = left, Player 3 (right opponent) = right
+    const positions: Record<number, string> = {
+      0: 'position-bottom',   // User
+      1: 'position-left',     // Left opponent
+      2: 'position-top',      // Partner
+      3: 'position-right'     // Right opponent
+    };
+    return positions[playerIndex] || 'position-bottom';
+  }
+
+  /**
+   * Gets the display label for a player
+   */
+  private getPlayerLabel(playerIndex: number): string {
+    const labels: Record<number, string> = {
+      0: 'You',
+      1: 'Left',
+      2: 'Partner',
+      3: 'Right'
+    };
+    return labels[playerIndex] || `P${playerIndex}`;
   }
 
   /**

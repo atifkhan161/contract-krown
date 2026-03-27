@@ -30,7 +30,7 @@ export class GameView {
   private onTrumpSelect: TrumpSelectionHandler | null = null;
   private uiState: UIState;
   // Trick display buffer: holds played cards visually until collection animation completes
-  private trickDisplayCards: Card[] = [];
+  private trickDisplayCards: { card: Card; player: number }[] = [];
 
   constructor() {
     this.feltGrid = new FeltGrid();
@@ -310,7 +310,7 @@ export class GameView {
    * Requirement 15.1, 15.3: Keep played cards visible until collection animation completes
    */
   private updateTrickDisplayBuffer(state: GameState): void {
-    const currentTrickCards = state.currentTrick.cards.map(pc => pc.card);
+    const currentTrickCards = state.currentTrick.cards.map(pc => ({ card: pc.card, player: pc.player }));
     
     // If current trick has cards, update buffer to match
     if (currentTrickCards.length > 0) {
@@ -323,13 +323,13 @@ export class GameView {
   /**
    * Adds a card to the trick display buffer
    */
-  public addCardToTrickDisplay(card: Card): void {
+  public addCardToTrickDisplay(card: Card, player: number): void {
     // Avoid duplicates
     const exists = this.trickDisplayCards.some(
-      c => c.suit === card.suit && c.rank === card.rank
+      c => c.card.suit === card.suit && c.card.rank === card.rank
     );
     if (!exists) {
-      this.trickDisplayCards.push(card);
+      this.trickDisplayCards.push({ card, player });
       this.feltGrid.renderTrickDisplayBuffer(this.trickDisplayCards);
     }
   }

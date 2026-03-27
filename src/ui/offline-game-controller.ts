@@ -9,7 +9,10 @@ import {
   createPlayers,
   declareTrump, 
   playCard, 
-  canPlayCard
+  canPlayCard,
+  calculateScore,
+  isGameComplete,
+  startNewRound as engineStartNewRound
 } from '../engine/index.js';
 import { BotManager } from '../bot/index.js';
 import { GameView } from './game-view.js';
@@ -87,8 +90,10 @@ export class OfflineGameController {
 
     // Deal cards with validation (handles re-deal if needed)
     setTimeout(() => {
-      // Deal initial 4 cards
+      // Create new deck and shuffle
       this.gameState.deck = shuffle(createDeck());
+      
+      // Reset players with fresh hands (preserve team assignments)
       this.gameState.players = createPlayers();
       
       // Deal 4 cards to each player
@@ -234,16 +239,33 @@ export class OfflineGameController {
 
       // Check if trick is complete
       if (this.gameState.currentTrick.cards.length === 0 && this.gameState.completedTricks.length > 0) {
-        // Trick was just completed
+        // Trick was just completed - show cards briefly before collecting
         const lastTrick = this.gameState.completedTricks[this.gameState.completedTricks.length - 1];
         if (lastTrick.winner !== null) {
-          // Animate trick collection
-          this.gameView.animateTrickCollection(lastTrick.winner);
+          // Update UI first to show the complete trick
+          this.notifyStateChange();
           
-          // Trigger haptic if user won
-          if (lastTrick.winner === this.userPlayerIndex) {
-            this.hapticController.triggerTrickWon();
-          }
+          // Wait 2 seconds before animating trick collection so players can see the result
+          setTimeout(() => {
+            if (!this.isRunning) return;
+            
+            this.gameView.animateTrickCollection(lastTrick.winner!);
+            
+            // Trigger haptic if user won
+            if (lastTrick.winner === this.userPlayerIndex) {
+              this.hapticController.triggerTrickWon();
+            }
+            
+            // Check if round is complete after animation
+            if (this.gameState.completedTricks.length === 8) {
+              setTimeout(() => this.handleRoundEnd(), 600);
+              return;
+            }
+            
+            // Schedule next bot turn or wait for user
+            this.scheduleBotTurn();
+          }, 2000);
+          return;
         }
       }
 
@@ -287,16 +309,33 @@ export class OfflineGameController {
 
       // Check if trick is complete
       if (this.gameState.currentTrick.cards.length === 0 && this.gameState.completedTricks.length > 0) {
-        // Trick was just completed
+        // Trick was just completed - show cards briefly before collecting
         const lastTrick = this.gameState.completedTricks[this.gameState.completedTricks.length - 1];
         if (lastTrick.winner !== null) {
-          // Animate trick collection
-          this.gameView.animateTrickCollection(lastTrick.winner);
+          // Update UI first to show the complete trick
+          this.notifyStateChange();
           
-          // Trigger haptic if user won
-          if (lastTrick.winner === this.userPlayerIndex) {
-            this.hapticController.triggerTrickWon();
-          }
+          // Wait 2 seconds before animating trick collection so players can see the result
+          setTimeout(() => {
+            if (!this.isRunning) return;
+            
+            this.gameView.animateTrickCollection(lastTrick.winner!);
+            
+            // Trigger haptic if user won
+            if (lastTrick.winner === this.userPlayerIndex) {
+              this.hapticController.triggerTrickWon();
+            }
+            
+            // Check if round is complete after animation
+            if (this.gameState.completedTricks.length === 8) {
+              setTimeout(() => this.handleRoundEnd(), 600);
+              return;
+            }
+            
+            // Schedule next bot turn
+            this.scheduleBotTurn();
+          }, 2000);
+          return;
         }
       }
 
@@ -322,6 +361,12 @@ export class OfflineGameController {
   private handleRoundEnd(): void {
     if (!this.isRunning) return;
 
+    // Calculate scores for this round
+    calculateScore(this.gameState);
+
+    // Update UI to show final scores
+    this.notifyStateChange();
+
     // Show round end modal
     this.gameView.showRoundEndModal();
 
@@ -330,10 +375,20 @@ export class OfflineGameController {
       if (!this.isRunning) return;
 
       // Check if game is complete
-      if (this.gameState.phase === 'GAME_END') {
+      if (isGameComplete(this.gameState)) {
+        this.gameState.phase = 'GAME_END';
         this.handleGameEnd();
         return;
       }
+
+      // Rotate dealer and crown for next round
+      this.gameState.dealer = (this.gameState.dealer + 1) % 4;
+      
+      // Reset for new round (keep scores, reset tricks)
+      this.gameState.completedTricks = [];
+      this.gameState.currentTrick = { leadPlayer: 0, cards: [], winner: null };
+      this.gameState.trumpSuit = null;
+      this.gameState.phase = 'DEALING_INITIAL';
 
       // Start new round
       this.startNewRound();
