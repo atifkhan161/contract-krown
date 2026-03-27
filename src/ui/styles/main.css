@@ -302,6 +302,51 @@ html, body {
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* Team Labels */
+.team-label {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.team-label.team-0 {
+  background: rgba(212, 175, 55, 0.3);
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+}
+
+.team-label.team-1 {
+  background: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.5);
+}
+
+/* User Display (bottom right corner of user hand area) */
+.user-display {
+  margin-top: 5px;
+}
+
+.user-display .player-info {
+  min-width: 60px;
+  padding: 4px 6px;
+}
+
+.user-display .player-name {
+  font-size: 10px;
+}
+
+.user-display .team-label {
+  font-size: 8px;
+  padding: 1px 4px;
+}
+
+.user-display .card-count {
+  font-size: 9px;
+}
+
 /* ===== Trick Area (Center) ===== */
 .trick-area {
   grid-area: trick-area;

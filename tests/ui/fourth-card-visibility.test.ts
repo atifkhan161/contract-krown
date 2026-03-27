@@ -1,6 +1,6 @@
+// @vitest-environment jsdom
 // Fourth Card Visibility Test
 // Verifies that the 4th card in a trick is visible in the trick area
-// @vitest-environment jsdom
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { GameView } from '../../src/ui/game-view.js';

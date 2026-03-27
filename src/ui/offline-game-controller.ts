@@ -242,7 +242,7 @@ export class OfflineGameController {
         // Trick was just completed - show cards briefly before collecting
         const lastTrick = this.gameState.completedTricks[this.gameState.completedTricks.length - 1];
         if (lastTrick.winner !== null) {
-          // Update UI first to show the complete trick
+          // Update UI first to show the complete trick (including the 4th card)
           this.notifyStateChange();
           
           // Wait 2 seconds before animating trick collection so players can see the result
@@ -258,6 +258,7 @@ export class OfflineGameController {
             
             // Check if round is complete after animation
             if (this.gameState.completedTricks.length === 8) {
+              // Wait for trick collection animation to complete before showing round end modal
               setTimeout(() => this.handleRoundEnd(), 600);
               return;
             }
@@ -269,7 +270,8 @@ export class OfflineGameController {
         }
       }
 
-      // Update UI
+      // FIX: Update UI immediately for all bot card plays
+      // This ensures the card is displayed in the trick area before any delay
       this.notifyStateChange();
 
       // Check if round is complete (after trick resolution)
@@ -367,31 +369,35 @@ export class OfflineGameController {
     // Update UI to show final scores
     this.notifyStateChange();
 
-    // Show round end modal
-    this.gameView.showRoundEndModal();
-
-    // Wait for user to continue
+    // Show round end modal after a delay (2 seconds)
     setTimeout(() => {
       if (!this.isRunning) return;
 
-      // Check if game is complete
-      if (isGameComplete(this.gameState)) {
-        this.gameState.phase = 'GAME_END';
-        this.handleGameEnd();
-        return;
-      }
+      this.gameView.showRoundEndModal();
 
-      // Rotate dealer and crown for next round
-      this.gameState.dealer = (this.gameState.dealer + 1) % 4;
-      
-      // Reset for new round (keep scores, reset tricks)
-      this.gameState.completedTricks = [];
-      this.gameState.currentTrick = { leadPlayer: 0, cards: [], winner: null };
-      this.gameState.trumpSuit = null;
-      this.gameState.phase = 'DEALING_INITIAL';
+      // Wait for user to continue
+      setTimeout(() => {
+        if (!this.isRunning) return;
 
-      // Start new round
-      this.startNewRound();
+        // Check if game is complete
+        if (isGameComplete(this.gameState)) {
+          this.gameState.phase = 'GAME_END';
+          this.handleGameEnd();
+          return;
+        }
+
+        // Rotate dealer and crown for next round
+        this.gameState.dealer = (this.gameState.dealer + 1) % 4;
+        
+        // Reset for new round (keep scores, reset tricks)
+        this.gameState.completedTricks = [];
+        this.gameState.currentTrick = { leadPlayer: 0, cards: [], winner: null };
+        this.gameState.trumpSuit = null;
+        this.gameState.phase = 'DEALING_INITIAL';
+
+        // Start new round
+        this.startNewRound();
+      }, 2000);
     }, 2000);
   }
 

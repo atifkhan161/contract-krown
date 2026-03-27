@@ -31,6 +31,8 @@ export class GameView {
   private uiState: UIState;
   // Trick display buffer: holds played cards visually until collection animation completes
   private trickDisplayCards: { card: Card; player: number }[] = [];
+  // Flag to track if trick collection animation is in progress
+  private isAnimatingTrickCollection: boolean = false;
 
   constructor() {
     this.feltGrid = new FeltGrid();
@@ -161,6 +163,11 @@ export class GameView {
    * Handles card click events
    */
   private handleCardClick(card: Card): void {
+    // Check if trick collection animation is in progress
+    if (this.isAnimatingTrickCollection) {
+      return;
+    }
+
     // Check if it's the user's turn
     if (this.uiState.gameState.currentPlayer !== this.userPlayerIndex) {
       return;
@@ -235,10 +242,14 @@ export class GameView {
     const trickCards = this.container.querySelectorAll('.trick-area .card') as NodeListOf<HTMLElement>;
     if (trickCards.length === 0) return;
 
+    // Set animation flag to prevent card plays during animation
+    this.isAnimatingTrickCollection = true;
+
     // Get winner's display element
     let winnerDisplay: HTMLElement | null = null;
     if (winnerIndex === this.userPlayerIndex) {
-      winnerDisplay = this.container.querySelector('.user-hand') as HTMLElement;
+      // For human player, animate to user display element (not user hand)
+      winnerDisplay = this.container.querySelector('.user-display') as HTMLElement;
     } else if (winnerIndex === (this.userPlayerIndex + 2) % 4) {
       winnerDisplay = this.container.querySelector('.partner-display') as HTMLElement;
     } else if (winnerIndex === (this.userPlayerIndex + 1) % 4) {
@@ -247,7 +258,10 @@ export class GameView {
       winnerDisplay = this.container.querySelector('.right-opponent') as HTMLElement;
     }
 
-    if (!winnerDisplay) return;
+    if (!winnerDisplay) {
+      this.isAnimatingTrickCollection = false;
+      return;
+    }
 
     const winnerPosition = getPlayerPosition(winnerDisplay, this.container);
     const cardsArray = Array.from(trickCards);
@@ -256,6 +270,9 @@ export class GameView {
 
     // Clear trick display buffer after animation completes
     this.clearTrickDisplayBuffer();
+
+    // Reset animation flag
+    this.isAnimatingTrickCollection = false;
   }
 
   /**
@@ -315,7 +332,16 @@ export class GameView {
     
     // If current trick has cards, update buffer to match
     if (currentTrickCards.length > 0) {
-      this.trickDisplayCards = [...currentTrickCards];
+      // FIX: Add new cards to existing buffer instead of replacing it
+      // This ensures cards played earlier in the trick are not lost
+      for (const playedCard of currentTrickCards) {
+        const exists = this.trickDisplayCards.some(
+          c => c.card.suit === playedCard.card.suit && c.card.rank === playedCard.card.rank
+        );
+        if (!exists) {
+          this.trickDisplayCards.push(playedCard);
+        }
+      }
       return state.currentTrick.winner;
     } else if (state.completedTricks.length > 0) {
       // Current trick is empty but we have a completed trick - use its cards
@@ -353,6 +379,8 @@ export class GameView {
    */
   public clearTrickDisplayBuffer(): void {
     this.trickDisplayCards = [];
+    // Render the trick area to show "Play a card" placeholder
+    this.feltGrid.renderTrickDisplayBuffer([], null);
   }
 
   /**

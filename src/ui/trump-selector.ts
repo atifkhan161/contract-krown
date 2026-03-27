@@ -100,13 +100,13 @@ export class TrumpSelector {
     const suitColors: Record<Suit, string> = {
       'HEARTS': 'text-error',
       'DIAMONDS': 'text-error',
-      'CLUBS': 'text-base-content',
-      'SPADES': 'text-base-content'
+      'CLUBS': 'text-black',
+      'SPADES': 'text-black'
     };
 
     for (const suit of suits) {
       const button = document.createElement('button');
-      button.className = 'btn btn-outline btn-lg flex flex-col items-center justify-center h-24 gap-1';
+      button.className = 'btn btn-lg flex flex-col items-center justify-center h-24 gap-1 bg-white border-2 border-gray-300 hover:bg-gray-100 active:bg-gray-200';
       button.dataset.suit = suit;
 
       const symbol = document.createElement('span');
@@ -114,7 +114,7 @@ export class TrumpSelector {
       symbol.textContent = this.getSuitSymbol(suit);
 
       const name = document.createElement('span');
-      name.className = 'text-xs font-semibold';
+      name.className = 'text-sm text-black font-semibold';
       name.textContent = suit.charAt(0) + suit.slice(1).toLowerCase();
 
       button.appendChild(symbol);
@@ -195,13 +195,13 @@ export class TrumpSelector {
     const cardEl = document.createElement('div');
     const isRed = card.suit === 'HEARTS' || card.suit === 'DIAMONDS';
     
-    cardEl.className = 'card card-compact bg-base-100 border border-base-300 shadow-md w-16 h-24';
+    cardEl.className = 'card card-compact bg-white border border-gray-300 shadow-md w-16 h-24';
     cardEl.innerHTML = `
       <div class="card-body items-center justify-center p-1">
-        <span class="text-2xl ${isRed ? 'text-error' : 'text-base-content'}">
+        <span class="text-2xl ${isRed ? 'text-red-600' : 'text-black'}">
           ${this.getSuitSymbol(card.suit)}
         </span>
-        <span class="text-lg font-bold">${card.rank}</span>
+        <span class="text-lg font-bold text-black">${card.rank}</span>
       </div>
     `;
 

@@ -13,6 +13,7 @@ export class FeltGrid {
   private trickArea: HTMLElement | null = null;
   private rightOpponentDisplay: HTMLElement | null = null;
   private bottomLeft: HTMLElement | null = null;
+  private userDisplay: HTMLElement | null = null;
   private userHand: HTMLElement | null = null;
   private bottomRight: HTMLElement | null = null;
 
@@ -65,6 +66,10 @@ export class FeltGrid {
     this.userHand = document.createElement('div');
     this.userHand.className = 'user-hand';
 
+    // User display (bottom-right of user hand)
+    this.userDisplay = document.createElement('div');
+    this.userDisplay.className = 'player-display user-display';
+
     // Bottom-right: Return to lobby button placeholder
     this.bottomRight = document.createElement('div');
     this.bottomRight.className = 'grid-cell bottom-right';
@@ -79,6 +84,9 @@ export class FeltGrid {
     this.container.appendChild(this.bottomLeft);
     this.container.appendChild(this.userHand);
     this.container.appendChild(this.bottomRight);
+
+    // Add user display as a child of user hand for proper positioning
+    this.userHand.appendChild(this.userDisplay);
   }
 
   /**
@@ -99,6 +107,7 @@ export class FeltGrid {
     // Note: Trick area is rendered separately via renderTrickDisplayBuffer()
     this.renderBottomLeft(state);
     this.renderUserHand(state, userPlayerIndex, playableCards);
+    this.renderUserDisplay(state, userPlayerIndex);
     this.renderBottomRight();
   }
 
@@ -155,6 +164,8 @@ export class FeltGrid {
     const partner = state.players[partnerIndex];
     const isActive = state.currentPlayer === partnerIndex;
     const isCrownHolder = state.crownHolder === partnerIndex;
+    const teamNumber = partner.team === 0 ? 'Team 1' : 'Team 2';
+    const teamClass = partner.team === 0 ? 'team-0' : 'team-1';
 
     this.partnerDisplay.innerHTML = `
       <div class="player-info ${isActive ? 'active' : ''} ${isCrownHolder ? 'crown-holder' : ''}">
@@ -163,6 +174,7 @@ export class FeltGrid {
           ${isActive ? '<div class="active-ring"></div>' : ''}
         </div>
         <div class="player-name">Partner</div>
+        <div class="team-label ${teamClass}">${teamNumber}</div>
         <div class="card-count">${partner.hand.length} cards</div>
       </div>
     `;
@@ -278,6 +290,8 @@ export class FeltGrid {
   ): void {
     const isActive = state.currentPlayer === playerIndex;
     const isCrownHolder = state.crownHolder === playerIndex;
+    const teamNumber = player.team === 0 ? 'Team 1' : 'Team 2';
+    const teamClass = player.team === 0 ? 'team-0' : 'team-1';
 
     container.innerHTML = `
       <div class="player-info ${isActive ? 'active' : ''} ${isCrownHolder ? 'crown-holder' : ''}">
@@ -286,6 +300,7 @@ export class FeltGrid {
           ${isActive ? '<div class="active-ring"></div>' : ''}
         </div>
         <div class="player-name">${label}</div>
+        <div class="team-label ${teamClass}">${teamNumber}</div>
         <div class="card-count">${player.hand.length} cards</div>
       </div>
     `;
@@ -397,14 +412,56 @@ export class FeltGrid {
     const user = state.players[userPlayerIndex];
     const playableSet = new Set(playableCards.map(c => `${c.suit}-${c.rank}`));
 
+    // Sort cards by deck order: suit (SPADES, HEARTS, DIAMONDS, CLUBS) then rank (7, 8, 9, 10, J, Q, K, A)
+    const sortedHand = [...user.hand].sort((a, b) => {
+      const suitOrder = { 'SPADES': 0, 'HEARTS': 1, 'DIAMONDS': 2, 'CLUBS': 3 };
+      const rankOrder = { '7': 0, '8': 1, '9': 2, '10': 3, 'J': 4, 'Q': 5, 'K': 6, 'A': 7 };
+      
+      const suitDiff = suitOrder[a.suit] - suitOrder[b.suit];
+      if (suitDiff !== 0) return suitDiff;
+      return rankOrder[a.rank] - rankOrder[b.rank];
+    });
+
+    // Build hand cards HTML
     let handHtml = '<div class="hand-cards">';
-    for (const card of user.hand) {
+    for (const card of sortedHand) {
       const isPlayable = playableSet.has(`${card.suit}-${card.rank}`);
       handHtml += this.renderCard(card, isPlayable, false);
     }
     handHtml += '</div>';
 
+    // Set hand cards HTML
     this.userHand.innerHTML = handHtml;
+
+    // Re-append user display element at the bottom
+    if (this.userDisplay) {
+      this.userHand.appendChild(this.userDisplay);
+    }
+  }
+
+  /**
+   * Renders user display element
+   */
+  private renderUserDisplay(state: GameState, userPlayerIndex: number): void {
+    if (!this.userDisplay) return;
+
+    const user = state.players[userPlayerIndex];
+    const isActive = state.currentPlayer === userPlayerIndex;
+    const isCrownHolder = state.crownHolder === userPlayerIndex;
+    const teamNumber = user.team === 0 ? 'Team 1' : 'Team 2';
+    const teamClass = user.team === 0 ? 'team-0' : 'team-1';
+
+    this.userDisplay.innerHTML = `
+      <div class="player-info ${isActive ? 'active' : ''} ${isCrownHolder ? 'crown-holder' : ''}">
+        <div class="player-avatar">
+          ${isCrownHolder ? '<span class="crown-icon">👑</span>' : ''}
+          ${isActive ? '<div class="active-ring"></div>' : ''}
+        </div>
+        <div class="player-name">You</div>
+        <div class="team-label ${teamClass}">${teamNumber}</div>
+        <div class="card-count">${user.hand.length} cards</div>
+      </div>
+    `;
   }
 
   /**

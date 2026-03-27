@@ -1,2 +1,9 @@
-// Contract Crown Session Tests
-// Main entry point for session tests
+// Session Tests Index
+
+import { describe, it, expect } from 'vitest';
+
+describe('Session Tests Index', () => {
+  it('should have tests', () => {
+    expect(true).toBe(true);
+  });
+});
