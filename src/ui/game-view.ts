@@ -272,14 +272,14 @@ export class GameView {
       this.uiState.playableCards = [];
     }
 
-    // Update trick display buffer
-    this.updateTrickDisplayBuffer(state);
+    // Update trick display buffer and get winner
+    const trickWinner = this.updateTrickDisplayBuffer(state);
 
     // Render felt grid (now includes header info in corner cells)
     this.feltGrid.render(state, userPlayerIndex, this.uiState.playableCards);
 
     // Render trick display buffer into trick area (after felt grid render)
-    this.feltGrid.renderTrickDisplayBuffer(this.trickDisplayCards);
+    this.feltGrid.renderTrickDisplayBuffer(this.trickDisplayCards, trickWinner);
 
     // Update active player indication
     this.feltGrid.updateActivePlayer(state, userPlayerIndex);
@@ -308,22 +308,36 @@ export class GameView {
   /**
    * Updates the trick display buffer based on current game state
    * Requirement 15.1, 15.3: Keep played cards visible until collection animation completes
+   * Returns the winner of the trick if one exists
    */
-  private updateTrickDisplayBuffer(state: GameState): void {
+  private updateTrickDisplayBuffer(state: GameState): number | null {
     const currentTrickCards = state.currentTrick.cards.map(pc => ({ card: pc.card, player: pc.player }));
     
     // If current trick has cards, update buffer to match
     if (currentTrickCards.length > 0) {
       this.trickDisplayCards = [...currentTrickCards];
+      return state.currentTrick.winner;
+    } else if (state.completedTricks.length > 0) {
+      // Current trick is empty but we have a completed trick - use its cards
+      // This handles the case where the 4th card was just played and trick was resolved
+      const lastTrick = state.completedTricks[state.completedTricks.length - 1];
+      this.trickDisplayCards = lastTrick.cards.map(pc => ({ card: pc.card, player: pc.player }));
+      return lastTrick.winner;
     }
-    // If current trick is empty and we have a completed trick, keep buffer 
-    // (it will be cleared after animation)
+    // If both are empty, keep buffer as-is (will be cleared after animation)
+    return null;
   }
 
   /**
    * Adds a card to the trick display buffer
    */
   public addCardToTrickDisplay(card: Card, player: number): void {
+    // If current trick is empty, we're starting a new trick - clear the buffer first
+    // This handles the edge case where the human wins and plays a new card quickly
+    if (this.uiState.gameState.currentTrick.cards.length === 0) {
+      this.trickDisplayCards = [];
+    }
+
     // Avoid duplicates
     const exists = this.trickDisplayCards.some(
       c => c.card.suit === card.suit && c.card.rank === card.rank

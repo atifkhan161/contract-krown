@@ -83,11 +83,12 @@ export class FeltGrid {
 
   /**
    * Renders the felt grid with current game state
+   * Note: Trick area is NOT rendered here - use renderTrickDisplayBuffer() separately
    */
   public render(state: GameState, userPlayerIndex: number, playableCards: Card[]): void {
     if (!this.container) return;
 
-    // Clear previous content
+    // Clear previous content (except trick area - handled by renderTrickDisplayBuffer)
     this.clearDisplays();
 
     // Render corner cells
@@ -95,14 +96,14 @@ export class FeltGrid {
     this.renderPartnerDisplay(state, userPlayerIndex);
     this.renderTopRight(state, userPlayerIndex);
     this.renderOpponentDisplays(state, userPlayerIndex);
-    this.renderTrickArea(state);
+    // Note: Trick area is rendered separately via renderTrickDisplayBuffer()
     this.renderBottomLeft(state);
     this.renderUserHand(state, userPlayerIndex, playableCards);
     this.renderBottomRight();
   }
 
   /**
-   * Clears all display areas
+   * Clears all display areas (except trick area - handled by renderTrickDisplayBuffer)
    */
   private clearDisplays(): void {
     if (this.topLeft) this.topLeft.innerHTML = '';
@@ -110,7 +111,7 @@ export class FeltGrid {
     if (this.topRight) this.topRight.innerHTML = '';
     if (this.leftOpponentDisplay) this.leftOpponentDisplay.innerHTML = '';
     if (this.rightOpponentDisplay) this.rightOpponentDisplay.innerHTML = '';
-    if (this.trickArea) this.trickArea.innerHTML = '';
+    // Note: Trick area is NOT cleared here - renderTrickDisplayBuffer() handles it
     if (this.bottomLeft) this.bottomLeft.innerHTML = '';
     if (this.userHand) this.userHand.innerHTML = '';
     if (this.bottomRight) this.bottomRight.innerHTML = '';
@@ -191,7 +192,7 @@ export class FeltGrid {
   }
 
   /**
-   * Renders bottom-left corner: Trick count
+   * Renders bottom-left corner: Trick count and current round score
    */
   private renderBottomLeft(state: GameState): void {
     if (!this.bottomLeft) return;
@@ -199,10 +200,29 @@ export class FeltGrid {
     const completedTricks = state.completedTricks.length;
     const totalTricks = 8;
 
+    // Calculate current round tricks won by each team
+    let team0Tricks = 0;
+    let team1Tricks = 0;
+    for (const trick of state.completedTricks) {
+      if (trick.winner !== null) {
+        const winnerTeam = state.players[trick.winner].team;
+        if (winnerTeam === 0) {
+          team0Tricks++;
+        } else {
+          team1Tricks++;
+        }
+      }
+    }
+
     this.bottomLeft.innerHTML = `
       <div class="trick-count-cell">
         <span class="trick-count-value">${completedTricks}/${totalTricks}</span>
         <span class="trick-count-label">Tricks</span>
+        <div class="round-score-row">
+          <span class="round-score team-0">${team0Tricks}</span>
+          <span class="round-score-divider">-</span>
+          <span class="round-score team-1">${team1Tricks}</span>
+        </div>
       </div>
     `;
   }

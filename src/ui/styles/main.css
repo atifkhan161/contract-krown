@@ -184,6 +184,32 @@ html, body {
   text-transform: uppercase;
 }
 
+/* Current Round Score */
+.round-score-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.round-score {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.round-score.team-0 {
+  color: #d4af37;
+}
+
+.round-score.team-1 {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.round-score-divider {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
 /* Bottom Right Cell (menu placeholder) */
 .bottom-right-cell {
   display: flex;
@@ -391,12 +417,13 @@ html, body {
 
 .hand-cards {
   display: flex;
-  gap: 3px;
+  gap: 4px;
   justify-content: center;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  align-content: center;
   max-width: 100%;
-  padding: 0 3px;
+  max-height: 100%;
+  padding: 0 4px;
 }
 
 /* ===== Cards ===== */
