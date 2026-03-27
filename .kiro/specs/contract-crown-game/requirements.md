@@ -106,7 +106,7 @@ Contract Crown is a mobile-only Progressive Web App (PWA) implementing a real-ti
 2. THE Mobile_UI SHALL display opponent avatars on the left and right sides of the screen
 3. THE Mobile_UI SHALL display the user's interactive hand at the bottom of the screen
 4. THE Mobile_UI SHALL display the active trick area in the center of the screen
-5. THE Mobile_UI SHALL display a header showing the Trump_Suit, Crown_Holder indicator, and team scores
+5. THE Mobile_UI SHALL display the Trump_Suit, Crown_Holder indicator, and team scores within the grid layout corners to maximize screen space for gameplay
 
 ### Requirement 8: Card Playability Indication
 

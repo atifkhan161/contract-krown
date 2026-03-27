@@ -219,35 +219,34 @@ class BotManager {
 
 Implements the "Felt Grid" layout with thumb-zone optimization.
 
-**Layout Structure**:
+**Layout Structure** (3x3 Grid - no separate header):
 ```
-┌─────────────────────────┐
-│ Header: Trump | Crown   │ 10%
-│         Scores          │
-├─────────────────────────┤
-│                         │
-│   Partner (Top)         │ 15%
-│                         │
-├──────┬──────────┬───────┤
-│      │          │       │
-│ Opp  │  Trick   │  Opp  │ 45%
-│ Left │  Area    │ Right │
-│      │          │       │
-├──────┴──────────┴───────┤
-│                         │
-│   User Hand (Bottom)    │ 30%
-│   [Thumb Zone]          │
-└─────────────────────────┘
+┌─────────────┬──────────┬─────────────┐
+│ Trump       │ Partner  │ Crown +     │ 15%
+│ Indicator   │ (Top)    │ Scores      │
+├─────────────┼──────────┼─────────────┤
+│             │          │             │
+│ Opp Left    │  Trick   │  Opp Right  │ 55%
+│             │  Area    │             │
+├─────────────┼──────────┼─────────────┤
+│ Trick Count │ User Hand│ Return Btn  │ 30%
+│             │ (Bottom) │             │
+│             │ [Thumb]  │             │
+└─────────────┴──────────┴─────────────┘
 ```
 
 **Component Hierarchy**:
 - `GameView`: Root container
-  - `GameHeader`: Scores, trump, crown indicator
-  - `FeltGrid`: Main play area
-    - `PartnerDisplay`: Top position
-    - `OpponentDisplay`: Left/right positions
-    - `TrickArea`: Center card display
-    - `UserHand`: Bottom interactive area
+  - `FeltGrid`: Full-screen 3x3 grid play area (includes header data in corner cells)
+    - `topLeft`: Trump suit indicator
+    - `partnerDisplay` (top-center): Partner avatar and card count
+    - `topRight`: Crown holder name + team scores
+    - `leftOpponentDisplay`: Left opponent
+    - `trickArea` (center): Active trick cards + pending trick display buffer
+    - `rightOpponentDisplay`: Right opponent
+    - `bottomLeft`: Trick count indicator
+    - `userHand` (bottom-center): User's interactive hand
+    - `bottomRight`: Return to lobby button
   - `TrumpSelector`: Modal for declaration
   - `RoundEndModal`: Round results
   - `VictoryModal`: Game completion

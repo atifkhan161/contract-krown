@@ -7,10 +7,23 @@ import { OfflineGameController } from '@src/ui/offline-game-controller.js';
 import { OfflineGameView } from '@src/ui/offline-game-view.js';
 import { BotManager } from '@src/bot/index.js';
 import { canPlayCard } from '@src/engine/index.js';
-import type { Suit } from '@src/engine/types.js';
+import type { Suit, GameState } from '@src/engine/types.js';
 
 // Custom generators for property tests
 const suitArbitrary = fc.constantFrom('HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES') as fc.Arbitrary<Suit>;
+
+// Helper: simulate user trump declaration (mirrors controller's internal logic)
+function simulateTrumpDeclaration(state: GameState, suit: Suit): void {
+  if (state.phase !== 'TRUMP_DECLARATION') return;
+  state.trumpSuit = suit;
+  // Deal final 4 cards to each player
+  for (let i = 0; i < 4; i++) {
+    for (const player of state.players) {
+      player.hand.push(state.deck.pop()!);
+    }
+  }
+  state.phase = 'TRICK_PLAY';
+}
 
 describe('Offline Mode Integration Tests', () => {
   let controller: OfflineGameController;
@@ -53,8 +66,17 @@ describe('Offline Mode Integration Tests', () => {
     it('deals cards to all players', async () => {
       controller.startGame();
       
-      // Wait for dealing to complete
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for initial dealing to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Human is crown holder on first round, declare trump
+      const state1 = controller.getGameState();
+      if (state1.phase === 'TRUMP_DECLARATION') {
+        simulateTrumpDeclaration(state1, 'HEARTS');
+      }
+      
+      // Wait for final dealing
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const state = controller.getGameState();
       // After dealing, each player should have 8 cards
@@ -66,8 +88,17 @@ describe('Offline Mode Integration Tests', () => {
     it('transitions to TRICK_PLAY phase after trump declaration', async () => {
       controller.startGame();
       
-      // Wait for trump declaration and dealing
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Wait for initial dealing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Human is crown holder on first round, declare trump
+      const state1 = controller.getGameState();
+      if (state1.phase === 'TRUMP_DECLARATION') {
+        simulateTrumpDeclaration(state1, 'HEARTS');
+      }
+      
+      // Wait for final dealing
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const state = controller.getGameState();
       expect(state.phase).toBe('TRICK_PLAY');
@@ -193,8 +224,17 @@ describe('Offline Mode Integration Tests', () => {
     it('can play through multiple tricks', async () => {
       controller.startGame();
       
+      // Wait for initial dealing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Human is crown holder on first round, declare trump
+      const state0 = controller.getGameState();
+      if (state0.phase === 'TRUMP_DECLARATION') {
+        simulateTrumpDeclaration(state0, 'HEARTS');
+      }
+      
       // Wait for game to be in TRICK_PLAY phase
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       let state = controller.getGameState();
       let tricksPlayed = 0;
@@ -225,8 +265,17 @@ describe('Offline Mode Integration Tests', () => {
     it('handles round completion', async () => {
       controller.startGame();
       
+      // Wait for initial dealing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Human is crown holder on first round, declare trump
+      const state0 = controller.getGameState();
+      if (state0.phase === 'TRUMP_DECLARATION') {
+        simulateTrumpDeclaration(state0, 'HEARTS');
+      }
+      
       // Wait for game to start
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       let state = controller.getGameState();
       

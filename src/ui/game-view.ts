@@ -4,7 +4,6 @@
 import type { GameState, Card, Suit } from '../engine/types.js';
 import type { UIState, CardTapHandler, TrumpSelectionHandler } from './types.js';
 import { FeltGrid } from './felt-grid.js';
-import { GameHeader } from './game-header.js';
 import { HapticController } from './haptic-controller.js';
 import { TrumpSelector } from './trump-selector.js';
 import { RoundEndModal } from './round-end-modal.js';
@@ -17,11 +16,9 @@ import {
   getTrickAreaPosition,
   getPlayerPosition
 } from './card-animation.js';
-import { canPlayCard, declareTrump } from '../engine/index.js';
 
 export class GameView {
   private container: HTMLElement | null = null;
-  private header: GameHeader;
   private feltGrid: FeltGrid;
   private hapticController: HapticController;
   private trumpSelector: TrumpSelector;
@@ -32,9 +29,10 @@ export class GameView {
   private onCardTap: CardTapHandler | null = null;
   private onTrumpSelect: TrumpSelectionHandler | null = null;
   private uiState: UIState;
+  // Trick display buffer: holds played cards visually until collection animation completes
+  private trickDisplayCards: Card[] = [];
 
   constructor() {
-    this.header = new GameHeader();
     this.feltGrid = new FeltGrid();
     this.hapticController = new HapticController();
     this.trumpSelector = new TrumpSelector();
@@ -85,13 +83,7 @@ export class GameView {
     this.container = document.createElement('div');
     this.container.className = 'game-view';
 
-    // Add header
-    const headerContainer = this.header.getContainer();
-    if (headerContainer) {
-      this.container.appendChild(headerContainer);
-    }
-
-    // Add felt grid
+    // Add felt grid (now 3x3 layout with header info in corners)
     const feltGridContainer = this.feltGrid.getContainer();
     if (feltGridContainer) {
       this.container.appendChild(feltGridContainer);
@@ -261,6 +253,9 @@ export class GameView {
     const cardsArray = Array.from(trickCards);
 
     await animateTrickCollection(cardsArray, winnerPosition, 500);
+
+    // Clear trick display buffer after animation completes
+    this.clearTrickDisplayBuffer();
   }
 
   /**
@@ -277,11 +272,14 @@ export class GameView {
       this.uiState.playableCards = [];
     }
 
-    // Render header
-    this.header.render(state, userPlayerIndex);
+    // Update trick display buffer
+    this.updateTrickDisplayBuffer(state);
 
-    // Render felt grid
+    // Render felt grid (now includes header info in corner cells)
     this.feltGrid.render(state, userPlayerIndex, this.uiState.playableCards);
+
+    // Render trick display buffer into trick area (after felt grid render)
+    this.feltGrid.renderTrickDisplayBuffer(this.trickDisplayCards);
 
     // Update active player indication
     this.feltGrid.updateActivePlayer(state, userPlayerIndex);
@@ -289,8 +287,6 @@ export class GameView {
     // Handle re-dealing message
     if (this.uiState.reDealing) {
       this.feltGrid.showReDealingMessage();
-    } else {
-      this.feltGrid.hideReDealingMessage();
     }
 
     // Show trump selector if needed
@@ -307,6 +303,42 @@ export class GameView {
     if (this.uiState.showVictory) {
       this.showVictoryModal();
     }
+  }
+
+  /**
+   * Updates the trick display buffer based on current game state
+   * Requirement 15.1, 15.3: Keep played cards visible until collection animation completes
+   */
+  private updateTrickDisplayBuffer(state: GameState): void {
+    const currentTrickCards = state.currentTrick.cards.map(pc => pc.card);
+    
+    // If current trick has cards, update buffer to match
+    if (currentTrickCards.length > 0) {
+      this.trickDisplayCards = [...currentTrickCards];
+    }
+    // If current trick is empty and we have a completed trick, keep buffer 
+    // (it will be cleared after animation)
+  }
+
+  /**
+   * Adds a card to the trick display buffer
+   */
+  public addCardToTrickDisplay(card: Card): void {
+    // Avoid duplicates
+    const exists = this.trickDisplayCards.some(
+      c => c.suit === card.suit && c.rank === card.rank
+    );
+    if (!exists) {
+      this.trickDisplayCards.push(card);
+      this.feltGrid.renderTrickDisplayBuffer(this.trickDisplayCards);
+    }
+  }
+
+  /**
+   * Clears the trick display buffer
+   */
+  public clearTrickDisplayBuffer(): void {
+    this.trickDisplayCards = [];
   }
 
   /**
@@ -335,6 +367,9 @@ export class GameView {
    * Requirement 2.2: Display 4 trump suit options to Crown Holder
    */
   public showTrumpSelector(): void {
+    // Pass the user's hand to the trump selector
+    const userHand = this.uiState.gameState.players[this.userPlayerIndex]?.hand || [];
+    this.trumpSelector.setUserHand(userHand);
     this.trumpSelector.show();
   }
 

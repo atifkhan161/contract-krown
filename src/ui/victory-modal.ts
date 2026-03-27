@@ -1,5 +1,5 @@
 // Contract Crown Victory Modal
-// Modal component for displaying game victory results
+// Modal component for displaying game victory results with DaisyUI components
 
 import type { GameState } from '../engine/types.js';
 import type { ModalActionHandler } from './types.js';
@@ -58,90 +58,133 @@ export class VictoryModal {
 
     const winningTeam = state.scores[0] >= 52 ? 1 : 2;
 
-    // Create modal
-    this.modal = document.createElement('div');
-    this.modal.className = 'modal victory-modal';
+    // Create DaisyUI modal
+    this.modal = document.createElement('dialog');
+    this.modal.className = 'modal';
     this.modal.setAttribute('role', 'dialog');
     this.modal.setAttribute('aria-labelledby', 'victory-title');
     this.modal.setAttribute('aria-modal', 'true');
 
-    this.modal.innerHTML = `
-      <div class="modal-overlay"></div>
-      <div class="modal-content">
-        <div class="victory-header">
-          <h2 id="victory-title" class="modal-title">🏆 Victory! 🏆</h2>
-          <p class="winner-announcement">Team ${winningTeam} Wins the Game!</p>
-        </div>
-        <div class="victory-result">
-          <div class="final-scores">
-            <h3>Final Scores</h3>
-            <div class="score-row">
-              <span class="team-label">Team 1</span>
-              <span class="team-score">${state.scores[0]} points</span>
-            </div>
-            <div class="score-row">
-              <span class="team-label">Team 2</span>
-              <span class="team-score">${state.scores[1]} points</span>
-            </div>
-          </div>
-        </div>
-        <div class="victory-actions">
-          <button class="new-game-button primary-button">New Game</button>
-          <button class="lobby-button secondary-button">Return to Lobby</button>
-        </div>
-      </div>
+    // Create modal content with DaisyUI classes
+    const modalBox = document.createElement('div');
+    modalBox.className = 'modal-box bg-base-100 text-base-content text-center';
+
+    // Victory icon
+    const victoryIcon = document.createElement('div');
+    victoryIcon.className = 'text-6xl mb-4';
+    victoryIcon.textContent = '🏆';
+    modalBox.appendChild(victoryIcon);
+
+    // Modal title
+    const title = document.createElement('h3');
+    title.id = 'victory-title';
+    title.className = 'font-bold text-2xl text-primary mb-2';
+    title.textContent = 'Victory!';
+    modalBox.appendChild(title);
+
+    // Winner announcement
+    const winnerAnnouncement = document.createElement('p');
+    winnerAnnouncement.className = 'text-xl font-bold text-success mb-6';
+    winnerAnnouncement.textContent = `Team ${winningTeam} Wins the Game!`;
+    modalBox.appendChild(winnerAnnouncement);
+
+    // Final scores section
+    const scoresSection = document.createElement('div');
+    scoresSection.className = 'mb-6';
+
+    const scoresTitle = document.createElement('h4');
+    scoresTitle.className = 'text-lg font-semibold mb-4';
+    scoresTitle.textContent = 'Final Scores';
+    scoresSection.appendChild(scoresTitle);
+
+    const scoresGrid = document.createElement('div');
+    scoresGrid.className = 'grid grid-cols-2 gap-4';
+
+    const team1ScoreDiv = document.createElement('div');
+    team1ScoreDiv.className = 'p-4 bg-primary/20 rounded-lg';
+    team1ScoreDiv.innerHTML = `
+      <div class="text-sm opacity-70">Team 1</div>
+      <div class="text-3xl font-bold text-primary">${state.scores[0]}</div>
+      <div class="text-sm opacity-70">points</div>
     `;
 
-    // Add event listener for new game button
-    const newGameButton = this.modal.querySelector('.new-game-button');
-    if (newGameButton) {
-      newGameButton.addEventListener('click', () => {
+    const team2ScoreDiv = document.createElement('div');
+    team2ScoreDiv.className = 'p-4 bg-primary/20 rounded-lg';
+    team2ScoreDiv.innerHTML = `
+      <div class="text-sm opacity-70">Team 2</div>
+      <div class="text-3xl font-bold text-primary">${state.scores[1]}</div>
+      <div class="text-sm opacity-70">points</div>
+    `;
+
+    scoresGrid.appendChild(team1ScoreDiv);
+    scoresGrid.appendChild(team2ScoreDiv);
+    scoresSection.appendChild(scoresGrid);
+    modalBox.appendChild(scoresSection);
+
+    // Modal action buttons
+    const modalAction = document.createElement('div');
+    modalAction.className = 'modal-action flex flex-col gap-2';
+
+    const newGameButton = document.createElement('button');
+    newGameButton.className = 'btn btn-primary btn-lg';
+    newGameButton.textContent = 'New Game';
+    newGameButton.addEventListener('click', () => {
+      this.handleNewGame();
+    });
+
+    // Keyboard support
+    newGameButton.addEventListener('keydown', (event) => {
+      if ((event as KeyboardEvent).key === 'Enter' || (event as KeyboardEvent).key === ' ') {
         this.handleNewGame();
-      });
+      }
+    });
 
-      // Keyboard support
-      newGameButton.addEventListener('keydown', (event) => {
-        if ((event as KeyboardEvent).key === 'Enter' || (event as KeyboardEvent).key === ' ') {
-          this.handleNewGame();
-        }
-      });
-    }
+    const lobbyButton = document.createElement('button');
+    lobbyButton.className = 'btn btn-ghost';
+    lobbyButton.textContent = 'Return to Lobby';
+    lobbyButton.addEventListener('click', () => {
+      this.handleReturnToLobby();
+    });
 
-    // Add event listener for lobby button
-    const lobbyButton = this.modal.querySelector('.lobby-button');
-    if (lobbyButton) {
-      lobbyButton.addEventListener('click', () => {
+    // Keyboard support
+    lobbyButton.addEventListener('keydown', (event) => {
+      if ((event as KeyboardEvent).key === 'Enter' || (event as KeyboardEvent).key === ' ') {
         this.handleReturnToLobby();
-      });
+      }
+    });
 
-      // Keyboard support
-      lobbyButton.addEventListener('keydown', (event) => {
-        if ((event as KeyboardEvent).key === 'Enter' || (event as KeyboardEvent).key === ' ') {
-          this.handleReturnToLobby();
-        }
-      });
-    }
+    modalAction.appendChild(newGameButton);
+    modalAction.appendChild(lobbyButton);
+    modalBox.appendChild(modalAction);
 
-    // Close modal on overlay click
-    const overlay = this.modal.querySelector('.modal-overlay');
-    if (overlay) {
-      overlay.addEventListener('click', () => {
-        // Don't auto-close on overlay click for victory modal
-      });
-    }
+    this.modal.appendChild(modalBox);
 
+    // Add event listeners
+    this.modal.addEventListener('keydown', (event) => {
+      if ((event as KeyboardEvent).key === 'Escape') {
+        // Don't auto-close on Escape for victory modal
+        event.preventDefault();
+      }
+    });
+
+    // Append to container
     this.container.appendChild(this.modal);
     this.isOpen = true;
+
+    // Show the modal using DaisyUI's modal API
+    if (typeof (this.modal as any).showModal === 'function') {
+      (this.modal as any).showModal();
+    } else {
+      // Fallback for browsers that don't support dialog
+      this.modal.classList.add('modal-open');
+    }
 
     // Trigger victory haptic pattern
     // Requirement 16.3: Trigger victory haptic pattern when game ends
     this.hapticController.triggerVictory();
 
     // Focus new game button for accessibility
-    const btn = this.modal.querySelector('.new-game-button') as HTMLElement;
-    if (btn) {
-      btn.focus();
-    }
+    newGameButton.focus();
   }
 
   /**

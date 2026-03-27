@@ -1,5 +1,5 @@
 // Contract Crown Round End Modal
-// Modal component for displaying round results
+// Modal component for displaying round results with DaisyUI components
 
 import type { GameState } from '../engine/types.js';
 import type { ModalActionHandler } from './types.js';
@@ -65,88 +65,137 @@ export class RoundEndModal {
       pointsAwarded = challengingTeamTricks;
     }
 
-    // Create modal
-    this.modal = document.createElement('div');
-    this.modal.className = 'modal round-end-modal';
+    // Create DaisyUI modal
+    this.modal = document.createElement('dialog');
+    this.modal.className = 'modal';
     this.modal.setAttribute('role', 'dialog');
     this.modal.setAttribute('aria-labelledby', 'round-end-title');
     this.modal.setAttribute('aria-modal', 'true');
 
-    this.modal.innerHTML = `
-      <div class="modal-overlay"></div>
-      <div class="modal-content">
-        <h2 id="round-end-title" class="modal-title">Round Complete!</h2>
-        <div class="round-result">
-          <div class="result-highlight">
-            <p class="result-text">${resultText}</p>
-            <p class="points-text">+${pointsAwarded} points</p>
-          </div>
-          <div class="trick-summary">
-            <div class="team-tricks">
-              <span class="team-label">Team 1:</span>
-              <span class="trick-count">${team0Tricks} tricks</span>
-            </div>
-            <div class="team-tricks">
-              <span class="team-label">Team 2:</span>
-              <span class="trick-count">${team1Tricks} tricks</span>
-            </div>
-          </div>
-          <div class="scores">
-            <div class="score-item">
-              <span class="team-label">Team 1:</span>
-              <span class="score-value">${state.scores[0]} points</span>
-            </div>
-            <div class="score-item">
-              <span class="team-label">Team 2:</span>
-              <span class="score-value">${state.scores[1]} points</span>
-            </div>
-          </div>
-        </div>
-        <button class="continue-button">Continue</button>
-      </div>
+    // Create modal content with DaisyUI classes
+    const modalBox = document.createElement('div');
+    modalBox.className = 'modal-box bg-base-100 text-base-content';
+
+    // Modal title
+    const title = document.createElement('h3');
+    title.id = 'round-end-title';
+    title.className = 'font-bold text-lg text-primary';
+    title.textContent = 'Round Complete!';
+    modalBox.appendChild(title);
+
+    // Result section
+    const resultSection = document.createElement('div');
+    resultSection.className = 'py-4';
+
+    // Result highlight
+    const resultHighlight = document.createElement('div');
+    resultHighlight.className = 'text-center mb-4';
+
+    const resultTextEl = document.createElement('p');
+    resultTextEl.className = 'text-xl font-bold text-success';
+    resultTextEl.textContent = resultText;
+
+    const pointsTextEl = document.createElement('p');
+    pointsTextEl.className = 'text-2xl font-bold text-accent';
+    pointsTextEl.textContent = `+${pointsAwarded} points`;
+
+    resultHighlight.appendChild(resultTextEl);
+    resultHighlight.appendChild(pointsTextEl);
+    resultSection.appendChild(resultHighlight);
+
+    // Trick summary
+    const trickSummary = document.createElement('div');
+    trickSummary.className = 'grid grid-cols-2 gap-4 mb-4';
+
+    const team1TricksDiv = document.createElement('div');
+    team1TricksDiv.className = 'text-center p-3 bg-base-200 rounded-lg';
+    team1TricksDiv.innerHTML = `
+      <div class="text-sm opacity-70">Team 1</div>
+      <div class="text-lg font-bold">${team0Tricks} tricks</div>
     `;
 
-    // Add event listener for continue button
-    const continueButton = this.modal.querySelector('.continue-button');
-    if (continueButton) {
-      continueButton.addEventListener('click', () => {
+    const team2TricksDiv = document.createElement('div');
+    team2TricksDiv.className = 'text-center p-3 bg-base-200 rounded-lg';
+    team2TricksDiv.innerHTML = `
+      <div class="text-sm opacity-70">Team 2</div>
+      <div class="text-lg font-bold">${team1Tricks} tricks</div>
+    `;
+
+    trickSummary.appendChild(team1TricksDiv);
+    trickSummary.appendChild(team2TricksDiv);
+    resultSection.appendChild(trickSummary);
+
+    // Scores
+    const scoresDiv = document.createElement('div');
+    scoresDiv.className = 'grid grid-cols-2 gap-4';
+
+    const team1ScoreDiv = document.createElement('div');
+    team1ScoreDiv.className = 'text-center p-3 bg-primary/20 rounded-lg';
+    team1ScoreDiv.innerHTML = `
+      <div class="text-sm opacity-70">Team 1 Total</div>
+      <div class="text-xl font-bold text-primary">${state.scores[0]} points</div>
+    `;
+
+    const team2ScoreDiv = document.createElement('div');
+    team2ScoreDiv.className = 'text-center p-3 bg-primary/20 rounded-lg';
+    team2ScoreDiv.innerHTML = `
+      <div class="text-sm opacity-70">Team 2 Total</div>
+      <div class="text-xl font-bold text-primary">${state.scores[1]} points</div>
+    `;
+
+    scoresDiv.appendChild(team1ScoreDiv);
+    scoresDiv.appendChild(team2ScoreDiv);
+    resultSection.appendChild(scoresDiv);
+
+    modalBox.appendChild(resultSection);
+
+    // Modal action buttons
+    const modalAction = document.createElement('div');
+    modalAction.className = 'modal-action';
+
+    const continueButton = document.createElement('button');
+    continueButton.className = 'btn btn-primary btn-lg';
+    continueButton.textContent = 'Continue';
+    continueButton.addEventListener('click', () => {
+      this.handleContinue();
+    });
+
+    // Keyboard support
+    continueButton.addEventListener('keydown', (event) => {
+      if ((event as KeyboardEvent).key === 'Enter' || (event as KeyboardEvent).key === ' ') {
         this.handleContinue();
-      });
+      }
+    });
 
-      // Keyboard support
-      continueButton.addEventListener('keydown', (event) => {
-        if ((event as KeyboardEvent).key === 'Enter' || (event as KeyboardEvent).key === ' ') {
-          this.handleContinue();
-        }
-      });
-    }
+    modalAction.appendChild(continueButton);
+    modalBox.appendChild(modalAction);
 
-    // Close modal on overlay click
-    const overlay = this.modal.querySelector('.modal-overlay');
-    if (overlay) {
-      overlay.addEventListener('click', () => {
-        this.handleContinue();
-      });
-    }
+    this.modal.appendChild(modalBox);
 
-    // Close modal on Escape key
+    // Add event listeners
     this.modal.addEventListener('keydown', (event) => {
       if ((event as KeyboardEvent).key === 'Escape') {
         this.handleContinue();
       }
     });
 
+    // Append to container
     this.container.appendChild(this.modal);
     this.isOpen = true;
+
+    // Show the modal using DaisyUI's modal API
+    if (typeof (this.modal as any).showModal === 'function') {
+      (this.modal as any).showModal();
+    } else {
+      // Fallback for browsers that don't support dialog
+      this.modal.classList.add('modal-open');
+    }
 
     // Trigger haptic feedback for trick win
     this.hapticController.triggerTrickWon();
 
     // Focus continue button for accessibility
-    const btn = this.modal.querySelector('.continue-button') as HTMLElement;
-    if (btn) {
-      btn.focus();
-    }
+    continueButton.focus();
   }
 
   /**

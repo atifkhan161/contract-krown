@@ -7,13 +7,8 @@ import {
   createDeck,
   shuffle,
   createPlayers,
-  dealInitial,
-  dealFinal,
-  validateDeal,
   declareTrump, 
   playCard, 
-  startNewRound,
-  setFirstTrickLeader,
   canPlayCard
 } from '../engine/index.js';
 import { BotManager } from '../bot/index.js';
@@ -31,6 +26,7 @@ export class OfflineGameController {
   private botTurnTimeout: ReturnType<typeof setTimeout> | null = null;
   private onStateChange: OfflineGameCallback | null = null;
   private isRunning: boolean = false;
+  private roundNumber: number = 0;
 
   constructor() {
     this.gameState = createInitialState();
@@ -61,6 +57,7 @@ export class OfflineGameController {
    */
   public startGame(): void {
     this.isRunning = true;
+    this.roundNumber = 0;
     this.gameState = createInitialState();
     
     // Create players with bots
@@ -77,9 +74,13 @@ export class OfflineGameController {
 
   /**
    * Starts a new round
+   * Requirement 2.1, 2.2, 4.1, 4.2, 10.1
    */
   private startNewRound(): void {
     if (!this.isRunning) return;
+
+    // Increment round counter
+    this.roundNumber++;
 
     // Show re-dealing message
     this.gameView.showReDealing();
@@ -97,8 +98,12 @@ export class OfflineGameController {
         }
       }
 
-      // Set crown holder to player left of dealer
-      this.gameState.crownHolder = (this.gameState.dealer + 1) % 4;
+      // Set crown holder: force human on first round, normal crown rule after
+      if (this.roundNumber === 1) {
+        this.gameState.crownHolder = this.userPlayerIndex;
+      } else {
+        this.gameState.crownHolder = (this.gameState.dealer + 1) % 4;
+      }
       this.gameState.currentPlayer = this.gameState.crownHolder;
       this.gameState.phase = 'TRUMP_DECLARATION';
       

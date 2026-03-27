@@ -1,24 +1,27 @@
 // Contract Crown Felt Grid
-// Main game table grid component with mobile-first layout
+// Main game table grid component with mobile-first 3x3 layout
 
 import type { GameState, Card, Suit, Player } from '../engine/types.js';
-import type { PlayerDisplayInfo, PlayerPosition, CardDisplayState } from './types.js';
 import { canPlayCard } from '../engine/index.js';
 
 export class FeltGrid {
   private container: HTMLElement | null = null;
+  private topLeft: HTMLElement | null = null;
   private partnerDisplay: HTMLElement | null = null;
+  private topRight: HTMLElement | null = null;
   private leftOpponentDisplay: HTMLElement | null = null;
-  private rightOpponentDisplay: HTMLElement | null = null;
   private trickArea: HTMLElement | null = null;
+  private rightOpponentDisplay: HTMLElement | null = null;
+  private bottomLeft: HTMLElement | null = null;
   private userHand: HTMLElement | null = null;
+  private bottomRight: HTMLElement | null = null;
 
   constructor() {
     this.createElements();
   }
 
   /**
-   * Creates the DOM elements for the felt grid
+   * Creates the DOM elements for the felt grid (3x3 layout)
    */
   private createElements(): void {
     // Check if document is available (browser environment)
@@ -29,33 +32,53 @@ export class FeltGrid {
     // Main container - CSS Grid layout
     this.container = document.createElement('div');
     this.container.className = 'felt-grid';
-    
-    // Partner display (top)
+
+    // Top-left: Trump suit indicator
+    this.topLeft = document.createElement('div');
+    this.topLeft.className = 'grid-cell top-left';
+
+    // Partner display (top-center)
     this.partnerDisplay = document.createElement('div');
     this.partnerDisplay.className = 'player-display partner-display';
-    
+
+    // Top-right: Crown + scores
+    this.topRight = document.createElement('div');
+    this.topRight.className = 'grid-cell top-right';
+
     // Left opponent display
     this.leftOpponentDisplay = document.createElement('div');
     this.leftOpponentDisplay.className = 'player-display opponent-display left-opponent';
-    
-    // Right opponent display
-    this.rightOpponentDisplay = document.createElement('div');
-    this.rightOpponentDisplay.className = 'player-display opponent-display right-opponent';
-    
+
     // Trick area (center)
     this.trickArea = document.createElement('div');
     this.trickArea.className = 'trick-area';
-    
-    // User hand (bottom - thumb zone)
+
+    // Right opponent display
+    this.rightOpponentDisplay = document.createElement('div');
+    this.rightOpponentDisplay.className = 'player-display opponent-display right-opponent';
+
+    // Bottom-left: Trick count
+    this.bottomLeft = document.createElement('div');
+    this.bottomLeft.className = 'grid-cell bottom-left';
+
+    // User hand (bottom-center - thumb zone)
     this.userHand = document.createElement('div');
     this.userHand.className = 'user-hand';
-    
-    // Assemble grid
+
+    // Bottom-right: Return to lobby button placeholder
+    this.bottomRight = document.createElement('div');
+    this.bottomRight.className = 'grid-cell bottom-right';
+
+    // Assemble grid (3x3)
+    this.container.appendChild(this.topLeft);
     this.container.appendChild(this.partnerDisplay);
+    this.container.appendChild(this.topRight);
     this.container.appendChild(this.leftOpponentDisplay);
     this.container.appendChild(this.trickArea);
     this.container.appendChild(this.rightOpponentDisplay);
+    this.container.appendChild(this.bottomLeft);
     this.container.appendChild(this.userHand);
+    this.container.appendChild(this.bottomRight);
   }
 
   /**
@@ -67,26 +90,62 @@ export class FeltGrid {
     // Clear previous content
     this.clearDisplays();
 
-    // Render each player display
+    // Render corner cells
+    this.renderTopLeft(state);
     this.renderPartnerDisplay(state, userPlayerIndex);
+    this.renderTopRight(state, userPlayerIndex);
     this.renderOpponentDisplays(state, userPlayerIndex);
     this.renderTrickArea(state);
+    this.renderBottomLeft(state);
     this.renderUserHand(state, userPlayerIndex, playableCards);
+    this.renderBottomRight();
   }
 
   /**
    * Clears all display areas
    */
   private clearDisplays(): void {
+    if (this.topLeft) this.topLeft.innerHTML = '';
     if (this.partnerDisplay) this.partnerDisplay.innerHTML = '';
+    if (this.topRight) this.topRight.innerHTML = '';
     if (this.leftOpponentDisplay) this.leftOpponentDisplay.innerHTML = '';
     if (this.rightOpponentDisplay) this.rightOpponentDisplay.innerHTML = '';
     if (this.trickArea) this.trickArea.innerHTML = '';
+    if (this.bottomLeft) this.bottomLeft.innerHTML = '';
     if (this.userHand) this.userHand.innerHTML = '';
+    if (this.bottomRight) this.bottomRight.innerHTML = '';
   }
 
   /**
-   * Renders partner display at top position
+   * Renders top-left corner: Trump suit indicator
+   */
+  private renderTopLeft(state: GameState): void {
+    if (!this.topLeft) return;
+
+    const trumpSuit = state.trumpSuit;
+    if (!trumpSuit) {
+      this.topLeft.innerHTML = `
+        <div class="trump-cell">
+          <span class="trump-cell-label">Trump</span>
+          <span class="trump-cell-value">--</span>
+        </div>
+      `;
+      return;
+    }
+
+    const suitSymbol = this.getSuitSymbol(trumpSuit);
+    const suitColor = this.getSuitColor(trumpSuit);
+
+    this.topLeft.innerHTML = `
+      <div class="trump-cell">
+        <span class="trump-cell-label">Trump</span>
+        <span class="trump-cell-value ${suitColor}">${suitSymbol}</span>
+      </div>
+    `;
+  }
+
+  /**
+   * Renders partner display at top-center position
    */
   private renderPartnerDisplay(state: GameState, userPlayerIndex: number): void {
     if (!this.partnerDisplay) return;
@@ -106,6 +165,72 @@ export class FeltGrid {
         <div class="card-count">${partner.hand.length} cards</div>
       </div>
     `;
+  }
+
+  /**
+   * Renders top-right corner: Crown holder + team scores
+   */
+  private renderTopRight(state: GameState, userPlayerIndex: number): void {
+    if (!this.topRight) return;
+
+    const crownHolderName = this.getCrownHolderName(state.crownHolder, userPlayerIndex);
+    const team0Score = state.scores[0];
+    const team1Score = state.scores[1];
+
+    this.topRight.innerHTML = `
+      <div class="scores-cell">
+        <span class="scores-cell-label">Scores</span>
+        <div class="scores-cell-row">
+          <span class="team-score-mini team-0">${team0Score}</span>
+          <span class="scores-divider">-</span>
+          <span class="team-score-mini team-1">${team1Score}</span>
+        </div>
+        <span class="crown-cell-name">👑 ${crownHolderName}</span>
+      </div>
+    `;
+  }
+
+  /**
+   * Renders bottom-left corner: Trick count
+   */
+  private renderBottomLeft(state: GameState): void {
+    if (!this.bottomLeft) return;
+
+    const completedTricks = state.completedTricks.length;
+    const totalTricks = 8;
+
+    this.bottomLeft.innerHTML = `
+      <div class="trick-count-cell">
+        <span class="trick-count-value">${completedTricks}/${totalTricks}</span>
+        <span class="trick-count-label">Tricks</span>
+      </div>
+    `;
+  }
+
+  /**
+   * Renders bottom-right corner: Return to lobby button placeholder
+   */
+  private renderBottomRight(): void {
+    if (!this.bottomRight) return;
+
+    this.bottomRight.innerHTML = `
+      <div class="bottom-right-cell">
+        <span class="menu-icon">≡</span>
+      </div>
+    `;
+  }
+
+  /**
+   * Gets crown holder name relative to user
+   */
+  private getCrownHolderName(crownHolder: number, userPlayerIndex: number): string {
+    const positionMap: Record<number, string> = {
+      [userPlayerIndex]: 'You',
+      [(userPlayerIndex + 1) % 4]: 'L',
+      [(userPlayerIndex + 2) % 4]: 'P',
+      [(userPlayerIndex + 3) % 4]: 'R'
+    };
+    return positionMap[crownHolder] || `P${crownHolder}`;
   }
 
   /**
@@ -148,6 +273,7 @@ export class FeltGrid {
 
   /**
    * Renders the trick area in the center
+   * Now supports a display buffer for played cards
    */
   private renderTrickArea(state: GameState): void {
     if (!this.trickArea) return;
@@ -163,6 +289,27 @@ export class FeltGrid {
     let cardsHtml = '<div class="trick-cards">';
     for (const playedCard of trickCards) {
       cardsHtml += this.renderCard(playedCard.card, false, false);
+    }
+    cardsHtml += '</div>';
+
+    this.trickArea.innerHTML = cardsHtml;
+  }
+
+  /**
+   * Renders trick cards from a display buffer (used during animations)
+   * Requirement 15.1, 15.3: Keep cards visible until collection animation completes
+   */
+  public renderTrickDisplayBuffer(displayCards: Card[]): void {
+    if (!this.trickArea) return;
+
+    if (displayCards.length === 0) {
+      this.trickArea.innerHTML = '<div class="trick-placeholder">Play a card</div>';
+      return;
+    }
+
+    let cardsHtml = '<div class="trick-cards">';
+    for (const card of displayCards) {
+      cardsHtml += this.renderCard(card, false, false);
     }
     cardsHtml += '</div>';
 
