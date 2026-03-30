@@ -224,13 +224,24 @@ html, body {
   cursor: pointer;
 }
 
-.menu-icon-btn {
-  padding: 4px 8px;
-  min-height: auto;
-  line-height: 1;
+.menu-toggle-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.menu-icon-btn:hover {
+.menu-toggle-btn .menu-icon {
+  color: white;
+  font-size: 24px;
+}
+
+.menu-toggle-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 

@@ -10,14 +10,12 @@ export class OfflineGameView {
   private controller: OfflineGameController;
   private gameView: GameView;
   private offlineIndicator: HTMLElement | null = null;
-  private returnButton: HTMLElement | null = null;
   private onReturnToLobby: (() => void) | null = null;
 
   constructor() {
     this.controller = new OfflineGameController();
     this.gameView = this.controller.getGameView();
     this.createElements();
-    this.setupEventListeners();
   }
 
   /**
@@ -40,37 +38,27 @@ export class OfflineGameView {
       <span class="offline-text">Offline Mode</span>
     `;
 
-    // Add return to lobby button
-    this.returnButton = document.createElement('button');
-    this.returnButton.className = 'return-to-lobby-btn';
-    this.returnButton.textContent = 'Return to Lobby';
-
     // Add game view
     const gameViewContainer = this.gameView.getContainer();
     if (gameViewContainer) {
       this.container.appendChild(gameViewContainer);
     }
 
-    // Add indicator and button to container
+    // Add indicator to container (button removed - now in menu)
     this.container.appendChild(this.offlineIndicator);
-    this.container.appendChild(this.returnButton);
   }
 
   /**
-   * Sets up event listeners
+   * Sets up return to lobby handler from game menu
    */
-  private setupEventListeners(): void {
-    if (!this.returnButton) return;
-
-    this.returnButton.addEventListener('click', () => {
-      this.handleReturnToLobby();
-    });
+  public setReturnToLobbyHandler(handler: () => void): void {
+    this.onReturnToLobby = handler;
   }
 
   /**
    * Handles return to lobby action
    */
-  private handleReturnToLobby(): void {
+  public handleReturnToLobby(): void {
     // Stop the game
     this.controller.stop();
 
@@ -78,13 +66,6 @@ export class OfflineGameView {
     if (this.onReturnToLobby) {
       this.onReturnToLobby();
     }
-  }
-
-  /**
-   * Sets the return to lobby callback
-   */
-  public setReturnToLobbyHandler(handler: () => void): void {
-    this.onReturnToLobby = handler;
   }
 
   /**

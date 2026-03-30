@@ -39,8 +39,11 @@ class App {
     this.clearCurrentView();
 
     const offlineView = new OfflineGameView();
-    offlineView.setReturnToLobbyHandler(() => {
-      offlineView.destroy();
+    
+    // Get the GameView to wire up the menu's return to lobby
+    const gameView = offlineView.getController().getGameView();
+    gameView.setReturnToLobbyHandler(() => {
+      offlineView.handleReturnToLobby();
       page.redirect('/offline');
     });
 

@@ -103,15 +103,17 @@ export class GameView {
     this.victoryModal.setContainer(this.container);
 
     // Set up game menu
-    const gameMenuContainer = this.gameMenu.getContainer();
-    if (gameMenuContainer) {
-      this.container.appendChild(gameMenuContainer);
-    }
-
-    // Set up menu click handler in felt grid
-    this.feltGrid.setMenuClickHandler(() => {
+    this.gameMenu.setContainer(this.container);
+    this.gameMenu.setViewPlayedCardsHandler(() => {
       this.gameMenu.showPlayedCardsModal(this.uiState.gameState, this.userPlayerIndex);
     });
+  }
+
+  /**
+   * Sets the return to lobby handler
+   */
+  public setReturnToLobbyHandler(handler: () => void): void {
+    this.gameMenu.setReturnToLobbyHandler(handler);
   }
 
   /**

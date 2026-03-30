@@ -19,11 +19,13 @@ export interface PlayedTrickRow {
 export class GameMenu {
   private container: HTMLElement | null = null;
   private menuElement: HTMLElement | null = null;
+  private menuButtonElement: HTMLElement | null = null;
   private modalElement: HTMLElement | null = null;
   private isOpen: boolean = false;
   private modalIsOpen: boolean = false;
   private currentUserPlayerIndex: number = 0;
   private onViewPlayedCards: (() => void) | null = null;
+  private onReturnToLobby: (() => void) | null = null;
 
   constructor() {
     if (typeof document !== 'undefined') {
@@ -36,13 +38,17 @@ export class GameMenu {
 
     this.container = document.createElement('div');
     this.container.className = 'game-menu-container';
-    this.container.style.display = 'none';
+
+    this.menuButtonElement = document.createElement('button');
+    this.menuButtonElement.className = 'menu-toggle-btn btn btn-ghost btn-sm';
+    this.menuButtonElement.innerHTML = '<span class="menu-icon text-2xl">≡</span>';
 
     this.menuElement = document.createElement('div');
     this.menuElement.className = 'game-menu dropdown dropdown-end';
     this.menuElement.innerHTML = `
       <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
         <li><a class="menu-item view-played-cards">View Played Cards</a></li>
+        <li><a class="menu-item return-to-lobby">Return to Lobby</a></li>
       </ul>
     `;
 
@@ -59,41 +65,21 @@ export class GameMenu {
       this.container.parentNode.removeChild(this.container);
     }
     if (this.container) {
+      // Add menu button first
+      if (this.menuButtonElement) {
+        container.appendChild(this.menuButtonElement);
+      }
       container.appendChild(this.container);
     }
     this.setupEventListeners();
   }
 
-  private setupEventListeners(): void {
-    if (!this.menuElement || !this.modalElement || !this.container) return;
+  public setReturnToLobbyHandler(handler: () => void): void {
+    this.onReturnToLobby = handler;
+  }
 
-    const menuToggle = this.menuElement.querySelector('.menu-item');
-    if (menuToggle) {
-      menuToggle.addEventListener('click', () => {
-        this.hide();
-        if (this.onViewPlayedCards) {
-          this.onViewPlayedCards();
-        }
-      });
-    }
-
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close-btn btn btn-sm btn-circle btn-ghost';
-    closeBtn.innerHTML = '✕';
-    closeBtn.style.position = 'absolute';
-    closeBtn.style.top = '8px';
-    closeBtn.style.left = '8px';
-    closeBtn.addEventListener('click', () => {
-      this.hidePlayedCardsModal();
-    });
-
-    this.modalElement.appendChild(closeBtn);
-
-    this.modalElement.addEventListener('click', (event) => {
-      if (event.target === this.modalElement) {
-        this.hidePlayedCardsModal();
-      }
-    });
+  public setViewPlayedCardsHandler(handler: () => void): void {
+    this.onViewPlayedCards = handler;
   }
 
   public show(): void {
@@ -136,8 +122,45 @@ export class GameMenu {
     this.modalIsOpen = false;
   }
 
-  public setViewPlayedCardsHandler(handler: () => void): void {
-    this.onViewPlayedCards = handler;
+  private setupEventListeners(): void {
+    if (!this.menuElement || !this.modalElement || !this.container || !this.menuButtonElement) return;
+
+    // Menu button toggles dropdown
+    this.menuButtonElement.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggle();
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (this.isOpen && this.menuElement && !this.menuElement.contains(e.target as Node) && !this.menuButtonElement?.contains(e.target as Node)) {
+        this.hide();
+      }
+    });
+
+    // View Played Cards menu item
+    const viewPlayedCardsItem = this.menuElement.querySelector('.view-played-cards');
+    if (viewPlayedCardsItem) {
+      viewPlayedCardsItem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.hide();
+        if (this.onViewPlayedCards) {
+          this.onViewPlayedCards();
+        }
+      });
+    }
+
+    // Return to Lobby menu item
+    const returnToLobbyItem = this.menuElement.querySelector('.return-to-lobby');
+    if (returnToLobbyItem) {
+      returnToLobbyItem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.hide();
+        if (this.onReturnToLobby) {
+          this.onReturnToLobby();
+        }
+      });
+    }
   }
 
   private renderPlayedCardsModal(state: GameState, userPlayerIndex: number): void {
