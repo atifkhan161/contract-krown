@@ -239,14 +239,27 @@ export class FeltGrid {
     `;
   }
 
+  private menuButtonElement: HTMLElement | null = null;
+
   /**
-   * Renders bottom-right corner: Empty (menu is now in fixed position)
+   * Sets the menu button element to be rendered in bottom-right
+   */
+  public setMenuButtonElement(element: HTMLElement): void {
+    this.menuButtonElement = element;
+  }
+
+  /**
+   * Renders bottom-right corner: Menu button
    */
   private renderBottomRight(): void {
     if (!this.bottomRight) return;
 
-    // Menu is now handled by GameMenu component with fixed positioning
-    this.bottomRight.innerHTML = '';
+    if (this.menuButtonElement) {
+      this.bottomRight.innerHTML = '';
+      this.bottomRight.appendChild(this.menuButtonElement);
+    } else {
+      this.bottomRight.innerHTML = '';
+    }
   }
 
   /**

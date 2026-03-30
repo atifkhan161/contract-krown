@@ -39,19 +39,18 @@ export class GameMenu {
     this.container = document.createElement('div');
     this.container.className = 'game-menu-container';
 
-    this.menuButtonElement = document.createElement('button');
-    this.menuButtonElement.className = 'menu-toggle-btn btn btn-ghost btn-sm';
-    this.menuButtonElement.innerHTML = '<span class="menu-icon text-2xl">≡</span>';
-
+    // Create menu dropdown
     this.menuElement = document.createElement('div');
     this.menuElement.className = 'game-menu dropdown dropdown-end';
+    this.menuElement.style.display = 'none';
     this.menuElement.innerHTML = `
-      <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+      <ul tabindex="0" class="dropdown-content z-[50] menu p-2 shadow bg-base-100 rounded-box w-52">
         <li><a class="menu-item view-played-cards">View Played Cards</a></li>
         <li><a class="menu-item return-to-lobby">Return to Lobby</a></li>
       </ul>
     `;
 
+    // Create modal for played cards
     this.modalElement = document.createElement('div');
     this.modalElement.className = 'played-cards-modal modal';
     this.modalElement.style.display = 'none';
@@ -60,15 +59,16 @@ export class GameMenu {
     this.container.appendChild(this.modalElement);
   }
 
+  public setMenuButtonElement(element: HTMLElement): void {
+    this.menuButtonElement = element;
+    this.setupMenuButtonListener();
+  }
+
   public setContainer(container: HTMLElement): void {
     if (this.container && this.container.parentNode) {
       this.container.parentNode.removeChild(this.container);
     }
     if (this.container) {
-      // Add menu button first
-      if (this.menuButtonElement) {
-        container.appendChild(this.menuButtonElement);
-      }
       container.appendChild(this.container);
     }
     this.setupEventListeners();
@@ -84,13 +84,13 @@ export class GameMenu {
 
   public show(): void {
     if (!this.menuElement) return;
-    this.menuElement.classList.add('dropdown-open');
+    this.menuElement.style.display = 'block';
     this.isOpen = true;
   }
 
   public hide(): void {
     if (!this.menuElement) return;
-    this.menuElement.classList.remove('dropdown-open');
+    this.menuElement.style.display = 'none';
     this.isOpen = false;
   }
 
@@ -122,18 +122,22 @@ export class GameMenu {
     this.modalIsOpen = false;
   }
 
-  private setupEventListeners(): void {
-    if (!this.menuElement || !this.modalElement || !this.container || !this.menuButtonElement) return;
-
-    // Menu button toggles dropdown
+  private setupMenuButtonListener(): void {
+    if (!this.menuButtonElement) return;
+    
     this.menuButtonElement.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
       this.toggle();
     });
+  }
+
+  private setupEventListeners(): void {
+    if (!this.menuElement || !this.modalElement || !this.container) return;
 
     // Close menu when clicking outside
     document.addEventListener('click', (e) => {
-      if (this.isOpen && this.menuElement && !this.menuElement.contains(e.target as Node) && !this.menuButtonElement?.contains(e.target as Node)) {
+      if (this.isOpen && this.menuElement && !this.menuElement.contains(e.target as Node) && this.menuButtonElement && !this.menuButtonElement.contains(e.target as Node)) {
         this.hide();
       }
     });

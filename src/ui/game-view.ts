@@ -102,7 +102,14 @@ export class GameView {
     this.roundEndModal.setContainer(this.container);
     this.victoryModal.setContainer(this.container);
 
-    // Set up game menu
+    // Create menu button element and add to felt grid
+    const menuButton = document.createElement('button');
+    menuButton.className = 'menu-toggle-btn btn btn-ghost btn-sm';
+    menuButton.innerHTML = '<span class="menu-icon text-2xl">≡</span>';
+    this.feltGrid.setMenuButtonElement(menuButton);
+
+    // Set up game menu with the button
+    this.gameMenu.setMenuButtonElement(menuButton);
     this.gameMenu.setContainer(this.container);
     this.gameMenu.setViewPlayedCardsHandler(() => {
       this.gameMenu.showPlayedCardsModal(this.uiState.gameState, this.userPlayerIndex);
