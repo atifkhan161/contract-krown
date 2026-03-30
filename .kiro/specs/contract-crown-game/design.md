@@ -768,6 +768,173 @@ These redundant properties have been consolidated into single comprehensive prop
 
 **Validates: Requirements 14.5**
 
+### Property 32: Menu Toggle Visibility
+
+*For any* menu icon tap, the menu SHALL toggle between open and closed states.
+
+**Validates: Requirements 22.1, 22.9**
+
+### Property 33: Team-Specific Trick Filtering
+
+*For any* "View Played Cards" modal, THE Mobile_UI SHALL display only tricks where the user's team won.
+
+**Validates: Requirements 22.4, 22.8**
+
+### Property 34: Player Label Assignment
+
+*For any* card displayed in the played cards modal, THE Mobile_UI SHALL correctly identify the player as You, Partner, Left, or Right relative to the user's position.
+
+**Validates: Requirements 22.5**
+
+### Property 35: Current Trick Display
+
+*For any* game state where the user's team has won at least one trick AND the current trick has cards, THE Mobile_UI SHALL display the current trick cards with "In Progress" label.
+
+**Validates: Requirements 22.6**
+
+### Property 36: Empty State Message
+
+*For any* game state where the user's team has won zero tricks, THE Mobile_UI SHALL display the empty state message.
+
+**Validates: Requirements 22.7**
+
+### 9. GameMenu Component (Played Cards Viewer)
+
+Provides a dropdown menu in the bottom-right corner with access to view played cards from tricks won by the user's team.
+
+**Responsibilities**:
+- Display dropdown menu on menu icon click
+- Show "View Played Cards" option
+- Display modal with played cards from user's team tricks
+- Filter tricks to show only those won by user's team
+- Display player labels (You, Partner, Left, Right) for each card
+- Handle current trick display
+- Show empty state when no tricks won
+
+**Key Interfaces**:
+
+```typescript
+interface PlayedCardInfo {
+  card: Card;
+  playerLabel: 'You' | 'Partner' | 'Left' | 'Right';
+  playerIndex: number;
+}
+
+interface PlayedTrickRow {
+  trickNumber: number;
+  winner: 'You' | 'Partner' | 'Left' | 'Right' | 'In Progress';
+  isCurrentTrick: boolean;
+  cards: PlayedCardInfo[];
+}
+
+class GameMenu {
+  private container: HTMLElement | null = null;
+  private menuElement: HTMLElement | null = null;
+  private modalElement: HTMLElement | null = null;
+  private isOpen: boolean = false;
+  private isModalOpen: boolean = false;
+
+  show(): void;
+  hide(): void;
+  toggle(): void;
+  showPlayedCardsModal(): void;
+  hidePlayedCardsModal(): void;
+  getPlayedCardsForUserTeam(state: GameState, userPlayerIndex: number): PlayedTrickRow[];
+  setContainer(container: HTMLElement): void;
+  render(state: GameState, userPlayerIndex: number): void;
+}
+```
+
+**Modal UI Design**:
+
+```
+┌─────────────────────────────────────────┐
+│  ✕  Cards Your Team Won                 │
+├─────────────────────────────────────────┤
+│  Trick 1 - Won by You                   │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+│  │   A♥   │ │   K♥   │ │   Q♥   │ │   J♥   │
+│  │  You   │ │Partner │ │  Left  │ │ Right  │
+│  └────────┘ └────────┘ └────────┘ └────────┘
+├─────────────────────────────────────────┤
+│  Trick 2 - Won by Partner               │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+│  │   7♠   │ │   8♠   │ │   9♠   │ │  10♠   │
+│  │  You   │ │Partner │ │  Left  │ │ Right  │
+│  └────────┘ └────────┘ └────────┘ └────────┘
+├─────────────────────────────────────────┤
+│  Trick 3 - In Progress                   │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+│  │   K♦   │ │   Q♦   │ │   --   │ │   --   │
+│  │  You   │ │Partner │ │  Left  │ │ Right  │
+│  └────────┘ └────────┘ └────────┘ └────────┘
+└─────────────────────────────────────────┘
+```
+
+**Empty State Design**:
+
+```
+┌─────────────────────────────────────────┐
+│  ✕  Cards Your Team Won                 │
+├─────────────────────────────────────────┤
+│                                         │
+│     Your team hasn't won any tricks     │
+│              yet                        │
+│                                         │
+│      Keep playing to see your           │
+│           played cards!                  │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+**Card Filtering Logic**:
+
+```typescript
+getPlayedCardsForUserTeam(state: GameState, userPlayerIndex: number): PlayedTrickRow[] {
+  const userTeam = state.players[userPlayerIndex].team;
+  const result: PlayedTrickRow[] = [];
+  const positionLabels = ['You', 'Left', 'Partner', 'Right'];
+  
+  const getPlayerLabel = (playerIndex: number): string => {
+    const relativeIndex = (playerIndex - userPlayerIndex + 4) % 4;
+    return positionLabels[relativeIndex];
+  };
+
+  for (let i = 0; i < state.completedTricks.length; i++) {
+    const trick = state.completedTricks[i];
+    const winnerTeam = state.players[trick.winner!].team;
+    
+    if (winnerTeam === userTeam) {
+      result.push({
+        trickNumber: i + 1,
+        winner: getPlayerLabel(trick.winner!) as 'You' | 'Partner' | 'Left' | 'Right',
+        isCurrentTrick: false,
+        cards: trick.cards.map(pc => ({
+          card: pc.card,
+          playerLabel: getPlayerLabel(pc.player) as 'You' | 'Partner' | 'Left' | 'Right',
+          playerIndex: pc.player
+        }))
+      });
+    }
+  }
+  
+  if (result.length > 0 && state.currentTrick.cards.length > 0) {
+    result.push({
+      trickNumber: state.completedTricks.length + 1,
+      winner: 'In Progress',
+      isCurrentTrick: true,
+      cards: state.currentTrick.cards.map(pc => ({
+        card: pc.card,
+        playerLabel: getPlayerLabel(pc.player) as 'You' | 'Partner' | 'Left' | 'Right',
+        playerIndex: pc.player
+      }))
+    });
+  }
+  
+  return result;
+}
+```
+
 
 ## Error Handling
 
@@ -921,7 +1088,7 @@ test('deck contains exactly 32 cards with correct distribution', () => {
 ```
 
 **Property Test Coverage**:
-- All 31 correctness properties must have corresponding property tests
+- All 36 correctness properties must have corresponding property tests
 - Use fast-check's built-in generators for primitives
 - Create custom generators for domain objects (Card, GameState, Player)
 - Test invariants that should hold across all valid game states

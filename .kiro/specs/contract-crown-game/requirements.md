@@ -275,3 +275,19 @@ Contract Crown is a mobile-only Progressive Web App (PWA) implementing a real-ti
 3. THE PWA_Shell SHALL be served as static files from the same Render instance
 4. THE Colyseus_Server SHALL use Bun as the runtime for optimal performance
 5. THE deployment configuration SHALL support automatic restarts on crashes
+
+### Requirement 22: Game Menu with Played Cards Viewer
+
+**User Story:** As a player, I want to view the cards played in tricks my team has won, so that I can review the game progress.
+
+#### Acceptance Criteria
+
+1. WHEN the user taps the menu icon in the bottom-right, THE Mobile_UI SHALL display a dropdown menu with the "View Played Cards" option
+2. THE Mobile_UI SHALL display a modal when "View Played Cards" is selected
+3. THE modal SHALL include a close button AND be dismissible by clicking outside
+4. WHEN the user's team has won N tricks (where N >= 1), THE Mobile_UI SHALL display N rows, each containing the 4 cards from that trick
+5. EACH card SHALL display the suit symbol, rank, AND player label (You, Partner, Left, Right)
+6. WHEN the user's team has won at least one trick AND a current trick is in progress, THE Mobile_UI SHALL display the current trick cards alongside completed tricks
+7. WHEN the user's team has won zero tricks, THE Mobile_UI SHALL display "Your team hasn't won any tricks yet" message
+8. WHEN displaying played cards, THE Mobile_UI SHALL NOT show cards from tricks won by the opposing team
+9. THE Mobile_UI SHALL hide the menu when clicking outside of it

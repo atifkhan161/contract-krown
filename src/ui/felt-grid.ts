@@ -16,6 +16,7 @@ export class FeltGrid {
   private userDisplay: HTMLElement | null = null;
   private userHand: HTMLElement | null = null;
   private bottomRight: HTMLElement | null = null;
+  private onMenuClick: (() => void) | null = null;
 
   constructor() {
     this.createElements();
@@ -240,16 +241,33 @@ export class FeltGrid {
   }
 
   /**
-   * Renders bottom-right corner: Return to lobby button placeholder
+   * Renders bottom-right corner: Menu button
    */
   private renderBottomRight(): void {
     if (!this.bottomRight) return;
 
     this.bottomRight.innerHTML = `
       <div class="bottom-right-cell">
-        <span class="menu-icon">≡</span>
+        <button class="menu-icon-btn btn btn-ghost btn-sm">
+          <span class="menu-icon text-2xl">≡</span>
+        </button>
       </div>
     `;
+
+    const menuBtn = this.bottomRight.querySelector('.menu-icon-btn');
+    if (menuBtn && this.onMenuClick) {
+      menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.onMenuClick?.();
+      });
+    }
+  }
+
+  /**
+   * Sets the menu click handler
+   */
+  public setMenuClickHandler(handler: () => void): void {
+    this.onMenuClick = handler;
   }
 
   /**

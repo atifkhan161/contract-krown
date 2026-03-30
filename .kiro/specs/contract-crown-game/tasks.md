@@ -459,6 +459,58 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Ensure corner cells occupy minimal space to maximize trick area and hand area
     - _Requirements: 6.3, 6.4, 7.5_
 
+- [x] 33. Implement Game Menu with Played Cards Viewer
+  - [x] 33.1 Create GameMenu class with DaisyUI dropdown styling
+    - Create src/ui/game-menu.ts
+    - Implement dropdown menu with "View Played Cards" option
+    - Add click-outside-to-close behavior
+    - _Requirements: 22.1, 22.9_
+
+  - [x] 33.2 Create PlayedCardsModal class
+    - Create modal with close button (DaisyUI modal)
+    - Add backdrop click dismiss functionality
+    - Implement empty state display
+    - _Requirements: 22.3, 22.7_
+
+  - [x] 33.3 Integrate menu icon in FeltGrid
+    - Replace static menu-icon with clickable element
+    - Wire up show/hide handlers to GameMenu
+    - _Requirements: 22.1_
+
+  - [x] 33.4 Implement played cards filtering logic
+    - Filter completed tricks by user's team wins only
+    - Get player labels relative to user position
+    - Handle current trick display when applicable
+    - _Requirements: 22.4, 22.5, 22.6, 22.8_
+
+  - [x] 33.5 Render played cards in modal
+    - Display each trick as a row with 4 cards
+    - Show suit symbol + rank + player label for each card
+    - Apply suit color (red/black) styling
+    - Handle empty state message
+    - _Requirements: 22.4, 22.5, 22.6, 22.7_
+
+  - [x] 33.6 Add CSS styling
+    - Style dropdown menu with DaisyUI dropdown pattern
+    - Style modal with DaisyUI modal pattern
+    - Style played cards grid with player labels
+    - Style empty state with centered message
+    - _Requirements: 22.1, 22.3_
+
+  - [x] 33.7 Integrate GameMenu with GameView
+    - Add GameMenu to GameView components
+    - Wire up menu and modal handlers
+    - Ensure proper render order
+    - _Requirements: 22.1, 22.2_
+
+  - [ ]* 33.8 Write unit tests for GameMenu
+    - Test menu toggle behavior
+    - Test trick filtering (team-specific)
+    - Test player label assignment
+    - Test current trick handling
+    - Test empty state display
+    - _Requirements: 22.4, 22.5, 22.6, 22.7, 22.8_
+
 - [ ] 18. Implement login and lobby views
   - [ ] 18.1 Create LoginView component
     - Username and password input fields
@@ -791,7 +843,7 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
 
   - [ ]* 31.4 Run full test suite
     - Run all unit tests
-    - Run all property tests (32 properties)
+    - Run all property tests (36 properties)
     - Run all integration tests
     - Run all E2E tests
     - Verify 100% property test coverage
@@ -804,7 +856,7 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
 
 - Tasks marked with `*` are optional and can be skipped for faster MVP
 - Each task references specific requirements for traceability
-- All 32 correctness properties have corresponding property tests (31 original + 1 re-deal property)
+- All 36 correctness properties have corresponding property tests (31 original + 1 re-deal + 4 new menu/properties)
 - Property tests use fast-check with minimum 100 iterations
 - Checkpoints ensure incremental validation at key milestones
 - **NEW WORKFLOW**: Implementation now prioritizes offline play testing before online multiplayer

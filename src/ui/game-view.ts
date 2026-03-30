@@ -8,6 +8,7 @@ import { HapticController } from './haptic-controller.js';
 import { TrumpSelector } from './trump-selector.js';
 import { RoundEndModal } from './round-end-modal.js';
 import { VictoryModal } from './victory-modal.js';
+import { GameMenu } from './game-menu.js';
 import { 
   animateCardPlay, 
   animateTrickCollection, 
@@ -24,6 +25,7 @@ export class GameView {
   private trumpSelector: TrumpSelector;
   private roundEndModal: RoundEndModal;
   private victoryModal: VictoryModal;
+  private gameMenu: GameMenu;
   private touchGestureHandler: TouchGestureHandler | null = null;
   private userPlayerIndex: number = 0;
   private onCardTap: CardTapHandler | null = null;
@@ -40,6 +42,7 @@ export class GameView {
     this.trumpSelector = new TrumpSelector();
     this.roundEndModal = new RoundEndModal();
     this.victoryModal = new VictoryModal();
+    this.gameMenu = new GameMenu();
     this.uiState = {
       gameState: this.createEmptyGameState(),
       selectedCard: null,
@@ -98,6 +101,17 @@ export class GameView {
     this.trumpSelector.setContainer(this.container);
     this.roundEndModal.setContainer(this.container);
     this.victoryModal.setContainer(this.container);
+
+    // Set up game menu
+    const gameMenuContainer = this.gameMenu.getContainer();
+    if (gameMenuContainer) {
+      this.container.appendChild(gameMenuContainer);
+    }
+
+    // Set up menu click handler in felt grid
+    this.feltGrid.setMenuClickHandler(() => {
+      this.gameMenu.showPlayedCardsModal(this.uiState.gameState, this.userPlayerIndex);
+    });
   }
 
   /**
@@ -509,6 +523,7 @@ export class GameView {
     this.trumpSelector.destroy();
     this.roundEndModal.destroy();
     this.victoryModal.destroy();
+    this.gameMenu.destroy();
     if (this.touchGestureHandler) {
       this.touchGestureHandler.destroy();
     }

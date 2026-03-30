@@ -224,6 +224,84 @@ html, body {
   cursor: pointer;
 }
 
+.menu-icon-btn {
+  padding: 4px 8px;
+  min-height: auto;
+  line-height: 1;
+}
+
+.menu-icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Game Menu ===== */
+.game-menu-container {
+  position: relative;
+}
+
+.game-menu .dropdown-content {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+}
+
+.game-menu .menu-item {
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.game-menu .menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Played Cards Modal ===== */
+.played-cards-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.played-cards-modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.played-cards-modal-content .trick-row {
+  padding: 12px;
+  background-color: var(--fallback-b2, #414853);
+  border-radius: 8px;
+}
+
+.played-cards-modal-content .played-card {
+  min-height: 60px;
+  justify-content: center;
+}
+
+.played-cards-modal .modal-close-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+}
+
+.empty-state {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
 /* ===== Player Displays ===== */
 .player-display {
   display: flex;
