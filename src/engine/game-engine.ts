@@ -3,16 +3,16 @@
 
 import { Card, GameState, Player, Suit, Rank, GamePhase, Trick, PlayedCard } from './types.js';
 
-// Rank values for comparison (higher = stronger)
+// Rank values for comparison (higher = stronger) - matches Card.value
 const RANK_VALUES: Record<Rank, number> = {
-  '7': 0,
-  '8': 1,
-  '9': 2,
-  '10': 3,
-  'J': 4,
-  'Q': 5,
-  'K': 6,
-  'A': 7
+  '7': 7,
+  '8': 8,
+  '9': 9,
+  '10': 10,
+  'J': 11,
+  'Q': 12,
+  'K': 13,
+  'A': 14
 };
 
 /**
@@ -25,7 +25,7 @@ export function createDeck(): Card[] {
 
   for (const suit of suits) {
     for (const rank of ranks) {
-      deck.push({ suit, rank });
+      deck.push({ suit, rank, value: RANK_VALUES[rank] });
     }
   }
 
@@ -72,7 +72,10 @@ export function createInitialState(): GameState {
     dealer: 0,
     phase: 'DEALING_INITIAL',
     scores: [0, 0],
-    currentPlayer: 0
+    currentPlayer: 0,
+    partnerIndex: 0,
+    isDeclaringTeam: false,
+    tricksWonByTeam: 0
   };
 }
 

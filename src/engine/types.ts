@@ -7,6 +7,7 @@ export type Rank = '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K' | 'A';
 export interface Card {
   suit: Suit;
   rank: Rank;
+  value: number; // 7=7, 8=8, 9=9, 10=10, J=11, Q=12, K=13, A=14
 }
 
 // Player representation
@@ -49,4 +50,8 @@ export interface GameState {
   phase: GamePhase;
   scores: [number, number]; // [team0, team1]
   currentPlayer: number;
+  // Bot-specific properties for SmartBot integration
+  partnerIndex: number;
+  isDeclaringTeam: boolean;
+  tricksWonByTeam: number;
 }
