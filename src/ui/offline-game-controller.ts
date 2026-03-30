@@ -395,6 +395,10 @@ export class OfflineGameController {
         this.gameState.trumpSuit = null;
         this.gameState.phase = 'DEALING_INITIAL';
 
+        // CRITICAL: Clear trick display buffer to flush old cards from UI
+        // This ensures no cards from the previous round are visible when new round starts
+        this.gameView.clearTrickDisplayBuffer();
+
         // Start new round
         this.startNewRound();
       }, 2000);

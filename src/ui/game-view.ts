@@ -69,7 +69,10 @@ export class GameView {
       dealer: 0,
       phase: 'DEALING_INITIAL',
       scores: [0, 0],
-      currentPlayer: 0
+      currentPlayer: 0,
+      partnerIndex: 2,
+      isDeclaringTeam: false,
+      tricksWonByTeam: 0
     };
   }
 
@@ -332,7 +335,14 @@ export class GameView {
     
     // If current trick has cards, update buffer to match
     if (currentTrickCards.length > 0) {
-      // FIX: Add new cards to existing buffer instead of replacing it
+      // CRITICAL FIX: Clear buffer when new trick starts to prevent stale cards from previous trick
+      // This fixes the issue where 4th card wasn't visible when winner leads next trick
+      // Check if buffer has more cards than current trick (indicates previous trick wasn't cleared)
+      if (this.trickDisplayCards.length > currentTrickCards.length) {
+        this.trickDisplayCards = [];
+      }
+      
+      // Add new cards to existing buffer instead of replacing it
       // This ensures cards played earlier in the trick are not lost
       for (const playedCard of currentTrickCards) {
         const exists = this.trickDisplayCards.some(

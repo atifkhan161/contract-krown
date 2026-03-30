@@ -1,10 +1,27 @@
-// @vitest-environment jsdom
 // Fourth Card Visibility Test
 // Verifies that the 4th card in a trick is visible in the trick area
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { JSDOM } from 'jsdom';
 import { GameView } from '../../src/ui/game-view.js';
-import type { GameState, Card } from '../../src/engine/types.js';
+import type { GameState, Card, PlayedCard } from '../../src/engine/types.js';
+
+// Set up jsdom for this test file
+const dom = new JSDOM(`<!DOCTYPE html><html><head></head><body><div id="app"></div></body></html>`, {
+  url: 'http://localhost',
+  pretendToBeVisual: true
+});
+
+(global as any).window = dom.window;
+(global as any).document = dom.window.document;
+(global as any).HTMLElement = dom.window.HTMLElement;
+(global as any).HTMLDivElement = dom.window.HTMLDivElement;
+(global as any).navigator = dom.window.navigator;
+
+// Helper function to create a card with value
+function createCard(suit: string, rank: string, value: number): Card {
+  return { suit: suit as any, rank: rank as any, value };
+}
 
 describe('Fourth Card Visibility', () => {
   let gameView: GameView;
@@ -46,11 +63,11 @@ describe('Fourth Card Visibility', () => {
         currentTrick: {
           leadPlayer: 0,
           cards: [
-            { card: { suit: 'HEARTS', rank: 'A' }, player: 0 },
-            { card: { suit: 'HEARTS', rank: 'K' }, player: 1 },
-            { card: { suit: 'HEARTS', rank: 'Q' }, player: 2 },
-            { card: { suit: 'HEARTS', rank: 'J' }, player: 3 }
-          ],
+            { card: createCard('HEARTS', 'A', 14), player: 0 },
+            { card: createCard('HEARTS', 'K', 13), player: 1 },
+            { card: createCard('HEARTS', 'Q', 12), player: 2 },
+            { card: createCard('HEARTS', 'J', 11), player: 3 }
+          ] as PlayedCard[],
           winner: null
         },
         completedTricks: [],
@@ -59,6 +76,9 @@ describe('Fourth Card Visibility', () => {
         dealer: 3,
         phase: 'TRICK_PLAY',
         scores: [0, 0],
+        partnerIndex: 2,
+        isDeclaringTeam: false,
+        tricksWonByTeam: 0,
         currentPlayer: 0
       };
 
@@ -90,11 +110,11 @@ describe('Fourth Card Visibility', () => {
           {
             leadPlayer: 0,
             cards: [
-              { card: { suit: 'HEARTS', rank: 'A' }, player: 0 },
-              { card: { suit: 'HEARTS', rank: 'K' }, player: 1 },
-              { card: { suit: 'HEARTS', rank: 'Q' }, player: 2 },
-              { card: { suit: 'HEARTS', rank: 'J' }, player: 3 } // 4th card
-            ],
+              { card: createCard('HEARTS', 'A', 14), player: 0 },
+              { card: createCard('HEARTS', 'K', 13), player: 1 },
+              { card: createCard('HEARTS', 'Q', 12), player: 2 },
+              { card: createCard('HEARTS', 'J', 11), player: 3 } // 4th card
+            ] as PlayedCard[],
             winner: 0
           }
         ],
@@ -103,6 +123,9 @@ describe('Fourth Card Visibility', () => {
         dealer: 3,
         phase: 'TRICK_PLAY',
         scores: [0, 0],
+        partnerIndex: 2,
+        isDeclaringTeam: false,
+        tricksWonByTeam: 0,
         currentPlayer: 0
       };
 
@@ -131,11 +154,11 @@ describe('Fourth Card Visibility', () => {
         currentTrick: {
           leadPlayer: 0,
           cards: [
-            { card: { suit: 'HEARTS', rank: 'A' }, player: 0 },
-            { card: { suit: 'DIAMONDS', rank: 'K' }, player: 1 },
-            { card: { suit: 'CLUBS', rank: 'Q' }, player: 2 },
-            { card: { suit: 'SPADES', rank: 'J' }, player: 3 }
-          ],
+            { card: createCard('HEARTS', 'A', 14), player: 0 },
+            { card: createCard('DIAMONDS', 'K', 13), player: 1 },
+            { card: createCard('CLUBS', 'Q', 12), player: 2 },
+            { card: createCard('SPADES', 'J', 11), player: 3 }
+          ] as PlayedCard[],
           winner: null
         },
         completedTricks: [],
@@ -144,6 +167,9 @@ describe('Fourth Card Visibility', () => {
         dealer: 3,
         phase: 'TRICK_PLAY',
         scores: [0, 0],
+        partnerIndex: 2,
+        isDeclaringTeam: false,
+        tricksWonByTeam: 0,
         currentPlayer: 0
       };
 
@@ -173,11 +199,11 @@ describe('Fourth Card Visibility', () => {
         currentTrick: {
           leadPlayer: 0,
           cards: [
-            { card: { suit: 'HEARTS', rank: 'A' }, player: 0 },
-            { card: { suit: 'HEARTS', rank: 'K' }, player: 1 },
-            { card: { suit: 'HEARTS', rank: 'Q' }, player: 2 },
-            { card: { suit: 'HEARTS', rank: 'J' }, player: 3 }
-          ],
+            { card: createCard('HEARTS', 'A', 14), player: 0 },
+            { card: createCard('HEARTS', 'K', 13), player: 1 },
+            { card: createCard('HEARTS', 'Q', 12), player: 2 },
+            { card: createCard('HEARTS', 'J', 11), player: 3 }
+          ] as PlayedCard[],
           winner: 0 // Player 0 (You) won
         },
         completedTricks: [],
@@ -186,6 +212,9 @@ describe('Fourth Card Visibility', () => {
         dealer: 3,
         phase: 'TRICK_PLAY',
         scores: [0, 0],
+        partnerIndex: 2,
+        isDeclaringTeam: false,
+        tricksWonByTeam: 0,
         currentPlayer: 0
       };
 
