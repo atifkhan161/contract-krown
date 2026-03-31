@@ -67,13 +67,13 @@ export class SessionManager {
   /**
    * Logs in a user and creates a session token
    */
-  public login(userId: string, username: string): SessionData {
-    const token = this.generateToken();
+  public login(userId: string, username: string, token?: string, expiresAt?: number): SessionData {
+    const sessionToken = token || this.generateToken();
     const session: SessionData = {
       userId,
       username,
-      token,
-      expiresAt: Date.now() + this.SESSION_DURATION
+      token: sessionToken,
+      expiresAt: expiresAt || Date.now() + this.SESSION_DURATION
     };
     
     localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));

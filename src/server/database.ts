@@ -98,6 +98,36 @@ export class Database {
   }
 
   // User operations
+  registerUser(username: string, passwordHash: string): UserDocument {
+    this.ensureDb();
+    
+    let users = this.db.getCollection('users');
+    if (!users) {
+      users = this.db.addCollection('users', {
+        indices: ['username', 'userId']
+      });
+    }
+
+    const existing = users.find({ username });
+    if (existing.length > 0) {
+      throw new Error('USERNAME_EXISTS');
+    }
+
+    const userId = this.generateUserId();
+    const user: UserDocument = {
+      userId,
+      username,
+      passwordHash,
+      createdAt: Date.now(),
+      lastLogin: Date.now()
+    };
+
+    users.insert(user);
+    this.initializeStatistics(userId);
+
+    return user;
+  }
+
   createUser(userId: string, username: string, passwordHash: string): UserDocument {
     const user: UserDocument = {
       userId,
@@ -278,6 +308,18 @@ export class Database {
         this.db.close();
       } catch (e) {}
     }
+  }
+
+  private generateUserId(): string {
+    const array = new Uint8Array(16);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(array);
+    } else {
+      for (let i = 0; i < array.length; i++) {
+        array[i] = Math.floor(Math.random() * 256);
+      }
+    }
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
 }
 

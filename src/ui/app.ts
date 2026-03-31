@@ -7,6 +7,7 @@ import { router } from './router.js';
 import { LoginView } from './login-view.js';
 import { LobbyView } from './lobby-view.js';
 import { OfflineGameView } from './offline-game-view.js';
+import { RegistrationView } from './registration-view.js';
 
 class App {
   private container: HTMLElement | null = null;
@@ -40,6 +41,12 @@ class App {
     page('/login', () => {
       console.log('Route /login matched');
       this.showLogin();
+    });
+
+    // Registration route - no auth required
+    page('/register', () => {
+      console.log('Route /register matched');
+      this.showRegistration();
     });
 
     // Lobby route - auth required
@@ -90,10 +97,22 @@ class App {
 
     const loginView = new LoginView(this.sessionManager, {
       onLoginSuccess: () => router.handleLoginRedirect(),
-      onPlayOffline: () => page.redirect('/offline')
+      onPlayOffline: () => page.redirect('/offline'),
+      onRegister: () => page.redirect('/register')
     });
 
     const viewContainer = loginView.render();
+    this.container.appendChild(viewContainer);
+    this.currentView = viewContainer;
+  }
+
+  private showRegistration(): void {
+    this.clearCurrentView();
+
+    if (!this.container) return;
+
+    const registrationView = new RegistrationView();
+    const viewContainer = registrationView.render();
     this.container.appendChild(viewContainer);
     this.currentView = viewContainer;
   }

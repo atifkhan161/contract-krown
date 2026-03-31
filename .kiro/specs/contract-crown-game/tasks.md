@@ -515,7 +515,7 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
   - [x] 18.1 Create LoginView component
     - Username and password input fields
     - Login button with SessionManager integration
-    - Registration link
+    - Registration link navigating to /register
     - _Requirements: 12.1, 13.1_
   
   - [x] 18.2 Create LobbyView component
@@ -531,6 +531,64 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Test navigation to offline game
     - Test offline mode launch without authentication
     - _Requirements: 12.1, 12.2, 12.3, 13.1_
+
+- [x] 18.4 Implement user registration view
+  - [x] 18.4.1 Create RegistrationView component
+    - Username input field (required, no special validation)
+    - Password input field (minimum 4 characters)
+    - Register button
+    - "Back to Login" link
+    - _Requirements: 13.1_
+
+  - [x] 18.4.2 Add /register route to Page.js router
+    - Register route handler for /register path
+    - Render RegistrationView component
+    - _Requirements: 12.1, 12.2_
+
+  - [x] 18.4.3 Implement registration form submission
+    - Validate username is not empty
+    - Validate password is at least 4 characters
+    - Call POST /api/register endpoint
+    - On success: auto-login, save session, redirect to /lobby
+    - On error: display error message (e.g., username taken)
+    - _Requirements: 13.1_
+
+  - [x] 18.4.4 Write unit tests for registration
+    - Test form validation (empty username, short password)
+    - Test successful registration and redirect
+    - Test error handling (duplicate username)
+    - Test navigation back to login
+    - _Requirements: 13.1_
+
+- [x] 18.5 Implement registration API endpoint
+  - [x] 18.5.1 Create POST /api/register endpoint
+    - Accept username and password in request body
+    - Validate username is not empty
+    - Validate password is at least 4 characters
+    - Check if username already exists in LokiJS
+    - Hash password before storing
+    - Create UserDocument in users collection
+    - Generate session token (30-day expiry)
+    - Return session token and user data on success
+    - Return 409 Conflict if username already exists
+    - Return 400 Bad Request for validation errors
+    - _Requirements: 13.1, 14.1_
+
+  - [x] 18.5.2 Update LokiJS user registration function
+    - Create registerUser() function in persistence layer
+    - Check for duplicate usernames
+    - Hash password using bcrypt or similar
+    - Insert new user into users collection
+    - Return created user document
+    - _Requirements: 14.1, 14.4_
+
+  - [x] 18.5.3 Write unit tests for registration API
+    - Test successful user registration
+    - Test duplicate username rejection
+    - Test validation errors (empty username, short password)
+    - Test password hashing verification
+    - Test session token generation
+    - _Requirements: 13.1, 14.1_
 
 - [x] 19. Checkpoint - Ensure offline play is fully functional
   - Test complete offline game flow from lobby to victory

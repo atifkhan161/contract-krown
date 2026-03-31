@@ -3,7 +3,6 @@
 // Feature: contract-crown-game, Property 31: Statistics Update
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import fc from 'fast-check';
 import { Database, hashPassword, verifyPassword } from '@src/server/database.js';
 
 describe('Database', () => {
@@ -155,9 +154,6 @@ describe('Database', () => {
       const originalTime = Date.now();
       db.createUser('user-1', 'testuser', hashPassword('password'));
       
-      // Wait a bit
-      const newTime = Date.now() + 1000;
-      
       db.updateUserLogin('user-1');
       
       const user = db.getUser('user-1');
@@ -186,6 +182,56 @@ describe('Database', () => {
       const hash1 = hashPassword('pass1');
       const hash2 = hashPassword('pass2');
       expect(hash1).not.toBe(hash2);
+    });
+  });
+
+  describe('User Registration (Task 18.5)', () => {
+    it('should successfully register a new user', () => {
+      const user = db.registerUser('newuser', hashPassword('testpass'));
+      
+      expect(user.userId).toBeDefined();
+      expect(user.username).toBe('newuser');
+      expect(user.passwordHash).toBe(hashPassword('testpass'));
+      expect(user.createdAt).toBeDefined();
+      expect(user.lastLogin).toBeDefined();
+    });
+
+    it('should reject duplicate username', () => {
+      db.registerUser('existinguser', hashPassword('pass1'));
+      
+      expect(() => {
+        db.registerUser('existinguser', hashPassword('pass2'));
+      }).toThrow('USERNAME_EXISTS');
+    });
+
+    it('should initialize statistics for new registered user', () => {
+      db.registerUser('statuser', hashPassword('pass1'));
+      
+      const user = db.getUserByUsername('statuser');
+      expect(user).toBeDefined();
+      
+      const stats = db.getStatistics(user!.userId);
+      expect(stats).toBeDefined();
+      expect(stats?.gamesPlayed).toBe(0);
+      expect(stats?.gamesWon).toBe(0);
+      expect(stats?.totalPoints).toBe(0);
+    });
+
+    it('should generate unique userId for each registration', () => {
+      const user1 = db.registerUser('user1', hashPassword('pass1'));
+      const user2 = db.registerUser('user2', hashPassword('pass2'));
+      
+      expect(user1.userId).not.toBe(user2.userId);
+    });
+
+    it('should allow registration with different usernames', () => {
+      const user1 = db.registerUser('alice', hashPassword('pass1'));
+      const user2 = db.registerUser('bob', hashPassword('pass2'));
+      const user3 = db.registerUser('charlie', hashPassword('pass3'));
+      
+      expect(user1.username).toBe('alice');
+      expect(user2.username).toBe('bob');
+      expect(user3.username).toBe('charlie');
     });
   });
 });
