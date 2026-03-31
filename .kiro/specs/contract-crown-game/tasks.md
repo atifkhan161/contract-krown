@@ -511,14 +511,14 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Test empty state display
     - _Requirements: 22.4, 22.5, 22.6, 22.7, 22.8_
 
-- [ ] 18. Implement login and lobby views
-  - [ ] 18.1 Create LoginView component
+- [x] 18. Implement login and lobby views
+  - [x] 18.1 Create LoginView component
     - Username and password input fields
     - Login button with SessionManager integration
     - Registration link
     - _Requirements: 12.1, 13.1_
-
-  - [ ] 18.2 Create LobbyView component
+  
+  - [x] 18.2 Create LobbyView component
     - Display user statistics (if logged in)
     - "Create Game" button (if logged in)
     - "Join Game" button (if logged in)
@@ -526,42 +526,42 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Logout button (if logged in)
     - _Requirements: 12.1_
 
-  - [ ]* 18.3 Write unit tests for login and lobby
+  - [x]* 18.3 Write unit tests for login and lobby
     - Test login form submission
     - Test navigation to offline game
     - Test offline mode launch without authentication
     - _Requirements: 12.1, 12.2, 12.3, 13.1_
 
-- [ ] 19. Checkpoint - Ensure offline play is fully functional
+- [x] 19. Checkpoint - Ensure offline play is fully functional
   - Test complete offline game flow from lobby to victory
   - Verify all game rules work correctly
   - Verify UI responsiveness and animations
   - Ask the user if they want to proceed with online multiplayer
 
-- [ ] 20. Implement Session Manager
-  - [ ] 20.1 Create SessionManager class
+- [x] 20. Implement Session Manager
+  - [x] 20.1 Create SessionManager class
     - Implement login() function with token creation
     - Implement logout() function with token clearing
     - Implement getSession() to retrieve from localStorage
     - Implement isAuthenticated() check
     - _Requirements: 13.1, 13.2, 13.3, 13.5_
 
-  - [ ]* 20.2 Write property test for session token expiration
+  - [x]* 20.2 Write property test for session token expiration
     - **Property 28: Session Token Expiration**
     - **Validates: Requirements 13.2**
 
-  - [ ]* 20.3 Write property test for expired token redirect
+  - [x]* 20.3 Write property test for expired token redirect
     - **Property 29: Expired Token Redirect**
     - **Validates: Requirements 13.4**
 
-  - [ ]* 20.4 Write unit tests for session management
+  - [x]* 20.4 Write unit tests for session management
     - Test token creation and storage
     - Test auto-authentication on app load
     - Test logout functionality
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
 
-- [ ] 21. Implement LokiJS persistence layer
-  - [ ] 21.1 Set up LokiJS database
+- [x] 21. Implement LokiJS persistence layer
+  - [x] 21.1 Set up LokiJS database
     - Create users collection
     - Create games collection
     - Create statistics collection
@@ -569,40 +569,40 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Configure load on startup
     - _Requirements: 14.1, 14.3, 14.4_
 
-  - [ ] 21.2 Implement user authentication with LokiJS
+  - [x] 21.2 Implement user authentication with LokiJS
     - Create user registration function
     - Create user login function with password hashing
     - Integrate with SessionManager
     - _Requirements: 13.1_
 
-  - [ ] 21.3 Implement game result persistence
+  - [x] 21.3 Implement game result persistence
     - Save game record on completion
     - Store player IDs, winner, scores, rounds, timestamp
     - _Requirements: 14.2_
 
-  - [ ]* 21.4 Write property test for game result persistence
+  - [x]* 21.4 Write property test for game result persistence
     - **Property 30: Game Result Persistence**
     - **Validates: Requirements 14.2**
 
-  - [ ] 21.5 Implement statistics tracking
+  - [x] 21.5 Implement statistics tracking
     - Update games played count
     - Update games won count
     - Update total points scored
     - Calculate average points per game
     - _Requirements: 14.5_
 
-  - [ ]* 21.6 Write property test for statistics update
+  - [x]* 21.6 Write property test for statistics update
     - **Property 31: Statistics Update**
     - **Validates: Requirements 14.5**
 
-  - [ ]* 21.7 Write unit tests for persistence layer
+  - [x]* 21.7 Write unit tests for persistence layer
     - Test user CRUD operations
     - Test game record creation
     - Test statistics calculations
     - Test auto-save and load
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
-- [ ] 22. Checkpoint - Ensure all tests pass
+- [x] 22. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 23. Implement Colyseus server with CrownRoom
