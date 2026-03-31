@@ -9,6 +9,8 @@ import { TrumpSelector } from './trump-selector.js';
 import { RoundEndModal } from './round-end-modal.js';
 import { VictoryModal } from './victory-modal.js';
 import { GameMenu } from './game-menu.js';
+import { ContextMenu } from './context-menu.js';
+import { ThemeManager } from './theme-manager.js';
 import { 
   animateCardPlay, 
   animateTrickCollection, 
@@ -26,14 +28,15 @@ export class GameView {
   private roundEndModal: RoundEndModal;
   private victoryModal: VictoryModal;
   private gameMenu: GameMenu;
+  private contextMenu: ContextMenu;
   private touchGestureHandler: TouchGestureHandler | null = null;
   private userPlayerIndex: number = 0;
   private onCardTap: CardTapHandler | null = null;
   private onTrumpSelect: TrumpSelectionHandler | null = null;
+  private onReturnToLobby: (() => void) | null = null;
+  private onRestartGame: (() => void) | null = null;
   private uiState: UIState;
-  // Trick display buffer: holds played cards visually until collection animation completes
   private trickDisplayCards: { card: Card; player: number }[] = [];
-  // Flag to track if trick collection animation is in progress
   private isAnimatingTrickCollection: boolean = false;
 
   constructor() {
@@ -43,6 +46,7 @@ export class GameView {
     this.roundEndModal = new RoundEndModal();
     this.victoryModal = new VictoryModal();
     this.gameMenu = new GameMenu();
+    this.contextMenu = new ContextMenu();
     this.uiState = {
       gameState: this.createEmptyGameState(),
       selectedCard: null,
@@ -101,6 +105,8 @@ export class GameView {
     this.trumpSelector.setContainer(this.container);
     this.roundEndModal.setContainer(this.container);
     this.victoryModal.setContainer(this.container);
+    this.gameMenu.setContainer(this.container);
+    this.contextMenu.setContainer(this.container);
 
     // Create menu button element and add to felt grid
     const menuButton = document.createElement('button');
@@ -108,11 +114,32 @@ export class GameView {
     menuButton.innerHTML = '<span class="menu-icon text-2xl">≡</span>';
     this.feltGrid.setMenuButtonElement(menuButton);
 
-    // Set up game menu with the button
-    this.gameMenu.setMenuButtonElement(menuButton);
-    this.gameMenu.setContainer(this.container);
-    this.gameMenu.setViewPlayedCardsHandler(() => {
+    // Wire up context menu to button
+    menuButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.contextMenu.show();
+    });
+
+    // Wire up context menu handlers
+    this.contextMenu.setHandler('view-cards', () => {
       this.gameMenu.showPlayedCardsModal(this.uiState.gameState, this.userPlayerIndex);
+    });
+
+    this.contextMenu.setHandler('toggle-theme', () => {
+      this.showThemeSelector();
+    });
+
+    this.contextMenu.setHandler('restart-game', () => {
+      if (this.onRestartGame) {
+        this.onRestartGame();
+      }
+    });
+
+    this.contextMenu.setHandler('return-lobby', () => {
+      if (this.onReturnToLobby) {
+        this.onReturnToLobby();
+      }
     });
   }
 
@@ -120,14 +147,14 @@ export class GameView {
    * Sets the return to lobby handler
    */
   public setReturnToLobbyHandler(handler: () => void): void {
-    this.gameMenu.setReturnToLobbyHandler(handler);
+    this.onReturnToLobby = handler;
   }
 
   /**
    * Sets the restart game handler
    */
   public setRestartGameHandler(handler: () => void): void {
-    this.gameMenu.setRestartGameHandler(handler);
+    this.onRestartGame = handler;
   }
 
   /**
@@ -254,7 +281,7 @@ export class GameView {
     this.container.appendChild(animatingCard);
 
     // Hide original card
-    cardElement.style.opacity = '0.3';
+    cardElement.classList.add('card-animating');
 
     // Animate the card
     await animateCardPlay(animatingCard, fromPosition, toPosition, 500);
@@ -540,10 +567,91 @@ export class GameView {
     this.roundEndModal.destroy();
     this.victoryModal.destroy();
     this.gameMenu.destroy();
+    this.contextMenu.destroy();
     if (this.touchGestureHandler) {
       this.touchGestureHandler.destroy();
     }
     this.onCardTap = null;
     this.onTrumpSelect = null;
+    this.onReturnToLobby = null;
+    this.onRestartGame = null;
+  }
+
+  /**
+   * Shows the theme selector modal
+   */
+  private showThemeSelector(): void {
+    if (!this.container || typeof document === 'undefined') return;
+
+    const themes = ThemeManager.getAvailableThemes();
+    const currentTheme = ThemeManager.getTheme();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'theme-selector-overlay';
+    overlay.innerHTML = `
+      <div class="theme-selector-panel">
+        <div class="theme-selector-header">
+          <h3 class="theme-selector-title">Choose Theme</h3>
+          <button class="theme-selector-close">✕</button>
+        </div>
+        <div class="theme-selector-grid">
+          ${themes.map(theme => {
+            const isActive = theme.id === currentTheme;
+            return `
+              <div class="theme-option-card${isActive ? ' active' : ''}" data-theme-id="${theme.id}" style="--theme-primary: ${theme.primaryColor}; --theme-bg: ${theme.bgColor};">
+                <div class="theme-option-preview" style="background: ${theme.primaryColor};">
+                  <span class="theme-option-preview-text" style="color: ${theme.bgColor};">Aa</span>
+                </div>
+                <span class="theme-option-name" style="color: ${theme.primaryColor};">${theme.name}</span>
+                <span class="theme-option-desc" style="color: ${theme.primaryColor};">${theme.description}</span>
+                ${isActive ? '<span class="theme-option-active-badge" style="color: ' + theme.primaryColor + ';">✓ Active</span>' : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    this.container.appendChild(overlay);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      overlay.classList.add('open');
+    });
+
+    // Close handler
+    const closeHandler = () => {
+      overlay.classList.remove('open');
+      setTimeout(() => {
+        if (overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
+      }, 300);
+    };
+
+    // Backdrop click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        closeHandler();
+      }
+    });
+
+    // Close button
+    const closeBtn = overlay.querySelector('.theme-selector-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeHandler);
+    }
+
+    // Theme selection
+    const themeCards = overlay.querySelectorAll('.theme-option-card');
+    themeCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const themeId = (card as HTMLElement).getAttribute('data-theme-id');
+        if (themeId) {
+          ThemeManager.setTheme(themeId);
+          closeHandler();
+        }
+      });
+    });
   }
 }
