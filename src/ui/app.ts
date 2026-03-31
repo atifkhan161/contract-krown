@@ -46,6 +46,9 @@ class App {
       offlineView.handleReturnToLobby();
       page.redirect('/offline');
     });
+    gameView.setRestartGameHandler(() => {
+      window.location.reload();
+    });
 
     const viewContainer = offlineView.getContainer();
     if (viewContainer && this.container) {

@@ -244,6 +244,24 @@ html, body {
   position: relative;
 }
 
+.game-menu-dropdown .menu-content {
+  background: rgba(20, 60, 30, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+}
+
+.game-menu-dropdown .menu-item {
+  color: #ffffff;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.game-menu-dropdown .menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
 .game-menu .dropdown-content {
   position: absolute;
   bottom: 100%;
@@ -292,11 +310,8 @@ html, body {
   justify-content: center;
 }
 
-.played-cards-modal .modal-close-btn {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 10;
+.played-cards-modal .modal-title {
+  flex-grow: 1;
 }
 
 .empty-state {

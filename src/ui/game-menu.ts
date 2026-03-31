@@ -26,6 +26,7 @@ export class GameMenu {
   private currentUserPlayerIndex: number = 0;
   private onViewPlayedCards: (() => void) | null = null;
   private onReturnToLobby: (() => void) | null = null;
+  private onRestartGame: (() => void) | null = null;
 
   constructor() {
     if (typeof document !== 'undefined') {
@@ -39,15 +40,22 @@ export class GameMenu {
     this.container = document.createElement('div');
     this.container.className = 'game-menu-container';
 
-    // Create menu dropdown
+    // Create simple menu dropdown (no DaisyUI dependency)
     this.menuElement = document.createElement('div');
-    this.menuElement.className = 'game-menu dropdown dropdown-end';
-    this.menuElement.style.display = 'none';
+    this.menuElement.className = 'game-menu-dropdown';
+    this.menuElement.style.cssText = 'position: absolute; bottom: 100%; right: 0; display: none; z-index: 1000;';
     this.menuElement.innerHTML = `
-      <ul tabindex="0" class="dropdown-content z-[50] menu p-2 shadow bg-base-100 rounded-box w-52">
-        <li><a class="menu-item view-played-cards">View Played Cards</a></li>
-        <li><a class="menu-item return-to-lobby">Return to Lobby</a></li>
-      </ul>
+      <div class="menu-content bg-base-100 shadow-lg rounded-box w-48 p-2">
+        <button class="menu-item w-full text-left px-4 py-2 hover:bg-base-200 rounded" data-action="view-cards">
+          View Played Cards
+        </button>
+        <button class="menu-item w-full text-left px-4 py-2 hover:bg-base-200 rounded" data-action="restart-game">
+          Restart Game
+        </button>
+        <button class="menu-item w-full text-left px-4 py-2 hover:bg-base-200 rounded" data-action="return-lobby">
+          Return to Lobby
+        </button>
+      </div>
     `;
 
     // Create modal for played cards
@@ -80,6 +88,10 @@ export class GameMenu {
 
   public setViewPlayedCardsHandler(handler: () => void): void {
     this.onViewPlayedCards = handler;
+  }
+
+  public setRestartGameHandler(handler: () => void): void {
+    this.onRestartGame = handler;
   }
 
   public show(): void {
@@ -143,7 +155,7 @@ export class GameMenu {
     });
 
     // View Played Cards menu item
-    const viewPlayedCardsItem = this.menuElement.querySelector('.view-played-cards');
+    const viewPlayedCardsItem = this.menuElement.querySelector('[data-action="view-cards"]');
     if (viewPlayedCardsItem) {
       viewPlayedCardsItem.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -155,13 +167,25 @@ export class GameMenu {
     }
 
     // Return to Lobby menu item
-    const returnToLobbyItem = this.menuElement.querySelector('.return-to-lobby');
+    const returnToLobbyItem = this.menuElement.querySelector('[data-action="return-lobby"]');
     if (returnToLobbyItem) {
       returnToLobbyItem.addEventListener('click', (e) => {
         e.stopPropagation();
         this.hide();
         if (this.onReturnToLobby) {
           this.onReturnToLobby();
+        }
+      });
+    }
+
+    // Restart Game menu item
+    const restartGameItem = this.menuElement.querySelector('[data-action="restart-game"]');
+    if (restartGameItem) {
+      restartGameItem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.hide();
+        if (this.onRestartGame) {
+          this.onRestartGame();
         }
       });
     }
@@ -173,8 +197,11 @@ export class GameMenu {
     const trickRows = this.getPlayedCardsForUserTeam(state, userPlayerIndex);
 
     let contentHtml = `
-      <div class="played-cards-modal-content modal-box max-w-md mx-auto">
-        <h3 class="font-bold text-lg mb-4">Cards Your Team Won</h3>
+      <div class="played-cards-modal-content modal-box max-w-md mx-auto" >
+        <div class="modal-close-btn-container flex">
+          <h3 class="modal-title font-bold text-lg mb-4 pr-8">Cards Your Team Won</h3>
+          <button class="modal-close-btn btn btn-sm btn-circle btn-ghost">✕</button>
+        </div>
     `;
 
     if (trickRows.length === 0) {
@@ -344,5 +371,6 @@ export class GameMenu {
     this.menuElement = null;
     this.modalElement = null;
     this.onViewPlayedCards = null;
+    this.onRestartGame = null;
   }
 }

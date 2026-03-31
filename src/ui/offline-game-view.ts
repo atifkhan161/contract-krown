@@ -35,7 +35,6 @@ export class OfflineGameView {
     this.offlineIndicator.className = 'offline-indicator';
     this.offlineIndicator.innerHTML = `
       <span class="offline-icon">📴</span>
-      <span class="offline-text">Offline Mode</span>
     `;
 
     // Add game view

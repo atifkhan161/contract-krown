@@ -194,8 +194,11 @@ export class FeltGrid {
       <div class="scores-cell">
         <span class="scores-cell-label">Scores</span>
         <div class="scores-cell-row">
+          <span class="team-label team-0">T1</span>
           <span class="team-score-mini team-0">${team0Score}</span>
-          <span class="scores-divider">-</span>
+        </div>
+        <div class="scores-cell-row">
+          <span class="team-label team-1">T2</span>
           <span class="team-score-mini team-1">${team1Score}</span>
         </div>
         <span class="crown-cell-name">👑 ${crownHolderName}</span>
@@ -231,8 +234,11 @@ export class FeltGrid {
         <span class="trick-count-value">${completedTricks}/${totalTricks}</span>
         <span class="trick-count-label">Tricks</span>
         <div class="round-score-row">
+          <span class="team-label team-0">T1</span>
           <span class="round-score team-0">${team0Tricks}</span>
-          <span class="round-score-divider">-</span>
+        </div>
+        <div class="round-score-row">
+          <span class="team-label team-1">T2</span>
           <span class="round-score team-1">${team1Tricks}</span>
         </div>
       </div>

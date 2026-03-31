@@ -124,6 +124,13 @@ export class GameView {
   }
 
   /**
+   * Sets the restart game handler
+   */
+  public setRestartGameHandler(handler: () => void): void {
+    this.gameMenu.setRestartGameHandler(handler);
+  }
+
+  /**
    * Sets up event listeners for card interactions
    */
   private setupEventListeners(): void {
