@@ -2,6 +2,7 @@
 // Main game lobby with user statistics and game options
 
 import { router } from './router.js';
+import { ThemeManager } from './theme-manager.js';
 import type { SessionManager } from '../session/index.js';
 
 export interface LobbyViewConfig {
@@ -90,6 +91,10 @@ export class LobbyView {
 
         ${isAuthenticated ? `
           <div class="lobby-footer">
+            <button class="theme-badge-btn" id="theme-badge-btn">
+              <span class="theme-dot"></span>
+              <span class="theme-name" id="theme-badge-name">Golden Ascent</span>
+            </button>
             <button class="btn btn-ghost btn-sm" id="logout-btn">
               Logout
             </button>
@@ -99,8 +104,18 @@ export class LobbyView {
     `;
 
     this.container = container;
+    this.updateThemeBadge();
     this.attachEventListeners();
     return container;
+  }
+
+  private updateThemeBadge(): void {
+    if (!this.container) return;
+    const currentTheme = ThemeManager.getCurrentTheme();
+    const themeNameEl = this.container.querySelector('#theme-badge-name');
+    if (themeNameEl) {
+      themeNameEl.textContent = currentTheme.name;
+    }
   }
 
   private attachEventListeners(): void {
@@ -142,6 +157,70 @@ export class LobbyView {
       } else {
         router.navigate('/login');
       }
+    });
+
+    const themeBadgeBtn = this.container.querySelector('#theme-badge-btn');
+    themeBadgeBtn?.addEventListener('click', () => {
+      this.showThemeSelector();
+    });
+  }
+
+  private showThemeSelector(): void {
+    const themes = ThemeManager.getAvailableThemes();
+    const currentTheme = ThemeManager.getTheme();
+
+    let cardsHtml = '';
+    for (const theme of themes) {
+      const isActive = theme.id === currentTheme;
+      cardsHtml += `
+        <div class="theme-option-card ${isActive ? 'active' : ''}" data-theme-id="${theme.id}">
+          <div class="theme-option-preview">
+            <span class="theme-option-preview-text">Aa</span>
+          </div>
+          <span class="theme-option-name">${theme.name}</span>
+          <span class="theme-option-desc">${theme.description}</span>
+          ${isActive ? '<span class="theme-option-active-badge">✓ Active</span>' : ''}
+        </div>
+      `;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'theme-selector-modal';
+    modal.innerHTML = `
+      <div class="theme-selector-content">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-lg">Choose Theme</h3>
+          <button class="theme-modal-close-btn btn btn-sm btn-circle btn-ghost">✕</button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          ${cardsHtml}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeBtn = modal.querySelector('.theme-modal-close-btn');
+    closeBtn?.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
+
+    const themeCards = modal.querySelectorAll('.theme-option-card');
+    themeCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const themeId = (card as HTMLElement).getAttribute('data-theme-id');
+        if (themeId) {
+          ThemeManager.setTheme(themeId);
+          document.body.removeChild(modal);
+          this.updateThemeBadge();
+        }
+      });
     });
   }
 

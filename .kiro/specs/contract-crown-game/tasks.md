@@ -879,6 +879,43 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Test back button navigation
     - _Requirements: 12.2, 12.3, 12.4, 12.5_
 
+- [x] 34. Implement dual-layer theme system
+  - [x] 34.1 Create CSS custom property design tokens
+  - [x] 34.2 Define 5 application themes with CSS variables
+  - [x] 34.3 Refactor tailwind.config.ts for theme integration
+  - [x] 34.4 Refactor main.css to use CSS variables
+  - [x] 34.5 Update public/index.html and manifest.json
+  - [x] 34.6 Create theme manager utility
+  - [x] 34.7 Add theme toggle to GameMenu
+  - [x] 34.8 Write unit tests for theme system
+    - Test CSS variable application across all themes
+    - Test theme manager get/set/persist functions
+    - Test theme toggle in GameMenu
+    - Test default theme application on first load
+    - Test game-theme variables remain green across all app themes
+    - Test felt grid theme variables change per theme
+    - _Requirements: 6.3_
+  - [x] 34.9 Add felt grid theme-aware background
+    - Add --felt-bg and --felt-bg-gradient variables to each theme block
+    - Update .felt-grid CSS to use theme-aware variables
+    - Golden Ascent: charcoal (#1a1a1a), Emerald: green (#1a472a), Crimson: burgundy (#2a1515), Sapphire: navy (#1e3a5f), Amethyst: purple (#3b1a6e)
+    - _Requirements: 6.3, 6.4_
+  - [x] 34.10 Add clickable theme badge to lobby footer
+    - Add theme badge button in lobby footer with colored dot and theme name
+    - Click opens theme selector modal
+    - Badge updates when theme changes
+    - _Requirements: 6.3_
+  - [x] 34.11 Refactor GameMenu theme selector to use CSS classes
+    - Remove inline styles from showThemeSelectorModal()
+    - Use CSS classes with data-theme-id attributes for theme-specific styling
+    - Add .theme-selector-modal and .theme-option-card CSS classes
+    - _Requirements: 6.3_
+  - [x] 34.12 Replace hardcoded opacity values with CSS classes
+    - Replace opacity='0.3' in game-view.ts with .card-animating class
+    - Replace opacity='0.3' in card-animation.ts with .card-collected class
+    - Add CSS classes for animation states
+    - _Requirements: 6.3, 15.2_
+
 - [ ] 31. Final integration and polish
   - [ ] 31.1 Integrate all components into complete application
     - Wire offline mode with UI

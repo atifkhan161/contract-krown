@@ -209,7 +209,7 @@ export function animateTrickCollection(
       const delay = index * 50;
       cardElement.style.transition = `transform ${duration}ms cubic-bezier(0.4, 0, 0.2, 1) ${delay}ms, opacity ${duration}ms ease ${delay}ms`;
       cardElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(0.5) rotate(${index * 5}deg)`;
-      cardElement.style.opacity = '0.3';
+      cardElement.classList.add('card-collected');
 
       // Handle animation completion
       const handleTransitionEnd = (event: TransitionEvent) => {

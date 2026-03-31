@@ -8,6 +8,7 @@ import { LoginView } from './login-view.js';
 import { LobbyView } from './lobby-view.js';
 import { OfflineGameView } from './offline-game-view.js';
 import { RegistrationView } from './registration-view.js';
+import { ThemeManager } from './theme-manager.js';
 
 class App {
   private container: HTMLElement | null = null;
@@ -16,6 +17,7 @@ class App {
 
   constructor() {
     this.sessionManager = new SessionManager();
+    ThemeManager.applyTheme();
     this.container = document.getElementById('app');
     if (!this.container) {
       console.error('App mount point #app not found');
