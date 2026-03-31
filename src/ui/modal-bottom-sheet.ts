@@ -49,14 +49,16 @@ export class ModalBottomSheet {
 
     this.createSheetElements(contentHtml);
     this.container.appendChild(this.sheet);
-    this.isOpen = true;
 
-    // Trigger animation
-    requestAnimationFrame(() => {
-      if (this.panel) {
-        this.panel.classList.add('open');
-      }
-    });
+    // Force reflow so the browser registers the initial transform state
+    void this.panel?.offsetHeight;
+
+    // Add open class to trigger slide-up animation
+    if (this.panel) {
+      this.panel.classList.add('open');
+    }
+
+    this.isOpen = true;
 
     // Focus first focusable element for accessibility
     const firstFocusable = this.panel?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])') as HTMLElement;
@@ -147,9 +149,12 @@ export class ModalBottomSheet {
     this.contentArea.innerHTML = contentHtml;
     this.panel.appendChild(this.contentArea);
 
-    // Assemble
+    // Assemble - panel comes after backdrop for proper z-order
     this.sheet.appendChild(this.backdrop);
     this.sheet.appendChild(this.panel);
+
+    // Ensure panel is above backdrop
+    this.panel.style.zIndex = '1';
 
     // Keyboard handling
     this.sheet.addEventListener('keydown', (event) => {

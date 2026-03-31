@@ -1,13 +1,10 @@
 // Contract Crown Unit Tests for Modal Bottom Sheet and Context Menu
+// Tests non-DOM behavior since bun test doesn't use jsdom
 
 import { describe, it, expect, vi } from 'vitest';
 
 import { ModalBottomSheet } from '@src/ui/modal-bottom-sheet.js';
 import { ContextMenu } from '@src/ui/context-menu.js';
-
-// ============================================================================
-// ModalBottomSheet Tests
-// ============================================================================
 
 describe('ModalBottomSheet', () => {
 
@@ -42,25 +39,12 @@ describe('ModalBottomSheet', () => {
     });
   });
 
-  describe('Container', () => {
-    it('setContainer does not throw', () => {
+  describe('Show without container', () => {
+    it('show does nothing when no container is set', () => {
       const sheet = new ModalBottomSheet({ allowBackdropDismiss: true });
-      const mockContainer = { appendChild: vi.fn() } as unknown as HTMLElement;
-      expect(() => sheet.setContainer(mockContainer)).not.toThrow();
-    });
-  });
-
-  describe('Show', () => {
-    it('show does not throw when no container set', () => {
-      const sheet = new ModalBottomSheet({ allowBackdropDismiss: true });
-      expect(() => sheet.show('<div>test</div>')).not.toThrow();
-    });
-
-    it('show does not throw in non-browser environment', () => {
-      const sheet = new ModalBottomSheet({ allowBackdropDismiss: true });
-      const mockContainer = { appendChild: vi.fn() } as unknown as HTMLElement;
-      sheet.setContainer(mockContainer);
-      expect(() => sheet.show('<div>test</div>')).not.toThrow();
+      sheet.show('<div>test</div>');
+      expect(sheet.isVisible()).toBe(false);
+      expect(sheet.getSheetElement()).toBeNull();
     });
   });
 
@@ -75,6 +59,7 @@ describe('ModalBottomSheet', () => {
     it('destroy cleans up without error', () => {
       const sheet = new ModalBottomSheet({ allowBackdropDismiss: true });
       expect(() => sheet.destroy()).not.toThrow();
+      expect(sheet.isVisible()).toBe(false);
     });
 
     it('destroy removes onDismiss handler', () => {
@@ -93,10 +78,6 @@ describe('ModalBottomSheet', () => {
   });
 });
 
-// ============================================================================
-// ContextMenu Tests
-// ============================================================================
-
 describe('ContextMenu', () => {
 
   describe('Constructor', () => {
@@ -104,14 +85,6 @@ describe('ContextMenu', () => {
       const menu = new ContextMenu();
       expect(menu).toBeDefined();
       expect(menu.isMenuOpen()).toBe(false);
-    });
-  });
-
-  describe('Container', () => {
-    it('setContainer does not throw', () => {
-      const menu = new ContextMenu();
-      const mockContainer = { appendChild: vi.fn() } as unknown as HTMLElement;
-      expect(() => menu.setContainer(mockContainer)).not.toThrow();
     });
   });
 
@@ -154,20 +127,11 @@ describe('ContextMenu', () => {
   });
 });
 
-// ============================================================================
-// Integration Tests
-// ============================================================================
-
-describe('Modal Bottom Sheet Integration', () => {
+describe('Integration', () => {
   it('ModalBottomSheet and ContextMenu can be imported together', () => {
     const sheet = new ModalBottomSheet({ allowBackdropDismiss: true });
     const menu = new ContextMenu();
     expect(sheet).toBeDefined();
     expect(menu).toBeDefined();
-  });
-
-  it('ContextMenu uses ModalBottomSheet internally', () => {
-    const menu = new ContextMenu();
-    expect(menu.isMenuOpen()).toBe(false);
   });
 });

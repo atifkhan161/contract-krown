@@ -43,6 +43,7 @@ const mockDocument = () => {
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
       appendChild: vi.fn(),
+      removeChild: vi.fn(),
       querySelector: vi.fn(),
       querySelectorAll: vi.fn(() => []),
       getBoundingClientRect: vi.fn(() => ({
@@ -52,7 +53,9 @@ const mockDocument = () => {
         height: 70
       })),
       setAttribute: vi.fn(),
-      focus: vi.fn()
+      focus: vi.fn(),
+      offsetHeight: 0,
+      parentNode: { removeChild: vi.fn() }
     })),
     querySelector: vi.fn()
   };
@@ -74,6 +77,7 @@ beforeEach(() => {
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),
         appendChild: vi.fn(),
+        removeChild: vi.fn(),
         querySelector: vi.fn(),
         querySelectorAll: vi.fn(() => []),
         getBoundingClientRect: vi.fn(() => ({
@@ -83,7 +87,9 @@ beforeEach(() => {
           height: 70
         })),
         setAttribute: vi.fn(),
-        focus: vi.fn()
+        focus: vi.fn(),
+        offsetHeight: 0,
+        parentNode: { removeChild: vi.fn() }
       }))
     };
   }
