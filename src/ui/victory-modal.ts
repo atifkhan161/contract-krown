@@ -53,7 +53,8 @@ export class VictoryModal {
    */
   public show(state: GameState): void {
     const contentHtml = this.renderContent(state);
-    this.bottomSheet.show(contentHtml);
+    this.bottomSheet.show();
+    this.bottomSheet.setContent(contentHtml);
     this.setupButtonHandlers();
 
     // Trigger victory haptic pattern

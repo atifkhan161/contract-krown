@@ -2196,6 +2196,10 @@ html, body {
     gap: 2px;
   }
 
+  .trick-card-slot .card.unplayable{
+    opacity: 1;
+  }
+
   .card-player-label {
     font-size: 6px;
     padding: 1px 2px;

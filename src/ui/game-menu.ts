@@ -39,7 +39,8 @@ export class GameMenu {
     }
 
     const contentHtml = this.renderPlayedCardsContent(state, userPlayerIndex);
-    this.bottomSheet.show(contentHtml);
+    this.bottomSheet.show();
+    this.bottomSheet.setContent(contentHtml);
   }
 
   public hidePlayedCardsModal(): void {

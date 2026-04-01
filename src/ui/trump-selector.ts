@@ -53,7 +53,8 @@ export class TrumpSelector {
    */
   public show(): void {
     const contentHtml = this.renderContent();
-    this.bottomSheet.show(contentHtml);
+    this.bottomSheet.show();
+    this.bottomSheet.setContent(contentHtml);
     this.setupSuitHandlers();
   }
 

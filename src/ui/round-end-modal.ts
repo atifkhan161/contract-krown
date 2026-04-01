@@ -43,7 +43,8 @@ export class RoundEndModal {
    */
   public show(state: GameState): void {
     const contentHtml = this.renderContent(state);
-    this.bottomSheet.show(contentHtml);
+    this.bottomSheet.show();
+    this.bottomSheet.setContent(contentHtml);
     this.setupContinueHandler();
 
     // Trigger haptic feedback for trick win

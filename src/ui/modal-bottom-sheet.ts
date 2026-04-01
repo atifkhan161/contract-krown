@@ -41,14 +41,22 @@ export class ModalBottomSheet {
   }
 
   /**
-   * Shows the bottom sheet with the given content HTML
+   * Sets the HTML content for the sheet panel
    */
-  public show(contentHtml: string): void {
+  public setContent(html: string): void {
+    if (!this.contentArea) return;
+    this.contentArea.innerHTML = html;
+  }
+
+  /**
+   * Shows the bottom sheet
+   */
+  public show(): void {
     if (!this.container || this.isOpen) return;
     if (typeof document === 'undefined') return;
 
-    this.createSheetElements(contentHtml);
-    this.container.appendChild(this.sheet);
+    this.createSheetElements();
+    this.container.appendChild(this.sheet!);
 
     // Force reflow so the browser registers the initial transform state
     void this.panel?.offsetHeight;
@@ -120,7 +128,7 @@ export class ModalBottomSheet {
   /**
    * Creates the DOM elements for the bottom sheet
    */
-  private createSheetElements(contentHtml: string): void {
+  private createSheetElements(): void {
     if (typeof document === 'undefined') return;
 
     // Main container
@@ -146,7 +154,6 @@ export class ModalBottomSheet {
     // Content area
     this.contentArea = document.createElement('div');
     this.contentArea.className = 'modal-bottom-sheet-content';
-    this.contentArea.innerHTML = contentHtml;
     this.panel.appendChild(this.contentArea);
 
     // Assemble - panel comes after backdrop for proper z-order

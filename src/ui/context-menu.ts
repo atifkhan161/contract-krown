@@ -55,7 +55,8 @@ export class ContextMenu {
     if (this.isOpen) return;
 
     const contentHtml = this.renderMenuItems();
-    this.bottomSheet.show(contentHtml);
+    this.bottomSheet.show();
+    this.bottomSheet.setContent(contentHtml);
     this.isOpen = true;
 
     // Set up click handlers after DOM is rendered
