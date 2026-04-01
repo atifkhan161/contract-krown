@@ -2516,3 +2516,166 @@ html, body {
     font-size: 9px;
   }
 }
+.online-game-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Room Code Modal */
+.room-code-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--game-modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.room-code-modal {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--app-bg);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 16px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+}
+
+.room-code-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.room-code-modal-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.room-code-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.room-code-display {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  font-family: monospace;
+  color: var(--app-text);
+  background: var(--app-surface);
+  border: 2px dashed var(--app-surface-border);
+  border-radius: 12px;
+  padding: 16px 24px;
+  width: 100%;
+  text-align: center;
+}
+
+.room-code-waiting {
+  font-size: 14px;
+  color: var(--app-text-muted);
+  margin-top: 4px;
+}
+
+/* Reconnection Overlay */
+.reconnection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--game-modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.reconnection-card {
+  background: var(--app-bg);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+}
+
+.reconnection-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--app-text);
+  margin: 16px 0 8px;
+}
+
+.reconnection-countdown {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 8px 0;
+}
+
+.reconnection-hint {
+  font-size: 14px;
+  color: var(--app-text-muted);
+}
+
+.reconnection-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--app-surface-border);
+  border-top-color: var(--app-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.reconnection-success {
+  border-color: var(--app-success);
+}
+
+.reconnection-check {
+  width: 48px;
+  height: 48px;
+  background: var(--app-success);
+  color: var(--app-text);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 auto;
+}
+
+.reconnection-failed {
+  border-color: var(--app-error-text);
+}
+
+.reconnection-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--app-error-text);
+  color: var(--app-text);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 auto;
+}

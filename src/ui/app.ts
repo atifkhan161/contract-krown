@@ -73,9 +73,7 @@ class App {
       router.requireAuth(ctx, next);
     }, (ctx) => {
       console.log('Route /game/:roomId auth passed, roomId:', ctx.params.roomId);
-      const roomId = ctx.params.roomId;
-      const createMode = roomId === 'new';
-      this.showGame(createMode ? null : roomId, createMode);
+      this.showGame(ctx.params.roomId);
     });
 
     // Default redirect
@@ -129,7 +127,14 @@ class App {
 
     const lobbyView = new LobbyView(this.sessionManager, {
       onCreateGame: async () => {
-        page.redirect('/game/new');
+        try {
+          const controller = new OnlineGameController();
+          const roomId = await controller.joinOrCreateRoom('crown');
+          controller.stop();
+          this.showRoomCodeModal(roomId);
+        } catch (error) {
+          console.error('Room creation failed:', error);
+        }
       },
       onJoinGame: () => {
         const roomId = prompt('Enter room ID to join:');
@@ -173,7 +178,7 @@ class App {
 
   private onlineController: OnlineGameController | null = null;
 
-  private showGame(roomId: string | null, createMode: boolean = false): void {
+  private showGame(roomId: string): void {
     this.clearCurrentView();
 
     if (!this.container) return;
@@ -201,11 +206,7 @@ class App {
       viewContainer.appendChild(gameViewContainer);
     }
 
-    const connectPromise = createMode
-      ? this.onlineController.joinOrCreateRoom('crown')
-      : this.onlineController.start(roomId!);
-
-    connectPromise.catch((err) => {
+    this.onlineController.start(roomId).catch((err) => {
       console.error('Failed to connect to game room:', err);
       viewContainer.innerHTML = `
         <div class="game-error">
@@ -216,11 +217,63 @@ class App {
         </div>
       `;
       viewContainer.querySelector('#retry-btn')?.addEventListener('click', () => {
-        this.showGame(roomId, createMode);
+        this.showGame(roomId);
       });
       viewContainer.querySelector('#lobby-btn')?.addEventListener('click', () => {
         page.redirect('/lobby');
       });
+    });
+  }
+
+  private showRoomCodeModal(roomId: string): void {
+    const modal = document.createElement('div');
+    modal.className = 'room-code-modal-overlay';
+    modal.innerHTML = `
+      <div class="room-code-modal">
+        <div class="room-code-modal-header">
+          <h3>Share this code with friends</h3>
+          <button class="room-code-modal-close btn btn-sm btn-circle btn-ghost">✕</button>
+        </div>
+        <div class="room-code-modal-body">
+          <div class="room-code-display" id="room-code-text">${roomId}</div>
+          <button class="btn btn-primary btn-sm" id="copy-room-code-btn">
+            Copy Code
+          </button>
+          <p class="room-code-waiting">Waiting for players...</p>
+          <button class="btn btn-outline btn-sm mt-4" id="enter-room-btn">
+            Enter Game
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeBtn = modal.querySelector('.room-code-modal-close');
+    closeBtn?.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
+
+    const copyBtn = modal.querySelector('#copy-room-code-btn');
+    copyBtn?.addEventListener('click', () => {
+      navigator.clipboard.writeText(roomId).then(() => {
+        (copyBtn as HTMLElement).textContent = 'Copied!';
+        setTimeout(() => {
+          (copyBtn as HTMLElement).textContent = 'Copy Code';
+        }, 2000);
+      });
+    });
+
+    const enterBtn = modal.querySelector('#enter-room-btn');
+    enterBtn?.addEventListener('click', () => {
+      document.body.removeChild(modal);
+      page.redirect(`/game/${roomId}`);
     });
   }
 }
