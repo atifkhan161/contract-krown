@@ -19,15 +19,17 @@
     "test:unit": "bun test --run",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
-    "lint": "tsc --noEmit && eslint src tests --ext .ts,.tsx"
+    "lint": "tsc --noEmit && eslint src tests --ext .ts,.tsx",
+    "postinstall": "node scripts/patch-colyseus.mjs"
   },
   "dependencies": {
-    "elysia": "^1.1.16",
     "colyseus": "^0.15.23",
+    "colyseus.js": "0.15.28",
+    "daisyui": "^4.12.14",
+    "elysia": "^1.1.16",
     "lokijs": "^1.5.12",
     "page": "^1.8.7",
-    "tailwindcss": "^3.4.17",
-    "daisyui": "^4.12.14"
+    "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
     "@types/bun": "^1.1.14",

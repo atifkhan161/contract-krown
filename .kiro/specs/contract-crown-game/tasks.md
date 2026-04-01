@@ -663,28 +663,28 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
 - [x] 22. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 23. Implement Colyseus server with CrownRoom
-  - [ ] 23.1 Set up Colyseus server with ElysiaJS
+- [x] 23. Implement Colyseus server with CrownRoom
+  - [x] 23.1 Set up Colyseus server with ElysiaJS
     - Initialize Colyseus server
     - Configure WebSocket transport
     - Register CrownRoom
     - _Requirements: 11.1, 11.6_
 
-  - [ ] 23.2 Implement CrownRoom class
+  - [x] 23.2 Implement CrownRoom class
     - Implement onCreate() - initialize game state
     - Implement onJoin() - add player to game
     - Implement onLeave() - handle disconnection
     - Implement onDispose() - cleanup
     - _Requirements: 11.1_
 
-  - [ ] 23.3 Implement declareTrump command with validation
+  - [x] 23.3 Implement declareTrump command with validation
     - Validate player is crown holder
     - Validate game phase is TRUMP_DECLARATION
     - Apply trump declaration to state
     - Broadcast state update
     - _Requirements: 11.2_
 
-  - [ ] 23.4 Implement playCard command with validation
+  - [x] 23.4 Implement playCard command with validation
     - Validate it's player's turn
     - Validate card is in player's hand
     - Validate card can be played (suit following)
@@ -692,51 +692,51 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Broadcast state update
     - _Requirements: 11.2_
 
-  - [ ]* 23.5 Write property test for server action validation
+  - [x] 23.5 Write property test for server action validation
     - **Property 26: Server Action Validation**
     - **Validates: Requirements 11.2**
 
-  - [ ] 23.6 Implement state synchronization
+  - [x] 23.6 Implement state synchronization
     - Broadcast state updates within 100ms
     - Send full state on player join
     - _Requirements: 11.3_
 
-  - [ ] 23.7 Implement reconnection handling
+  - [x] 23.7 Implement reconnection handling
     - Pause game on player disconnect
     - Wait 60 seconds for reconnection
     - Resume game on reconnection
     - Replace with bot after timeout
     - _Requirements: 11.4, 11.5_
 
-  - [ ]* 23.8 Write unit tests for Colyseus server
+  - [x] 23.8 Write unit tests for Colyseus server
     - Test room creation and joining
     - Test action validation
     - Test state broadcasting
     - Test reconnection logic
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
 
-- [ ] 24. Implement online multiplayer client integration
-  - [ ] 24.1 Create Colyseus client wrapper
+- [x] 24. Implement online multiplayer client integration
+  - [x] 24.1 Create Colyseus client wrapper
     - Connect to Colyseus server via WebSocket
     - Handle connection state changes
     - Send actions to server
     - Receive state updates from server
     - _Requirements: 11.1, 11.3_
 
-  - [ ] 24.2 Implement online game controller
+  - [x] 24.2 Implement online game controller
     - Initialize connection to game room
     - Send declareTrump action to server
     - Send playCard action to server
     - Update UI on state changes from server
     - _Requirements: 11.2, 11.3_
 
-  - [ ] 24.3 Implement reconnection UI
+  - [x] 24.3 Implement reconnection UI
     - Display reconnection indicator on disconnect
     - Show countdown timer (60s)
     - Restore game state on reconnection
     - _Requirements: 11.4, 19.1, 19.2_
 
-  - [ ]* 24.4 Write integration tests for online mode
+  - [x]* 24.4 Write integration tests for online mode
     - Test full multiplayer game with 4 connected clients
     - Verify state synchronization across all clients
     - Verify reconnection handling

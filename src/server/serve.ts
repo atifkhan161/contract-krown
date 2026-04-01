@@ -6,6 +6,7 @@ import { join } from 'path';
 import { database, hashPassword } from './database.js';
 
 const PORT = Number(process.env.PORT) || 3000;
+const WS_PORT = Number(process.env.WS_PORT) || 2567;
 const STATIC_DIR = join(import.meta.dir, '../../dist/client');
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -13,6 +14,14 @@ const app = new Elysia()
   // API endpoints
   .get('/health', () => ({ status: 'ok' }))
   .get('/api/games', () => ({ games: [] }))
+  .post('/api/rooms', () => {
+    const roomId = generateRoomId();
+    return {
+      roomId,
+      wsUrl: `ws://localhost:${WS_PORT}`,
+      httpUrl: `http://localhost:${PORT}`
+    };
+  })
   .post('/api/games', () => ({ created: true }))
 
   // Registration endpoint
@@ -75,6 +84,15 @@ const app = new Elysia()
 
   .listen(PORT);
 
+function generateRoomId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 function generateToken(): string {
   const array = new Uint8Array(32);
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
@@ -87,4 +105,18 @@ function generateToken(): string {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-console.log(`Contract Crown server running at http://localhost:${app.server?.port}`);
+// --- Colyseus WebSocket Server ---
+import { Server } from 'colyseus';
+import { WebSocketTransport } from '@colyseus/ws-transport/build/WebSocketTransport.js';
+import { CrownRoom } from './rooms.js';
+
+const gameServer = new Server({
+  transport: new WebSocketTransport()
+});
+
+gameServer.define('crown', CrownRoom);
+
+gameServer.listen(WS_PORT);
+
+console.log(`Contract Crown HTTP server running at http://localhost:${app.server?.port}`);
+console.log(`Contract Crown WebSocket server running at ws://localhost:${WS_PORT}`);

@@ -224,10 +224,8 @@ export class LobbyView {
     });
   }
 
-  private handleCreateGame(): void {
-    // Generate a random room ID
-    const roomId = this.generateRoomId();
-    router.navigate(`/game/${roomId}`);
+  private async handleCreateGame(): Promise<void> {
+    router.navigate('/game/new');
   }
 
   private handleJoinGame(): void {
@@ -235,15 +233,6 @@ export class LobbyView {
     if (roomId && roomId.trim()) {
       router.navigate(`/game/${roomId.trim()}`);
     }
-  }
-
-  private generateRoomId(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
   }
 
   private escapeHtml(text: string): string {

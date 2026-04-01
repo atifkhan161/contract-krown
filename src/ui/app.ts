@@ -1,5 +1,5 @@
 // Contract Crown PWA App
-// Main bootstrap entry point that mounts UI to the DOM
+// Mainbootstrap entry point that mounts UI to the DOM
 
 import page from 'page';
 import { SessionManager } from '../session/index.js';
@@ -9,6 +9,7 @@ import { LobbyView } from './lobby-view.js';
 import { OfflineGameView } from './offline-game-view.js';
 import { RegistrationView } from './registration-view.js';
 import { ThemeManager } from './theme-manager.js';
+import { OnlineGameController } from './online-game-controller.js';
 
 class App {
   private container: HTMLElement | null = null;
@@ -72,7 +73,9 @@ class App {
       router.requireAuth(ctx, next);
     }, (ctx) => {
       console.log('Route /game/:roomId auth passed, roomId:', ctx.params.roomId);
-      this.showGame(ctx.params.roomId);
+      const roomId = ctx.params.roomId;
+      const createMode = roomId === 'new';
+      this.showGame(createMode ? null : roomId, createMode);
     });
 
     // Default redirect
@@ -125,9 +128,8 @@ class App {
     if (!this.container) return;
 
     const lobbyView = new LobbyView(this.sessionManager, {
-      onCreateGame: () => {
-        const roomId = this.generateRoomId();
-        page.redirect(`/game/${roomId}`);
+      onCreateGame: async () => {
+        page.redirect('/game/new');
       },
       onJoinGame: () => {
         const roomId = prompt('Enter room ID to join:');
@@ -169,41 +171,57 @@ class App {
     }
   }
 
-  private showGame(roomId: string): void {
+  private onlineController: OnlineGameController | null = null;
+
+  private showGame(roomId: string | null, createMode: boolean = false): void {
     this.clearCurrentView();
 
     if (!this.container) return;
 
-    const gameContainer = document.createElement('div');
-    gameContainer.className = 'game-view';
-    gameContainer.innerHTML = `
-      <div class="game-room">
-        <h2>Game Room: ${this.escapeHtml(roomId)}</h2>
-        <p>Waiting for players...</p>
-        <button class="btn btn-outline" id="return-to-lobby">Return to Lobby</button>
-      </div>
-    `;
+    this.onlineController = new OnlineGameController();
 
-    this.container.appendChild(gameContainer);
-    this.currentView = gameContainer;
+    const gameView = this.onlineController.getGameView();
+    gameView.setReturnToLobbyHandler(() => {
+      this.onlineController?.stop();
+      this.onlineController = null;
+      page.redirect('/lobby');
+    });
+    gameView.setRestartGameHandler(() => {
+      window.location.reload();
+    });
 
-    const returnBtn = gameContainer.querySelector('#return-to-lobby');
-    returnBtn?.addEventListener('click', () => page.redirect('/lobby'));
-  }
+    const viewContainer = document.createElement('div');
+    viewContainer.className = 'online-game-container';
+    this.container.appendChild(viewContainer);
+    this.currentView = viewContainer;
 
-  private generateRoomId(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    // Attach the GameView's internal container to the DOM
+    const gameViewContainer = this.onlineController.getGameView().getContainer();
+    if (gameViewContainer) {
+      viewContainer.appendChild(gameViewContainer);
     }
-    return result;
-  }
 
-  private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    const connectPromise = createMode
+      ? this.onlineController.joinOrCreateRoom('crown')
+      : this.onlineController.start(roomId!);
+
+    connectPromise.catch((err) => {
+      console.error('Failed to connect to game room:', err);
+      viewContainer.innerHTML = `
+        <div class="game-error">
+          <h2>Connection Failed</h2>
+          <p>Could not connect to the game server.</p>
+          <button class="btn btn-primary" id="retry-btn">Retry</button>
+          <button class="btn btn-ghost" id="lobby-btn">Return to Lobby</button>
+        </div>
+      `;
+      viewContainer.querySelector('#retry-btn')?.addEventListener('click', () => {
+        this.showGame(roomId, createMode);
+      });
+      viewContainer.querySelector('#lobby-btn')?.addEventListener('click', () => {
+        page.redirect('/lobby');
+      });
+    });
   }
 }
 

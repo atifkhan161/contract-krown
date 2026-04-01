@@ -15,7 +15,7 @@ Before writing code:
 
 ## 2. The TDD Loop
 1. **Property Test First**: Create or update a property test in `tests/property/` using `fast-check`.
-2. **Implementation**: Write the TypeScript logic in the corresponding source file.
+2. **Implementation**: Write the TypeScript logic in the corresponding source file. Dont create hardcoded styles, refer theme.css before writing new styles.
 3. **Verification**: Execute `bun test` using the `bash` tool. Do not proceed if tests fail.
 
 ## 3. Tech Stack
