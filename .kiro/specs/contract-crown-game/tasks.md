@@ -1036,6 +1036,123 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Verify endgame calculations produce optimal plays
     - _Requirements: 23.9, 23.10, 23.11, 23.12, 23.13, 23.15_
 
+- [x] 36. Implement Waiting Room and Join Room Feature
+  - [x] 36.1 Create room code generator
+    - Create src/server/room-code-generator.ts
+    - Implement generateRoomCode() for 4-char alphanumeric codes
+    - Store roomCode -> roomId mapping in server memory
+    - Ensure uniqueness with retry on collision
+    - _Requirements: 36.3_
+
+  - [x] 36.2 Add room expiry logic to CrownRoom
+    - Add roomCode, adminSessionId, roomExpiryAt, roomCreatedAt to GameStateSchema
+    - Set 3-minute hard expiry on room creation
+    - Auto-dispose expired rooms
+    - Broadcast expiry warnings (60s, 30s, 10s)
+    - _Requirements: 36.10, 36.11_
+
+  - [x] 36.3 Add team management message handlers
+    - Add 'shuffle_teams' handler (admin only)
+    - Add 'add_bot' handler (admin only, fills next empty slot)
+    - Add 'start_game' handler (admin only)
+    - _Requirements: 36.7, 36.8, 36.9, 38.1, 38.3_
+
+  - [x] 36.4 Add available rooms endpoint
+    - Create GET /api/rooms endpoint via ElysiaJS
+    - Use matchMaker.query() to get active rooms
+    - Return rooms with code, player count, admin name
+    - _Requirements: 37.3_
+
+  - [x] 36.5 Create WaitingRoomView component
+    - Create src/ui/waiting-room-view.ts
+    - Implement 2x2 team slot layout
+    - Display room code with copy functionality
+    - Show admin badge for room creator
+    - Show "Waiting for player..." for empty slots
+    - _Requirements: 36.1, 36.2, 36.4, 36.5, 36.6_
+
+  - [x] 36.6 Implement countdown timer
+    - Display remaining time (MM:SS format)
+    - Update every second
+    - Show warning styling when < 60s
+    - Redirect to /lobby on expiry
+    - _Requirements: 36.11_
+
+  - [x] 36.7 Implement admin controls
+    - "Start Game" button (admin only, disabled if < 2 players)
+    - "Shuffle Teams" button (admin only)
+    - "Add Bot" button (admin only, disabled if room full)
+    - Wire up message handlers to Colyseus
+    - _Requirements: 36.7, 36.8, 36.9_
+
+  - [x] 36.8 Create JoinRoomModal component
+    - Create src/ui/join-room-modal.ts
+    - Use ModalBottomSheet base class
+    - Room code input + Join button
+    - Available rooms list from GET /api/rooms
+    - _Requirements: 37.1, 37.2, 37.3, 37.4, 37.5_
+
+  - [x] 36.9 Update ColyseusClientWrapper
+    - Add getAvailableRooms() method
+    - Add shuffleTeams() method
+    - Add addBot() method
+    - Add startGame() method
+    - Add room expiry message handler
+    - _Requirements: 36.7, 36.8, 36.9, 36.10_
+
+  - [x] 36.10 Update LobbyView
+    - Replace onCreateGame callback to navigate to /waiting/new
+    - Replace onJoinGame callback to show JoinRoomModal
+    - _Requirements: 36.1, 37.1_
+
+  - [x] 36.11 Update app.ts routing
+    - Add /waiting/:roomId route
+    - Implement showWaitingRoom(roomId) handler
+    - Handle 'new' roomId special case
+    - Remove showRoomCodeModal
+    - _Requirements: 36.1_
+
+  - [x] 36.12 Update OnlineGameController
+    - Add createWaitingRoom() method
+    - Add joinWaitingRoom(roomId) method
+    - Handle transition from waiting room to game
+    - _Requirements: 36.1_
+
+  - [x] 36.13 Add CSS styling
+    - Style waiting room layout (2x2 team grid)
+    - Style room code display and copy button
+    - Style countdown timer
+    - Style admin controls
+    - Style JoinRoomModal
+    - _Requirements: 36.4, 36.5, 36.6_
+
+  - [x]* 36.14 Write unit tests for WaitingRoomView
+    - Test room code display and copy
+    - Test admin controls visibility
+    - Test countdown timer behavior
+    - Test shuffle teams functionality
+    - _Requirements: 36.3, 36.7, 36.8, 36.9_
+
+  - [x]* 36.15 Write unit tests for JoinRoomModal
+    - Test room code input validation
+    - Test available rooms list rendering
+    - Test join button behavior
+    - _Requirements: 37.2, 37.4_
+
+  - [x]* 36.16 Write unit tests for server handlers
+    - Test room code generation uniqueness
+    - Test expiry timer logic
+    - Test team shuffle algorithm
+    - Test admin-only action validation
+    - _Requirements: 36.3, 36.7, 36.8, 36.9, 36.10_
+
+  - [x]* 36.17 Integration testing
+    - Test full create room flow
+    - Test join room via code and list
+    - Test team shuffle and bot addition
+    - Test room expiry and redirect
+    - _Requirements: All_
+
 ## Notes
 
 - Tasks marked with `*` are optional and can be skipped for faster MVP

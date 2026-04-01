@@ -313,3 +313,43 @@ Contract Crown is a mobile-only Progressive Web App (PWA) implementing a real-ti
 7. WHEN the user's team has won zero tricks, THE Mobile_UI SHALL display "Your team hasn't won any tricks yet" message
 8. WHEN displaying played cards, THE Mobile_UI SHALL NOT show cards from tricks won by the opposing team
 9. THE Mobile_UI SHALL hide the menu when clicking outside of it
+
+### Requirement 36: Room Creation and Waiting Room
+
+**User Story:** As a player, I want to create a game room and wait for others to join, so that I can set up the game before starting.
+
+#### Acceptance Criteria
+
+1. WHEN a player clicks "Create Room", THE LobbyView SHALL create a new room and navigate to the WaitingRoomView
+2. THE WaitingRoomView SHALL display the room creator as the first player in slot 1 (Team 0)
+3. THE WaitingRoomView SHALL display a 4-character alphanumeric room code (e.g., "A3KF") that can be copied and shared
+4. THE WaitingRoomView SHALL display 4 player slots organized by team (Team 0: slots 1 & 3, Team 1: slots 2 & 4)
+5. THE WaitingRoomView SHALL display empty slots with "Waiting for player..." placeholder
+6. THE room creator SHALL be designated as the room admin
+7. ONLY the room admin SHALL see the "Start Game" button
+8. THE room admin SHALL see a "Shuffle Teams" button to randomly reassign players to teams
+9. THE room admin SHALL see an "Add Bot" button to fill empty slots with AI players
+10. WHEN the room has been created, THE room SHALL expire after 3 minutes and redirect to /lobby
+11. THE WaitingRoomView SHALL display a countdown timer showing remaining time before expiry
+
+### Requirement 37: Join Room Flow
+
+**User Story:** As a player, I want to join an existing room, so that I can play with others.
+
+#### Acceptance Criteria
+
+1. WHEN a player clicks "Join Room", THE LobbyView SHALL display a modal with two options
+2. THE modal SHALL provide a text input for entering a 4-char room code and a "Join" button
+3. THE modal SHALL list all available rooms with their codes and current player counts
+4. WHEN a player enters a valid code and clicks "Join", THE system SHALL navigate to the WaitingRoomView for that room
+5. WHEN a player clicks on a listed room, THE system SHALL navigate to the WaitingRoomView for that room
+
+### Requirement 38: Team Management in Waiting Room
+
+**User Story:** As the room admin, I want to shuffle team assignments before starting, so that the game is balanced.
+
+#### Acceptance Criteria
+
+1. WHEN the admin clicks "Shuffle Teams", THE system SHALL randomly reassign all human players to teams while preserving team sizes (2 per team)
+2. THE team assignments SHALL be synchronized to all connected clients in real-time
+3. THE "Shuffle Teams" button SHALL only be visible to the room admin

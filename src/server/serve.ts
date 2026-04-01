@@ -14,6 +14,35 @@ const app = new Elysia()
   // API endpoints
   .get('/health', () => ({ status: 'ok' }))
   .get('/api/games', () => ({ games: [] }))
+  .get('/api/rooms', async () => {
+    const { matchMaker } = await import('colyseus');
+    const rooms = await matchMaker.query({ name: 'crown' });
+    const now = Date.now();
+
+    const available: Array<{ roomId: string; roomCode: string; playerCount: number; maxPlayers: number; adminSessionId: string }> = [];
+
+    for (const room of rooms) {
+      // Skip full rooms
+      if (room.clients >= 4) continue;
+      // Skip rooms that are past their waiting phase
+      if (room.locked) continue;
+
+      // Extract metadata from room presence
+      const meta = room.metadata as any;
+      if (meta?.phase && meta.phase !== 'WAITING_FOR_PLAYERS') continue;
+      if (meta?.roomExpiryAt && meta.roomExpiryAt <= now) continue;
+
+      available.push({
+        roomId: room.roomId,
+        roomCode: meta?.roomCode ?? room.roomId.substring(0, 4).toUpperCase(),
+        playerCount: room.clients,
+        maxPlayers: 4,
+        adminSessionId: meta?.adminSessionId ?? ''
+      });
+    }
+
+    return available;
+  })
   .post('/api/rooms', () => {
     const roomId = generateRoomId();
     return {

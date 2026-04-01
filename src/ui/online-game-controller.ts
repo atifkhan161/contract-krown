@@ -341,4 +341,88 @@ export class OnlineGameController {
       tricksWonByTeam: 0
     };
   }
+
+  // --- Waiting Room Methods ---
+
+  async createWaitingRoom(serverUrl: string = DEFAULT_SERVER_URL): Promise<{ roomId: string; roomCode: string }> {
+    await this.clientWrapper.connect(serverUrl);
+    const roomId = await this.clientWrapper.createRoom('crown');
+    this.isRunning = true;
+
+    return new Promise((resolve) => {
+      const checkState = () => {
+        if (this.serverState && this.serverState.roomCode) {
+          resolve({ roomId, roomCode: this.serverState.roomCode });
+        } else {
+          setTimeout(checkState, 100);
+        }
+      };
+      setTimeout(checkState, 200);
+    });
+  }
+
+  async joinWaitingRoom(roomId: string, serverUrl: string = DEFAULT_SERVER_URL): Promise<{
+    roomId: string;
+    roomCode: string;
+    isAdmin: boolean;
+    playerCount: number;
+    players: Array<{ playerIndex: number; username: string; sessionId: string; isBot: boolean; isAdmin: boolean; team: 0 | 1 }>;
+  }> {
+    await this.clientWrapper.connect(serverUrl);
+    await this.clientWrapper.joinRoom(roomId);
+    this.isRunning = true;
+
+    return new Promise((resolve) => {
+      const checkState = () => {
+        if (this.serverState) {
+          const players: Array<any> = [];
+          const playerMap = this.serverState.players as unknown as Map<string, any>;
+          for (let i = 0; i < 4; i++) {
+            const ps = playerMap.get(String(i));
+            if (ps && !ps.isBot) {
+              players.push({
+                playerIndex: ps.id,
+                username: `Player ${ps.id + 1}`,
+                sessionId: ps.sessionId,
+                isBot: ps.isBot,
+                isAdmin: ps.sessionId === this.serverState.adminSessionId,
+                team: ps.team as 0 | 1
+              });
+            }
+          }
+
+          resolve({
+            roomId,
+            roomCode: this.serverState.roomCode || roomId.substring(0, 4).toUpperCase(),
+            isAdmin: this.clientWrapper.sessionId === this.serverState.adminSessionId,
+            playerCount: players.length,
+            players
+          });
+        } else {
+          setTimeout(checkState, 100);
+        }
+      };
+      setTimeout(checkState, 200);
+    });
+  }
+
+  shuffleTeams(): void {
+    this.clientWrapper.sendShuffleTeams();
+  }
+
+  addBot(): void {
+    this.clientWrapper.sendAddBot();
+  }
+
+  startGame(): void {
+    this.clientWrapper.sendStartGame();
+  }
+
+  onWaitingRoomStateChange(callback: (state: any) => void): void {
+    const originalCallback = this.onStateChange;
+    this.onStateChange = (gameState) => {
+      if (originalCallback) originalCallback(gameState);
+      callback(this.serverState);
+    };
+  }
 }

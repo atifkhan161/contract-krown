@@ -43,6 +43,12 @@ export class GameStateSchema extends Schema {
   @type('number') tricksWonByTeam: number = 0;
   @type('number') roundNumber: number = 0;
 
+  // Waiting room fields
+  @type('string') roomCode: string = '';
+  @type('string') adminSessionId: string = '';
+  @type('number') roomExpiryAt: number = 0;
+  @type('number') roomCreatedAt: number = 0;
+
   @type(TrickSchema) currentTrick = new TrickSchema();
   @type([TrickSchema]) completedTricks = new ArraySchema<TrickSchema>();
   @type({ map: PlayerSchema }) players = new MapSchema<PlayerSchema>();

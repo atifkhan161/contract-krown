@@ -12,9 +12,12 @@ import {
 } from '../engine/index.js';
 import type { GameState, Card, Suit } from '../engine/types.js';
 import { BotManager } from '../bot/bot-manager.js';
+import { roomCodeGenerator } from './room-code-generator.js';
 
 const MAX_PLAYERS = 4;
 const RECONNECT_TIMEOUT_MS = 60_000;
+const ROOM_EXPIRY_MS = 3 * 60 * 1000; // 3 minutes
+const EXPIRY_CHECK_INTERVAL_MS = 10_000; // Check every 10 seconds
 
 export class CrownRoom extends Room<GameStateSchema> {
   maxClients = MAX_PLAYERS;
@@ -26,6 +29,8 @@ export class CrownRoom extends Room<GameStateSchema> {
   private playerToClient = new Map<number, string>();
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private botTurnTimer: ReturnType<typeof setTimeout> | null = null;
+  private expiryCheckTimer: ReturnType<typeof setInterval> | null = null;
+  private roomCode: string = '';
 
   // --- Lifecycle ---
 
@@ -34,10 +39,30 @@ export class CrownRoom extends Room<GameStateSchema> {
     this.gameState.dealer = options.dealer ?? 0;
     this.botManager = new BotManager();
 
+    // Generate room code
+    this.roomCode = roomCodeGenerator.generate(new Set());
+    roomCodeGenerator.register(this.roomCode, this.roomId);
+
+    const now = Date.now();
     const schema = new GameStateSchema();
     schema.phase = 'WAITING_FOR_PLAYERS';
     schema.dealer = this.gameState.dealer;
+    schema.roomCode = this.roomCode;
+    schema.roomCreatedAt = now;
+    schema.roomExpiryAt = now + ROOM_EXPIRY_MS;
+    schema.adminSessionId = ''; // Set when first player joins
     this.setState(schema);
+
+    // Set room metadata for matchMaker query
+    this.setMetadata({
+      roomCode: this.roomCode,
+      phase: 'WAITING_FOR_PLAYERS'
+    });
+
+    // Start expiry check timer
+    this.expiryCheckTimer = setInterval(() => {
+      this.checkRoomExpiry();
+    }, EXPIRY_CHECK_INTERVAL_MS);
 
     this.onMessage('declare_trump', (client: Client, message: any) => {
       this.handleDeclareTrump(client, message);
@@ -50,6 +75,51 @@ export class CrownRoom extends Room<GameStateSchema> {
     this.onMessage('ready', (_client: Client, _message: any) => {
       // Client acknowledges state sync — no action needed
     });
+
+    this.onMessage('shuffle_teams', (client: Client, _message: any) => {
+      this.handleShuffleTeams(client);
+    });
+
+    this.onMessage('add_bot', (client: Client, _message: any) => {
+      this.handleAddBot(client);
+    });
+
+    this.onMessage('start_game', (client: Client, _message: any) => {
+      this.handleStartGame(client);
+    });
+  }
+
+  onDispose() {
+    this.cancelReconnectTimer();
+    this.cancelBotTurnTimer();
+    if (this.expiryCheckTimer) {
+      clearInterval(this.expiryCheckTimer);
+      this.expiryCheckTimer = null;
+    }
+    roomCodeGenerator.removeCode(this.roomCode);
+  }
+
+  // --- Expiry Check ---
+
+  private checkRoomExpiry(): void {
+    if (this.state.phase !== 'WAITING_FOR_PLAYERS') return;
+
+    const now = Date.now();
+    const remaining = this.state.roomExpiryAt - now;
+
+    if (remaining <= 0) {
+      this.disconnect();
+      return;
+    }
+
+    // Broadcast warnings
+    if (remaining <= 10000 && remaining > 9000) {
+      this.broadcast('room_expiry_warning', { remaining: 10 });
+    } else if (remaining <= 30000 && remaining > 29000) {
+      this.broadcast('room_expiry_warning', { remaining: 30 });
+    } else if (remaining <= 60000 && remaining > 59000) {
+      this.broadcast('room_expiry_warning', { remaining: 60 });
+    }
   }
 
   async onJoin(client: Client, _options: any) {
@@ -87,6 +157,11 @@ export class CrownRoom extends Room<GameStateSchema> {
     this.clientToPlayer.set(client.sessionId, playerIndex);
     this.playerToClient.set(playerIndex, client.sessionId);
 
+    // Set admin on first player join
+    if (this.clientToPlayer.size === 1) {
+      this.state.adminSessionId = client.sessionId;
+    }
+
     // Create player in schema
     const ps = new PlayerSchema();
     ps.id = playerIndex;
@@ -96,10 +171,15 @@ export class CrownRoom extends Room<GameStateSchema> {
     ps.disconnected = false;
     this.state.players.set(String(playerIndex), ps);
 
-    // If 4 players joined, start the game
-    if (this.clientToPlayer.size === MAX_PLAYERS) {
-      this.startGame();
-    }
+    this.syncState();
+
+    // Update room metadata
+    this.setMetadata({
+      roomCode: this.roomCode,
+      phase: this.state.phase,
+      adminSessionId: this.state.adminSessionId,
+      roomExpiryAt: this.state.roomExpiryAt
+    });
   }
 
   async onLeave(client: Client, consented: boolean) {
@@ -129,11 +209,6 @@ export class CrownRoom extends Room<GameStateSchema> {
     if (this.clientToPlayer.size === 0 && this.reconnectTimer === null) {
       this.disconnect();
     }
-  }
-
-  onDispose() {
-    this.cancelReconnectTimer();
-    this.cancelBotTurnTimer();
   }
 
   // --- Message Handlers ---
@@ -232,8 +307,136 @@ export class CrownRoom extends Room<GameStateSchema> {
   // --- Game Flow ---
 
   private startGame() {
+    if (this.clientToPlayer.size < 2) return;
+
+    // Fill empty slots with bots
+    for (let i = 0; i < MAX_PLAYERS; i++) {
+      if (!this.playerToClient.has(i)) {
+        this.addBotToSlot(i);
+      }
+    }
+
     dealInitial(this.gameState);
     this.syncState();
+  }
+
+  // --- Waiting Room Handlers ---
+
+  private isAdmin(client: Client): boolean {
+    return client.sessionId === this.state.adminSessionId;
+  }
+
+  private handleShuffleTeams(client: Client): void {
+    if (!this.isAdmin(client)) {
+      client.send('error', { message: 'Only the admin can shuffle teams' });
+      return;
+    }
+    if (this.state.phase !== 'WAITING_FOR_PLAYERS') {
+      client.send('error', { message: 'Can only shuffle teams in waiting room' });
+      return;
+    }
+
+    // Get all human players
+    const humanPlayers: number[] = [];
+    for (let i = 0; i < MAX_PLAYERS; i++) {
+      const ps = this.state.players.get(String(i));
+      if (ps && !ps.isBot) {
+        humanPlayers.push(i);
+      }
+    }
+
+    if (humanPlayers.length < 2) {
+      client.send('error', { message: 'Need at least 2 players to shuffle' });
+      return;
+    }
+
+    // Fisher-Yates shuffle
+    const shuffled = [...humanPlayers];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // Assign teams: even indices -> Team 0, odd -> Team 1
+    for (let i = 0; i < shuffled.length; i++) {
+      const playerIdx = shuffled[i];
+      const newTeam = i % 2 === 0 ? 0 : 1;
+      const ps = this.state.players.get(String(playerIdx));
+      if (ps) {
+        ps.team = newTeam;
+      }
+      if (this.gameState.players[playerIdx]) {
+        this.gameState.players[playerIdx].team = newTeam as 0 | 1;
+      }
+    }
+
+    this.syncState();
+  }
+
+  private handleAddBot(client: Client): void {
+    if (!this.isAdmin(client)) {
+      client.send('error', { message: 'Only the admin can add bots' });
+      return;
+    }
+    if (this.state.phase !== 'WAITING_FOR_PLAYERS') {
+      client.send('error', { message: 'Can only add bots in waiting room' });
+      return;
+    }
+
+    // Find next empty slot
+    for (let i = 0; i < MAX_PLAYERS; i++) {
+      if (!this.playerToClient.has(i)) {
+        this.addBotToSlot(i);
+        this.syncState();
+        return;
+      }
+    }
+
+    client.send('error', { message: 'Room is full' });
+  }
+
+  private handleStartGame(client: Client): void {
+    if (!this.isAdmin(client)) {
+      client.send('error', { message: 'Only the admin can start the game' });
+      return;
+    }
+    if (this.state.phase !== 'WAITING_FOR_PLAYERS') {
+      client.send('error', { message: 'Game already started' });
+      return;
+    }
+    if (this.clientToPlayer.size < 1) {
+      client.send('error', { message: 'Need at least 1 player to start' });
+      return;
+    }
+
+    this.startGame();
+  }
+
+  private addBotToSlot(slotIndex: number): void {
+    const ps = new PlayerSchema();
+    ps.id = slotIndex;
+    ps.team = slotIndex % 2 === 0 ? 0 : 1;
+    ps.isBot = true;
+    ps.sessionId = `bot-${slotIndex}`;
+    ps.disconnected = false;
+    this.state.players.set(String(slotIndex), ps);
+
+    if (this.gameState.players[slotIndex]) {
+      this.gameState.players[slotIndex].isBot = true;
+    }
+
+    this.playerToClient.set(slotIndex, `bot-${slotIndex}`);
+  }
+
+  // --- Room Metadata for Listing ---
+
+  getRoomMetadata(): { roomCode: string; playerCount: number; adminSessionId: string; phase: string } {
+    return {
+      roomCode: this.state.roomCode,
+      playerCount: this.clientToPlayer.size,
+      adminSessionId: this.state.adminSessionId,
+      phase: this.state.phase
+    };
   }
 
   private processRoundEnd() {

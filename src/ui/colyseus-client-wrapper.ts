@@ -104,6 +104,21 @@ export class ColyseusClientWrapper {
     this.room.send('ready', {});
   }
 
+  sendShuffleTeams(): void {
+    if (!this.room) throw new Error('Not in a room.');
+    this.room.send('shuffle_teams', {});
+  }
+
+  sendAddBot(): void {
+    if (!this.room) throw new Error('Not in a room.');
+    this.room.send('add_bot', {});
+  }
+
+  sendStartGame(): void {
+    if (!this.room) throw new Error('Not in a room.');
+    this.room.send('start_game', {});
+  }
+
   onServerMessage(type: string, handler: (data: any) => void): void {
     if (!this.room) throw new Error('Not in a room.');
     this.room.onMessage(type, handler);

@@ -1361,3 +1361,194 @@ tests/
 - Track memory usage
 - Alert on regressions
 
+## 10. Waiting Room Components
+
+### 10.1 WaitingRoomView
+
+Provides a dedicated waiting room page where the room creator (admin) can manage teams, add bots, and start the game while waiting for other players to join.
+
+**Responsibilities**:
+- Display room info (4-char code, admin name)
+- Show 4 player slots in 2x2 team layout (Team 0: slots 1&3, Team 1: slots 2&4)
+- Display copyable room code with share functionality
+- Countdown timer for room expiry (3 minutes from creation, hard)
+- Admin controls (Start Game, Shuffle Teams, Add Bot)
+- Real-time player join/leave updates via Colyseus state sync
+
+**Key Interfaces**:
+
+```typescript
+interface WaitingRoomPlayer {
+  playerIndex: number;
+  username: string;
+  sessionId: string;
+  isBot: boolean;
+  isAdmin: boolean;
+  team: 0 | 1;
+}
+
+interface WaitingRoomState {
+  roomId: string;
+  roomCode: string;
+  adminSessionId: string;
+  players: WaitingRoomPlayer[];
+  timeRemaining: number; // seconds
+  isFull: boolean;
+  isAdmin: boolean;
+}
+
+class WaitingRoomView {
+  private container: HTMLElement;
+  private state: WaitingRoomState;
+  private countdownTimer: ReturnType<typeof setInterval> | null;
+
+  constructor(roomId: string, roomCode: string, isAdmin: boolean);
+  render(): HTMLElement;
+  updateState(state: Partial<WaitingRoomState>): void;
+  handleShuffleTeams(): void;
+  handleAddBot(): void;
+  handleStartGame(): void;
+  handleCopyCode(): void;
+  private renderPlayerSlots(): string;
+  private renderAdminControls(): string;
+  private startCountdown(): void;
+  private stopCountdown(): void;
+}
+```
+
+**Layout Structure**:
+```
+┌─────────────────────────────────────────┐
+│  ← Back     Contract Crown              │
+├─────────────────────────────────────────┤
+│  Room Code: A3KF  [Copy]                │
+│  ⏱ 2:45 remaining                       │
+├─────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐       │
+│  │  Team 0     │  │  Team 1     │       │
+│  │ [You]       │  │ [Empty]     │       │
+│  │  Admin 👑   │  │  Waiting... │       │
+│  ├─────────────┤  ├─────────────┤       │
+│  │ [Empty]     │  │ [Empty]     │       │
+│  │  Waiting... │  │  Waiting... │       │
+│  └─────────────┘  └─────────────┘       │
+├─────────────────────────────────────────┤
+│  [Shuffle Teams]  [Add Bot]             │
+│  [Start Game] (admin only)              │
+└─────────────────────────────────────────┘
+```
+
+### 10.2 JoinRoomModal
+
+Modal for joining existing rooms via code input or browsing available rooms.
+
+**Responsibilities**:
+- Display room code input with join button
+- List available rooms from server (GET /api/rooms)
+- Handle room code validation (4-char alphanumeric)
+- Navigate to waiting room on successful join
+
+**Key Interfaces**:
+
+```typescript
+interface AvailableRoom {
+  roomId: string;
+  roomCode: string;
+  playerCount: number;
+  maxPlayers: number;
+  adminUsername: string;
+}
+
+class JoinRoomModal {
+  private bottomSheet: ModalBottomSheet;
+  private onJoin: (roomId: string) => void;
+
+  constructor(onJoin: (roomId: string) => void);
+  setContainer(container: HTMLElement): void;
+  show(availableRooms: AvailableRoom[]): void;
+  hide(): void;
+  private renderContent(rooms: AvailableRoom[]): string;
+  private setupHandlers(): void;
+}
+```
+
+### 10.3 Room Code Generator
+
+Server-side utility for generating short, human-readable room codes.
+
+**Responsibilities**:
+- Generate 4-character alphanumeric codes (uppercase letters + digits)
+- Ensure uniqueness across active rooms
+- Map room codes to Colyseus room IDs
+
+**Key Interface**:
+
+```typescript
+class RoomCodeGenerator {
+  private static readonly CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  private static readonly CODE_LENGTH = 4;
+  private codeToRoomId: Map<string, string>;
+
+  generate(existingCodes: Set<string>): string;
+  getRoomId(code: string): string | undefined;
+  removeCode(code: string): void;
+}
+```
+
+**Code Generation Algorithm**:
+- Uses 32 characters (excluding ambiguous: 0, O, 1, I)
+- 4 characters = 32^4 = 1,048,576 possible codes
+- Retry on collision (extremely unlikely with active room count)
+
+### 10.4 Server-Side Schema Updates
+
+**New GameStateSchema Fields**:
+```typescript
+@type('string') roomCode: string = '';           // 4-char code
+@type('string') adminSessionId: string = '';     // Room creator
+@type('number') roomExpiryAt: number = 0;        // Expiry timestamp
+@type('number') roomCreatedAt: number = 0;       // Creation timestamp
+```
+
+**New Message Handlers**:
+```typescript
+// 'shuffle_teams' - admin shuffles team assignments
+// 'add_bot' - admin adds bot to next empty slot
+// 'start_game' - admin starts the game
+```
+
+**Room Expiry Logic**:
+- Set on creation: `roomExpiryAt = Date.now() + 3 * 60 * 1000`
+- Hard expiry: no reset on joins
+- Auto-dispose when expired
+- Broadcast warnings at 60s, 30s, 10s remaining
+
+### 10.5 Team Shuffle Algorithm
+
+```typescript
+function shuffleTeams(players: WaitingRoomPlayer[]): WaitingRoomPlayer[] {
+  const shuffled = [...players];
+  // Fisher-Yates shuffle
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  // Assign teams: even indices -> Team 0, odd -> Team 1
+  return shuffled.map((p, i) => ({
+    ...p,
+    team: i % 2 === 0 ? 0 : 1
+  }));
+}
+```
+
+### 10.6 Routing Updates
+
+**New Route**:
+```typescript
+page('/waiting/:roomId', requireAuth, showWaitingRoom);
+```
+
+**Updated Lobby Callbacks**:
+- `onCreateGame`: Navigate to `/waiting/new`
+- `onJoinGame`: Show JoinRoomModal
+

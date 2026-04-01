@@ -10,11 +10,14 @@ import { OfflineGameView } from './offline-game-view.js';
 import { RegistrationView } from './registration-view.js';
 import { ThemeManager } from './theme-manager.js';
 import { OnlineGameController } from './online-game-controller.js';
+import { WaitingRoomView } from './waiting-room-view.js';
+import { JoinRoomModal } from './join-room-modal.js';
 
 class App {
   private container: HTMLElement | null = null;
   private currentView: HTMLElement | null = null;
   private sessionManager: SessionManager;
+  private joinRoomModal: JoinRoomModal | null = null;
 
   constructor() {
     this.sessionManager = new SessionManager();
@@ -34,25 +37,21 @@ class App {
 
   private setupRoutes(): void {
     console.log('Setting up routes...');
-    // Root redirects to lobby
     page('/', () => {
       console.log('Route / matched, redirecting to /lobby');
       page.redirect('/lobby');
     });
 
-    // Login route - no auth required
     page('/login', () => {
       console.log('Route /login matched');
       this.showLogin();
     });
 
-    // Registration route - no auth required
     page('/register', () => {
       console.log('Route /register matched');
       this.showRegistration();
     });
 
-    // Lobby route - auth required
     page('/lobby', (ctx, next) => {
       console.log('Route /lobby matched, auth check...');
       router.requireAuth(ctx, next);
@@ -61,13 +60,19 @@ class App {
       this.showLobby();
     });
 
-    // Offline route - no auth required
     page('/offline', () => {
       console.log('Route /offline matched');
       this.showOfflineGame();
     });
 
-    // Game route - auth required
+    page('/waiting/:roomId', (ctx, next) => {
+      console.log('Route /waiting/:roomId matched, auth check...');
+      router.requireAuth(ctx, next);
+    }, (ctx) => {
+      console.log('Route /waiting/:roomId auth passed, roomId:', ctx.params.roomId);
+      this.showWaitingRoom(ctx.params.roomId);
+    });
+
     page('/game/:roomId', (ctx, next) => {
       console.log('Route /game/:roomId matched, auth check...');
       router.requireAuth(ctx, next);
@@ -76,7 +81,6 @@ class App {
       this.showGame(ctx.params.roomId);
     });
 
-    // Default redirect
     page('*', () => {
       console.log('Route * matched, redirecting to /lobby');
       page.redirect('/lobby');
@@ -126,21 +130,11 @@ class App {
     if (!this.container) return;
 
     const lobbyView = new LobbyView(this.sessionManager, {
-      onCreateGame: async () => {
-        try {
-          const controller = new OnlineGameController();
-          const roomId = await controller.joinOrCreateRoom('crown');
-          controller.stop();
-          this.showRoomCodeModal(roomId);
-        } catch (error) {
-          console.error('Room creation failed:', error);
-        }
+      onCreateGame: () => {
+        page.redirect('/waiting/new');
       },
       onJoinGame: () => {
-        const roomId = prompt('Enter room ID to join:');
-        if (roomId && roomId.trim()) {
-          page.redirect(`/game/${roomId.trim()}`);
-        }
+        this.showJoinRoomModal();
       },
       onPlayOffline: () => page.redirect('/offline'),
       onLogout: () => {
@@ -178,6 +172,150 @@ class App {
 
   private onlineController: OnlineGameController | null = null;
 
+  private showWaitingRoom(roomIdParam: string): void {
+    this.clearCurrentView();
+
+    if (!this.container) return;
+
+    const isNewRoom = roomIdParam === 'new';
+    const session = this.sessionManager.getSession();
+    const username = session?.username ?? 'Player';
+
+    const viewContainer = document.createElement('div');
+    viewContainer.className = 'waiting-room-wrapper';
+    this.container.appendChild(viewContainer);
+    this.currentView = viewContainer;
+
+    const handleReturnToLobby = () => {
+      if (this.onlineController) {
+        this.onlineController.stop();
+        this.onlineController = null;
+      }
+      page.redirect('/lobby');
+    };
+
+    if (isNewRoom) {
+      this.onlineController = new OnlineGameController();
+      this.onlineController.createWaitingRoom().then(({ roomId, roomCode }) => {
+        const waitingView = new WaitingRoomView({
+          roomId,
+          roomCode,
+          adminSessionId: session?.token ?? '',
+          players: [{
+            playerIndex: 0,
+            username,
+            sessionId: session?.token ?? '',
+            isBot: false,
+            isAdmin: true,
+            team: 0
+          }],
+          timeRemaining: 180,
+          isFull: false,
+          isAdmin: true,
+          playerCount: 1
+        }, {
+          onShuffleTeams: () => {
+            this.onlineController?.shuffleTeams();
+          },
+          onAddBot: () => {
+            this.onlineController?.addBot();
+          },
+          onStartGame: () => {
+            this.onlineController?.startGame();
+            page.redirect(`/game/${roomId}`);
+          },
+          onReturnToLobby: handleReturnToLobby,
+          onCopyCode: () => {}
+        });
+
+        const wrContainer = waitingView.render();
+        viewContainer.appendChild(wrContainer);
+
+        this.onlineController?.onWaitingRoomStateChange((state) => {
+          waitingView.updateState(state);
+        });
+      }).catch((err) => {
+        console.error('Failed to create waiting room:', err);
+        viewContainer.innerHTML = `
+          <div class="game-error">
+            <h2>Room Creation Failed</h2>
+            <p>Could not create a game room.</p>
+            <button class="btn btn-primary" id="lobby-btn">Return to Lobby</button>
+          </div>
+        `;
+        viewContainer.querySelector('#lobby-btn')?.addEventListener('click', () => {
+          page.redirect('/lobby');
+        });
+      });
+    } else {
+      this.onlineController = new OnlineGameController();
+      this.onlineController.joinWaitingRoom(roomIdParam).then(({ roomId, roomCode, isAdmin, playerCount, players }) => {
+        const waitingView = new WaitingRoomView({
+          roomId,
+          roomCode,
+          adminSessionId: '',
+          players: players || [],
+          timeRemaining: 180,
+          isFull: playerCount >= 4,
+          isAdmin,
+          playerCount
+        }, {
+          onShuffleTeams: () => {
+            this.onlineController?.shuffleTeams();
+          },
+          onAddBot: () => {
+            this.onlineController?.addBot();
+          },
+          onStartGame: () => {
+            this.onlineController?.startGame();
+            page.redirect(`/game/${roomId}`);
+          },
+          onReturnToLobby: handleReturnToLobby,
+          onCopyCode: () => {}
+        });
+
+        const wrContainer = waitingView.render();
+        viewContainer.appendChild(wrContainer);
+
+        this.onlineController?.onWaitingRoomStateChange((state) => {
+          waitingView.updateState(state);
+        });
+      }).catch((err) => {
+        console.error('Failed to join waiting room:', err);
+        viewContainer.innerHTML = `
+          <div class="game-error">
+            <h2>Room Not Found</h2>
+            <p>Could not find the room. It may have expired.</p>
+            <button class="btn btn-primary" id="lobby-btn">Return to Lobby</button>
+          </div>
+        `;
+        viewContainer.querySelector('#lobby-btn')?.addEventListener('click', () => {
+          page.redirect('/lobby');
+        });
+      });
+    }
+  }
+
+  private showJoinRoomModal(): void {
+    if (!this.container) return;
+
+    if (!this.joinRoomModal) {
+      this.joinRoomModal = new JoinRoomModal((roomId: string) => {
+        page.redirect(`/waiting/${roomId}`);
+      });
+      this.joinRoomModal.setContainer(this.container);
+    }
+
+    fetch('/api/rooms')
+      .then(res => res.json())
+      .then(rooms => {
+        this.joinRoomModal?.show(rooms);
+      })
+      .catch(() => {
+        this.joinRoomModal?.show([]);
+      });
+  }
+
   private showGame(roomId: string): void {
     this.clearCurrentView();
 
@@ -200,7 +338,6 @@ class App {
     this.container.appendChild(viewContainer);
     this.currentView = viewContainer;
 
-    // Attach the GameView's internal container to the DOM
     const gameViewContainer = this.onlineController.getGameView().getContainer();
     if (gameViewContainer) {
       viewContainer.appendChild(gameViewContainer);
@@ -224,61 +361,8 @@ class App {
       });
     });
   }
-
-  private showRoomCodeModal(roomId: string): void {
-    const modal = document.createElement('div');
-    modal.className = 'room-code-modal-overlay';
-    modal.innerHTML = `
-      <div class="room-code-modal">
-        <div class="room-code-modal-header">
-          <h3>Share this code with friends</h3>
-          <button class="room-code-modal-close btn btn-sm btn-circle btn-ghost">✕</button>
-        </div>
-        <div class="room-code-modal-body">
-          <div class="room-code-display" id="room-code-text">${roomId}</div>
-          <button class="btn btn-primary btn-sm" id="copy-room-code-btn">
-            Copy Code
-          </button>
-          <p class="room-code-waiting">Waiting for players...</p>
-          <button class="btn btn-outline btn-sm mt-4" id="enter-room-btn">
-            Enter Game
-          </button>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    const closeBtn = modal.querySelector('.room-code-modal-close');
-    closeBtn?.addEventListener('click', () => {
-      document.body.removeChild(modal);
-    });
-
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        document.body.removeChild(modal);
-      }
-    });
-
-    const copyBtn = modal.querySelector('#copy-room-code-btn');
-    copyBtn?.addEventListener('click', () => {
-      navigator.clipboard.writeText(roomId).then(() => {
-        (copyBtn as HTMLElement).textContent = 'Copied!';
-        setTimeout(() => {
-          (copyBtn as HTMLElement).textContent = 'Copy Code';
-        }, 2000);
-      });
-    });
-
-    const enterBtn = modal.querySelector('#enter-room-btn');
-    enterBtn?.addEventListener('click', () => {
-      document.body.removeChild(modal);
-      page.redirect(`/game/${roomId}`);
-    });
-  }
 }
 
-// Boot the app when DOM is ready
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => new App());

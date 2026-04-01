@@ -1272,6 +1272,420 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 auto;
+}
+
+/* Waiting Room View */
+.waiting-room-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--app-bg-gradient-start) 0%, var(--app-bg-gradient-mid) 50%, var(--app-bg-gradient-end) 100%);
+  overflow-y: auto;
+}
+
+.waiting-room-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.waiting-room-back-btn {
+  flex-shrink: 0;
+}
+
+.waiting-room-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.waiting-room-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.room-code-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.room-code-label {
+  font-size: 12px;
+  color: var(--app-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.room-code-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-code-text {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  font-family: monospace;
+  color: var(--app-primary);
+}
+
+.room-timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.room-timer .timer-icon {
+  color: var(--app-text-muted);
+}
+
+.room-timer .timer-warning {
+  color: var(--app-error-text);
+}
+
+.timer-warning {
+  color: var(--app-error-text);
+}
+
+.room-player-count {
+  font-size: 14px;
+  color: var(--app-text-muted);
+}
+
+/* Team Slots */
+.team-slots-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.team-slot {
+  background: var(--app-surface);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.team-slot-header {
+  display: flex;
+  justify-content: center;
+}
+
+.team-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.team-badge-0 {
+  background: var(--game-team-0-bg, rgba(59, 130, 246, 0.2));
+  color: var(--game-team-0-text, #60a5fa);
+  border: 1px solid var(--game-team-0-border, rgba(59, 130, 246, 0.4));
+}
+
+.team-badge-1 {
+  background: var(--game-team-1-bg, rgba(239, 68, 68, 0.2));
+  color: var(--game-team-1-text, #f87171);
+  border: 1px solid var(--game-team-1-border, rgba(239, 68, 68, 0.4));
+}
+
+.team-slot-players {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.player-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--app-bg);
+  border: 1px solid var(--app-surface-border);
+}
+
+.player-slot-admin {
+  border-color: var(--app-primary);
+}
+
+.player-slot-empty {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.player-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--game-avatar-bg, var(--app-primary));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.avatar-empty {
+  background: var(--app-surface-border);
+  color: var(--app-text-muted);
+}
+
+.admin-crown {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 12px;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.player-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-name-empty {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--app-text-muted);
+}
+
+.admin-badge {
+  font-size: 10px;
+  color: var(--app-primary);
+  font-weight: 600;
+}
+
+/* Admin Controls */
+.waiting-room-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--app-surface-border);
+}
+
+.admin-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-controls .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+/* Join Room Modal */
+.join-room-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.join-room-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--app-text);
+  margin: 0;
+  text-align: center;
+}
+
+.join-room-code-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.join-room-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.join-room-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.join-room-code-field {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  text-align: center;
+  font-family: monospace;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.join-room-error {
+  font-size: 12px;
+  color: var(--app-error-text);
+}
+
+.join-room-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--app-text-muted);
+  font-size: 13px;
+}
+
+.join-room-divider::before,
+.join-room-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--app-surface-border);
+}
+
+.join-room-rooms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.join-room-rooms-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.join-room-empty {
+  font-size: 14px;
+  color: var(--app-text-muted);
+  text-align: center;
+  padding: 16px;
+}
+
+.join-room-rooms {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.join-room-room-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--app-bg);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.join-room-room-card:hover {
+  border-color: var(--app-primary);
+  background: var(--app-surface-hover);
+}
+
+.join-room-room-code {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: 3px;
+  color: var(--app-text);
+}
+
+.join-room-room-players {
+  font-size: 13px;
+  color: var(--app-text-muted);
+}
+
+/* Landscape overrides for waiting room */
+@media (orientation: landscape) and (max-height: 500px) {
+  .waiting-room-view {
+    padding: 8px;
+  }
+
+  .waiting-room-header {
+    margin-bottom: 8px;
+  }
+
+  .waiting-room-title {
+    font-size: 16px;
+  }
+
+  .waiting-room-info {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .room-code-text {
+    font-size: 24px;
+    letter-spacing: 4px;
+  }
+
+  .team-slots-container {
+    gap: 8px;
+  }
+
+  .team-slot {
+    padding: 8px;
+  }
+
+  .avatar-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .player-name {
+    font-size: 11px;
+  }
 }
 
 /* Individual card position in circular layout */
