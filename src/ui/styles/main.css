@@ -543,7 +543,7 @@ html, body {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 480px;
+  max-width: min(90vw, 600px);
   max-height: 85vh;
   overflow-y: auto;
   background: var(--app-surface);
@@ -2076,50 +2076,49 @@ html, body {
   }
 }
 
-/* ===== Landscape Responsiveness (iPhone 14 Pro Max: 932x430) ===== */
+/* ===== Landscape Responsiveness (iPhone 14/15 Pro Max: 932x430) ===== */
+/* Always 3x3 grid (9 cells) — only cell sizes scale down for shorter height */
 @media (orientation: landscape) and (max-height: 500px) {
   .felt-grid {
     grid-template-areas:
-      "top-left partner trick-area right-opponent top-right"
-      "bottom-left user-hand user-hand user-hand bottom-right";
-    grid-template-rows: 1fr 1fr;
-    grid-template-columns: 12% 18% 1fr 18% 12%;
+      "top-left partner top-right"
+      "left-opponent trick-area right-opponent"
+      "bottom-left user-hand bottom-right";
+    grid-template-rows: 18% 52% 30%;
+    grid-template-columns: 1fr 3fr 1fr;
     gap: 2px;
     padding: 2px;
   }
 
-  .partner-display {
-    align-self: center;
-  }
-
+  /* Player displays: compact vertical layout */
   .player-info {
-    min-width: 52px;
-    padding: 3px 4px;
-    gap: 2px;
+    min-width: 44px;
+    padding: 2px 3px;
+    gap: 1px;
   }
 
   .player-avatar {
-    width: 24px;
-    height: 24px;
-    font-size: 12px;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
   }
 
   .player-name {
-    font-size: 8px;
+    font-size: 7px;
   }
 
   .card-count {
-    font-size: 7px;
+    font-size: 6px;
   }
 
   .team-label {
-    font-size: 7px;
-    padding: 1px 3px;
+    font-size: 6px;
+    padding: 1px 2px;
   }
 
   .crown-icon {
-    top: -8px;
-    font-size: 10px;
+    top: -6px;
+    font-size: 8px;
   }
 
   .active-ring {
@@ -2127,60 +2126,70 @@ html, body {
     border-width: 1px;
   }
 
+  .partner-display {
+    align-self: center;
+  }
+
+  /* Corner cells */
   .trump-cell {
-    min-width: 32px;
+    min-width: 28px;
     padding: 2px;
   }
 
   .trump-cell-label {
-    font-size: 7px;
+    font-size: 6px;
   }
 
   .trump-cell-value {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .scores-cell {
-    min-width: 40px;
+    min-width: 36px;
     padding: 2px;
     gap: 1px;
   }
 
   .scores-cell-label {
-    font-size: 7px;
+    font-size: 6px;
   }
 
   .team-score-mini {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .crown-cell-name {
-    font-size: 8px;
+    font-size: 7px;
+  }
+
+  .trump-declarer-cell {
+    font-size: 7px;
   }
 
   .trick-count-cell {
-    min-width: 32px;
+    min-width: 28px;
     padding: 2px;
   }
 
   .trick-count-value {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .trick-count-label {
-    font-size: 7px;
+    font-size: 6px;
   }
 
   .round-score {
-    font-size: 10px;
+    font-size: 9px;
   }
 
+  /* Trick area */
   .trick-area {
-    border-radius: 8px;
+    border-radius: 6px;
   }
 
   .trick-placeholder {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .trick-card-slot {
@@ -2188,36 +2197,75 @@ html, body {
   }
 
   .card-player-label {
-    font-size: 7px;
-    padding: 1px 3px;
+    font-size: 6px;
+    padding: 1px 2px;
   }
 
+  /* User hand: compact cards */
   .user-hand {
     padding: 2px 3px 4px;
   }
 
   .hand-cards {
-    gap: 2px;
+    gap: 1px;
   }
 
   .card {
-    width: 36px;
-    height: 50px;
+    width: 34px;
+    height: 48px;
   }
 
   .card-rank {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .card-suit {
-    font-size: 12px;
+    font-size: 11px;
   }
 
+  /* Menu button */
   .menu-toggle-btn .menu-icon {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .re-dealing-message {
+    font-size: 11px;
+  }
+
+  /* Modal panel: use full width in landscape to avoid scrollbar */
+  .modal-bottom-sheet-panel {
+    max-width: min(95vw, 700px);
+  }
+
+  /* Trump selector cards: use full width */
+  .trump-selector-cards {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .trump-card {
+    width: 48px;
+    height: 64px;
+  }
+
+  .trump-card-suit {
+    font-size: 18px;
+  }
+
+  .trump-card-rank {
     font-size: 12px;
+  }
+
+  .trump-suit-btn {
+    height: 64px;
+    padding: 12px;
+  }
+
+  .trump-suit-symbol {
+    font-size: 24px;
+  }
+
+  .trump-suit-name {
+    font-size: 11px;
   }
 }
