@@ -3,5 +3,11 @@
   "instructions": [
     "AGENTS.md",
     ".opencode/skills/kiro-ide/SKILL.md",
-  ]
+  ],
+   "mcp": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"]
+    }
+  }
 }

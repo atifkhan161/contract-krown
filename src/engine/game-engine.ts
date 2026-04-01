@@ -69,6 +69,7 @@ export function createInitialState(): GameState {
     completedTricks: [],
     trumpSuit: null,
     crownHolder: 0,
+    trumpDeclarer: null,
     dealer: 0,
     phase: 'DEALING_INITIAL',
     scores: [0, 0],
@@ -241,6 +242,7 @@ export function declareTrump(state: GameState, suit: Suit): void {
 
   // Update game state with trump suit
   state.trumpSuit = suit;
+  state.trumpDeclarer = state.crownHolder;
   state.phase = 'DEALING_FINAL';
 }
 

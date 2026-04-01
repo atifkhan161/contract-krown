@@ -181,7 +181,7 @@ export class FeltGrid {
   }
 
   /**
-   * Renders top-right corner: Crown holder + team scores
+   * Renders top-right corner: Crown holder + team scores + trump declarer
    */
   private renderTopRight(state: GameState, userPlayerIndex: number): void {
     if (!this.topRight) return;
@@ -189,6 +189,9 @@ export class FeltGrid {
     const crownHolderName = this.getCrownHolderName(state.crownHolder, userPlayerIndex);
     const team0Score = state.scores[0];
     const team1Score = state.scores[1];
+    const trumpDeclarerName = state.trumpDeclarer !== null
+      ? this.getCrownHolderName(state.trumpDeclarer, userPlayerIndex)
+      : null;
 
     this.topRight.innerHTML = `
       <div class="scores-cell">
@@ -201,7 +204,7 @@ export class FeltGrid {
           <span class="team-label team-1">T2</span>
           <span class="team-score-mini team-1">${team1Score}</span>
         </div>
-        <span class="crown-cell-name">👑 ${crownHolderName}</span>
+        ${trumpDeclarerName ? `<span class="trump-declarer-cell">🗣️ ${trumpDeclarerName}</span>` : `<span class="crown-cell-name">👑 ${crownHolderName}</span>`}
       </div>
     `;
   }

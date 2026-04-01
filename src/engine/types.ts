@@ -46,6 +46,7 @@ export interface GameState {
   completedTricks: Trick[];
   trumpSuit: Suit | null;
   crownHolder: number; // player index
+  trumpDeclarer: number | null; // player who declared trump
   dealer: number; // player index
   phase: GamePhase;
   scores: [number, number]; // [team0, team1]

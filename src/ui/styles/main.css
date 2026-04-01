@@ -317,6 +317,8 @@ html, body {
   background-color: var(--felt-bg);
   background-image:
     radial-gradient(ellipse at center, var(--felt-bg-gradient) 0%, var(--felt-bg) 70%);
+  width: 100%;
+  height: 100%;
 }
 
 /* ===== Grid Corner Cells ===== */
@@ -426,6 +428,12 @@ html, body {
 .crown-cell-name {
   font-size: 10px;
   color: var(--game-text-muted);
+}
+
+.trump-declarer-cell {
+  font-size: 10px;
+  color: var(--game-text);
+  font-weight: 600;
 }
 
 /* Trick Count Cell (bottom-left) */
@@ -1260,6 +1268,9 @@ html, body {
 .played-card-value {
   font-size: 16px;
   font-weight: 700;
+  border: 1px solid var(--app-surface-border);
+  border-radius: 6px;
+  background-color: var(--game-card-bg);
 }
 
 .played-card-player {
@@ -2302,5 +2313,151 @@ html, body {
   }
   .user-hand {
     padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ===== Landscape Responsiveness (iPhone 14 Pro Max: 932x430) ===== */
+@media (orientation: landscape) and (max-height: 500px) {
+  .felt-grid {
+    grid-template-areas:
+      "top-left partner trick-area right-opponent top-right"
+      "bottom-left user-hand user-hand user-hand bottom-right";
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 12% 18% 1fr 18% 12%;
+    gap: 2px;
+    padding: 2px;
+  }
+
+  .partner-display {
+    align-self: center;
+  }
+
+  .player-info {
+    min-width: 52px;
+    padding: 3px 4px;
+    gap: 2px;
+  }
+
+  .player-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .player-name {
+    font-size: 8px;
+  }
+
+  .card-count {
+    font-size: 7px;
+  }
+
+  .team-label {
+    font-size: 7px;
+    padding: 1px 3px;
+  }
+
+  .crown-icon {
+    top: -8px;
+    font-size: 10px;
+  }
+
+  .active-ring {
+    inset: -2px;
+    border-width: 1px;
+  }
+
+  .trump-cell {
+    min-width: 32px;
+    padding: 2px;
+  }
+
+  .trump-cell-label {
+    font-size: 7px;
+  }
+
+  .trump-cell-value {
+    font-size: 16px;
+  }
+
+  .scores-cell {
+    min-width: 40px;
+    padding: 2px;
+    gap: 1px;
+  }
+
+  .scores-cell-label {
+    font-size: 7px;
+  }
+
+  .team-score-mini {
+    font-size: 12px;
+  }
+
+  .crown-cell-name {
+    font-size: 8px;
+  }
+
+  .trick-count-cell {
+    min-width: 32px;
+    padding: 2px;
+  }
+
+  .trick-count-value {
+    font-size: 12px;
+  }
+
+  .trick-count-label {
+    font-size: 7px;
+  }
+
+  .round-score {
+    font-size: 10px;
+  }
+
+  .trick-area {
+    border-radius: 8px;
+  }
+
+  .trick-placeholder {
+    font-size: 10px;
+  }
+
+  .trick-card-slot {
+    gap: 2px;
+  }
+
+  .card-player-label {
+    font-size: 7px;
+    padding: 1px 3px;
+  }
+
+  .user-hand {
+    padding: 2px 3px 4px;
+  }
+
+  .hand-cards {
+    gap: 2px;
+  }
+
+  .card {
+    width: 36px;
+    height: 50px;
+  }
+
+  .card-rank {
+    font-size: 10px;
+  }
+
+  .card-suit {
+    font-size: 12px;
+  }
+
+  .menu-toggle-btn .menu-icon {
+    font-size: 18px;
+  }
+
+  .re-dealing-message {
+    font-size: 12px;
   }
 }

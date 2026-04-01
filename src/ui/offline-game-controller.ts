@@ -11,6 +11,7 @@ import {
   playCard, 
   canPlayCard,
   calculateScore,
+  updateCrown,
   isGameComplete,
   startNewRound as engineStartNewRound
 } from '../engine/index.js';
@@ -103,12 +104,12 @@ export class OfflineGameController {
         }
       }
 
-      // Set crown holder: force human on first round, normal crown rule after
+      // Set crown holder: force human on first round, preserve calculated crown after
       if (this.roundNumber === 1) {
         this.gameState.crownHolder = this.userPlayerIndex;
-      } else {
-        this.gameState.crownHolder = (this.gameState.dealer + 1) % 4;
       }
+      // For rounds > 1, crownHolder is already set by calculateScore() rotation logic
+      // Do NOT overwrite it here - that was the bug
       this.gameState.currentPlayer = this.gameState.crownHolder;
       this.gameState.phase = 'TRUMP_DECLARATION';
       
@@ -389,10 +390,14 @@ export class OfflineGameController {
         // Rotate dealer and crown for next round
         this.gameState.dealer = (this.gameState.dealer + 1) % 4;
         
+        // Update crown holder based on round results (rotates if declaring team lost)
+        updateCrown(this.gameState);
+        
         // Reset for new round (keep scores, reset tricks)
         this.gameState.completedTricks = [];
         this.gameState.currentTrick = { leadPlayer: 0, cards: [], winner: null };
         this.gameState.trumpSuit = null;
+        this.gameState.trumpDeclarer = null;
         this.gameState.phase = 'DEALING_INITIAL';
 
         // CRITICAL: Clear trick display buffer to flush old cards from UI
