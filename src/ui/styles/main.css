@@ -1684,6 +1684,14 @@ html, body {
   color: var(--game-suit-black);
 }
 
+.suit-red {
+  color: var(--game-suit-red);
+}
+
+.suit-black {
+  color: var(--game-suit-black);
+}
+
 /* ===== Offline Game View ===== */
 .offline-game-view {
   width: 100%;
