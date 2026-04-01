@@ -1,15 +1,23 @@
 // Contract Crown Bot Manager
-// Manages bot players and AI decisions using SmartBot
+// Manages bot players and AI decisions using SmartBot with team-shared memory
 
-import type { Card, Suit, GameState } from '../engine/types.js';
+import type { Card, Suit, GameState, Trick } from '../engine/types.js';
 import { canPlayCard } from '../engine/index.js';
 import { SmartBot } from './bot-logic.js';
+import { TeamMemory } from './team-memory.js';
 
 export class BotManager {
-  /**
-   * Selects the trump suit based on the initial hand
-   * Strategy: Choose the suit with the most cards
-   */
+  private teamMemories: Map<number, TeamMemory> = new Map();
+
+  constructor() {
+    this.teamMemories.set(0, new TeamMemory());
+    this.teamMemories.set(1, new TeamMemory());
+  }
+
+  getTeamMemory(teamId: number): TeamMemory {
+    return this.teamMemories.get(teamId)!;
+  }
+
   selectTrumpSuit(hand: Card[]): Suit {
     const suitCounts: Record<Suit, number> = {
       'HEARTS': 0,
@@ -18,46 +26,54 @@ export class BotManager {
       'SPADES': 0
     };
 
-    // Count cards in each suit
+    const suitValues: Record<Suit, number> = {
+      'HEARTS': 0,
+      'DIAMONDS': 0,
+      'CLUBS': 0,
+      'SPADES': 0
+    };
+
     for (const card of hand) {
       suitCounts[card.suit]++;
+      suitValues[card.suit] += card.value;
     }
 
-    // Find suit with most cards
     let maxCount = 0;
     let bestSuit: Suit = 'HEARTS';
+    let bestValue = 0;
     
     for (const [suit, count] of Object.entries(suitCounts)) {
-      if (count > maxCount) {
+      const s = suit as Suit;
+      if (count > maxCount || (count === maxCount && suitValues[s] > bestValue)) {
         maxCount = count;
-        bestSuit = suit as Suit;
+        bestValue = suitValues[s];
+        bestSuit = s;
       }
     }
 
     return bestSuit;
   }
 
-  /**
-   * Selects a card to play using SmartBot's advanced strategy
-   * - Partner-aware decision making
-   * - Smart leading with Aces
-   * - Win-or-slough strategy
-   */
   selectCard(state: GameState, playerIndex: number): Card {
     const player = state.players[playerIndex];
     const hand = player.hand;
 
-    // Get playable cards using engine's validation
     const playableCards = hand.filter(card => canPlayCard(state, playerIndex, card));
 
     if (playableCards.length === 0) {
       throw new Error('No playable cards available');
     }
 
-    // Build SmartBot-compatible GameState
     const leadSuit = state.currentTrick.cards.length > 0 
       ? state.currentTrick.cards[0].card.suit 
       : null;
+
+    const teamId = player.team;
+    const memory = this.getTeamMemory(teamId);
+    memory.trumpSuit = state.trumpSuit;
+
+    const totalTricks = 8;
+    const tricksRemaining = totalTricks - state.completedTricks.length;
 
     const smartBotState: Parameters<typeof SmartBot.getBestMove>[1] = {
       trumpSuit: state.trumpSuit!,
@@ -69,31 +85,53 @@ export class BotManager {
       myIndex: playerIndex,
       partnerIndex: state.partnerIndex,
       isDeclaringTeam: state.isDeclaringTeam,
-      tricksWonByTeam: state.tricksWonByTeam
+      tricksWonByTeam: state.tricksWonByTeam,
+      tricksRemaining
     };
 
-    // Use SmartBot to select the best move
-    return SmartBot.getBestMove(playableCards, smartBotState);
+    return SmartBot.getBestMove(playableCards, smartBotState, memory);
   }
 
-  /**
-   * Returns a random delay between 500-1500ms for human-like behavior
-   */
+  recordTrickResult(trick: Trick, winner: number, players: { id: number; team: number }[]): void {
+    const winnerTeam = players.find(p => p.id === winner)?.team ?? 0;
+    const trickNumber = trick.cards.length > 0 ? 1 : 1;
+
+    for (let teamId = 0; teamId < 2; teamId++) {
+      const memory = this.getTeamMemory(teamId);
+
+      for (const entry of trick.cards) {
+        const playerTeam = players.find(p => p.id === entry.player)?.team ?? 0;
+        if (playerTeam === teamId) {
+          memory.recordOurPlay(entry.player, entry.card, trickNumber, entry.player === winner);
+        }
+      }
+
+      if (winnerTeam === teamId) {
+        memory.recordTrickWeWon({
+          trickNumber,
+          winner,
+          allCards: trick.cards.map(pc => ({ player: pc.player, card: pc.card })),
+          ledSuit: trick.cards[0].card.suit
+        });
+      }
+    }
+  }
+
+  resetMemories(): void {
+    for (const memory of this.teamMemories.values()) {
+      memory.reset();
+    }
+  }
+
   getDecisionDelay(): number {
     return 500 + Math.random() * 1000;
   }
 
-  /**
-   * Evaluates a hand's strength based on high cards and trump potential
-   */
   evaluateHand(hand: Card[], trumpSuit: Suit | null): number {
     let score = 0;
     
     for (const card of hand) {
-      // High cards are worth more (using card.value)
-      score += card.value - 6; // Normalize: 7=1, 8=2, ..., A=8
-      
-      // Trump cards are worth bonus
+      score += card.value - 6;
       if (card.suit === trumpSuit) {
         score += 2;
       }

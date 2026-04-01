@@ -83,10 +83,9 @@ export class OfflineGameController {
   private startNewRound(): void {
     if (!this.isRunning) return;
 
-    // Increment round counter
     this.roundNumber++;
+    this.botManager.resetMemories();
 
-    // Show re-dealing message
     this.gameView.showReDealing();
 
     // Deal cards with validation (handles re-deal if needed)
@@ -243,115 +242,90 @@ export class OfflineGameController {
         // Trick was just completed - show cards briefly before collecting
         const lastTrick = this.gameState.completedTricks[this.gameState.completedTricks.length - 1];
         if (lastTrick.winner !== null) {
-          // Update UI first to show the complete trick (including the 4th card)
+          this.botManager.recordTrickResult(lastTrick, lastTrick.winner, this.gameState.players.map(p => ({ id: p.id, team: p.team })));
           this.notifyStateChange();
           
-          // Wait 2 seconds before animating trick collection so players can see the result
           setTimeout(() => {
             if (!this.isRunning) return;
             
             this.gameView.animateTrickCollection(lastTrick.winner!);
             
-            // Trigger haptic if user won
             if (lastTrick.winner === this.userPlayerIndex) {
               this.hapticController.triggerTrickWon();
             }
             
-            // Check if round is complete after animation
             if (this.gameState.completedTricks.length === 8) {
-              // Wait for trick collection animation to complete before showing round end modal
               setTimeout(() => this.handleRoundEnd(), 600);
               return;
             }
             
-            // Schedule next bot turn or wait for user
             this.scheduleBotTurn();
           }, 2000);
           return;
         }
       }
 
-      // FIX: Update UI immediately for all bot card plays
-      // This ensures the card is displayed in the trick area before any delay
       this.notifyStateChange();
 
-      // Check if round is complete (after trick resolution)
       if (this.gameState.completedTricks.length === 8) {
         this.handleRoundEnd();
         return;
       }
 
-      // Schedule next bot turn or wait for user
       this.scheduleBotTurn();
     } catch (error) {
       console.error('Bot turn error:', error);
-      // Try again with a different card
       this.executeBotTurn(playerIndex);
     }
   }
 
-  /**
-   * Handles user card play
-   */
   private handleUserCardPlay(card: Card): void {
     if (!this.isRunning) return;
     if (this.gameState.phase !== 'TRICK_PLAY') return;
     if (this.gameState.currentPlayer !== this.userPlayerIndex) return;
 
-    // Validate card can be played
     if (!canPlayCard(this.gameState, this.userPlayerIndex, card)) {
       return;
     }
 
     try {
-      // Play the card
       playCard(this.gameState, this.userPlayerIndex, card);
 
-      // Trigger haptic feedback
       this.hapticController.triggerYourTurn();
 
-      // Check if trick is complete
       if (this.gameState.currentTrick.cards.length === 0 && this.gameState.completedTricks.length > 0) {
-        // Trick was just completed - show cards briefly before collecting
         const lastTrick = this.gameState.completedTricks[this.gameState.completedTricks.length - 1];
         if (lastTrick.winner !== null) {
-          // Update UI first to show the complete trick
+          this.botManager.recordTrickResult(lastTrick, lastTrick.winner, this.gameState.players.map(p => ({ id: p.id, team: p.team })));
           this.notifyStateChange();
           
-          // Wait 2 seconds before animating trick collection so players can see the result
           setTimeout(() => {
             if (!this.isRunning) return;
             
             this.gameView.animateTrickCollection(lastTrick.winner!);
             
-            // Trigger haptic if user won
             if (lastTrick.winner === this.userPlayerIndex) {
               this.hapticController.triggerTrickWon();
             }
             
-            // Check if round is complete after animation
             if (this.gameState.completedTricks.length === 8) {
               setTimeout(() => this.handleRoundEnd(), 600);
               return;
             }
             
-            // Schedule next bot turn
             this.scheduleBotTurn();
           }, 2000);
           return;
         }
       }
 
-      // Update UI
       this.notifyStateChange();
 
-      // Check if round is complete (after trick resolution)
       if (this.gameState.completedTricks.length === 8) {
         this.handleRoundEnd();
         return;
       }
 
-      // Schedule next bot turn
       this.scheduleBotTurn();
     } catch (error) {
       console.error('User card play error:', error);

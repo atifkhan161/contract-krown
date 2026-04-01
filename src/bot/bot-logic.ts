@@ -1,6 +1,10 @@
-import type { Suit, Rank, Card } from '../engine/types.js';
+// Contract Crown Smart Bot with Team Memory
+// Uses shared team memory for intelligent, human-like card play decisions
 
-export interface GameState {
+import type { Suit, Card } from '../engine/types.js';
+import { TeamMemory } from './team-memory.js';
+
+export interface BotGameState {
   trumpSuit: Suit;
   currentTrick: { playerIndex: number; card: Card }[];
   leadSuit: Suit | null;
@@ -8,44 +12,41 @@ export interface GameState {
   partnerIndex: number;
   isDeclaringTeam: boolean;
   tricksWonByTeam: number;
+  tricksRemaining: number;
 }
 
-/**
- * Smart Heuristic Bot for Contract Crown
- */
 export class SmartBot {
   
-  public static getBestMove(hand: Card[], state: GameState): Card {
+  public static getBestMove(hand: Card[], state: BotGameState, memory: TeamMemory): Card {
     const legalMoves = this.getLegalMoves(hand, state.leadSuit);
     
-    // 1. If I only have one card, play it.
     if (legalMoves.length === 1) return legalMoves[0];
+
+    if (state.currentTrick.length === 0) {
+      return this.getBestLeadWithMemory(legalMoves, state, memory);
+    }
+
+    if (state.leadSuit && !hand.some(c => c.suit === state.leadSuit)) {
+      return this.decideWhenVoid(legalMoves, state, memory);
+    }
 
     const currentWinner = this.getCurrentlyWinningCard(state);
 
-    // 2. PARTNER IS WINNING: Don't waste power.
     if (currentWinner && currentWinner.playerIndex === state.partnerIndex) {
-      // Partner has it. Play the LOWEST legal card to save high cards for later.
       return this.sortCardsByValue(legalMoves)[0];
     }
 
-    // 3. I AM STARTING THE TRICK: Play strategically.
-    if (state.currentTrick.length === 0) {
-      return this.getBestLead(legalMoves, state);
-    }
-
-    // 4. TRY TO WIN: Find cards that beat the current winner.
     const winningCards = legalMoves.filter(card => 
       this.isCardBetter(card, currentWinner!.card, state.trumpSuit, state.leadSuit!)
     );
 
     if (winningCards.length > 0) {
-      // We can win. If we are the declaring team and close to 5 tricks, play the LOWEST winning card.
-      // (Minimal effort to win the trick).
+      if (state.tricksWonByTeam >= 5 && state.isDeclaringTeam) {
+        return this.sortCardsByValue(legalMoves)[0];
+      }
       return this.sortCardsByValue(winningCards)[0];
     }
 
-    // 5. CANNOT WIN: Play the absolute lowest card to "slough" (throw away).
     return this.sortCardsByValue(legalMoves)[0];
   }
 
@@ -55,25 +56,137 @@ export class SmartBot {
     return followSuitCards.length > 0 ? followSuitCards : hand;
   }
 
-  private static getBestLead(hand: Card[], state: GameState): Card {
+  private static getBestLeadWithMemory(hand: Card[], state: BotGameState, memory: TeamMemory): Card {
     const sorted = this.sortCardsByValue(hand);
-    // If we have an Ace (Value 14) of a non-trump suit, lead it. It's a safe win.
-    const strongLead = sorted.find(c => c.value === 14 && c.suit !== state.trumpSuit);
-    if (strongLead) return strongLead;
+    
+    if (this.isEndgame(state)) {
+      return this.getEndgameLead(sorted, state, memory);
+    }
 
-    // Otherwise, lead a medium card or low trump.
-    return sorted[Math.floor(sorted.length / 2)];
+    const partnerStrongSuits = this.getPartnerStrongSuits(memory);
+    for (const suit of partnerStrongSuits) {
+      const suitCards = sorted.filter(c => c.suit === suit);
+      if (suitCards.length > 0) {
+        return suitCards[suitCards.length - 1];
+      }
+    }
+
+    const nonTrumpAces = sorted.filter(c => c.value === 14 && c.suit !== state.trumpSuit);
+    if (nonTrumpAces.length > 0) {
+      const ace = nonTrumpAces[0];
+      const unaccounted = memory.getUnaccountedHighCards();
+      const higherUnaccounted = unaccounted.filter(c => c.suit === ace.suit && c.value > ace.value);
+      if (higherUnaccounted.length === 0) {
+        return ace;
+      }
+    }
+
+    const nonTrumpCards = sorted.filter(c => c.suit !== state.trumpSuit);
+    if (nonTrumpCards.length > 0) {
+      return nonTrumpCards[Math.floor(nonTrumpCards.length / 2)];
+    }
+
+    return sorted[0];
   }
 
-  private static isCardBetter(candidate: Card, best: Card, trump: Suit, lead: Suit): boolean {
+  private static decideWhenVoid(legalMoves: Card[], state: BotGameState, memory: TeamMemory): Card {
+    const trumpsInHand = legalMoves.filter(c => c.suit === state.trumpSuit);
+    const nonTrumps = legalMoves.filter(c => c.suit !== state.trumpSuit);
+    
+    if (trumpsInHand.length === 0) {
+      return this.sortCardsByValue(legalMoves)[0];
+    }
+
+    const trumpRemaining = memory.getTrumpRemaining();
+    const currentWinner = this.getCurrentlyWinningCard(state);
+    
+    if (currentWinner) {
+      const winnerIsPartner = currentWinner.playerIndex === state.partnerIndex;
+      if (winnerIsPartner) {
+        if (nonTrumps.length > 0) {
+          return this.sortCardsByValue(nonTrumps)[0];
+        }
+        return this.sortCardsByValue(legalMoves)[0];
+      }
+
+      const canWinWithTrump = trumpsInHand.filter(t => 
+        this.isCardBetter(t, currentWinner.card, state.trumpSuit, state.leadSuit!)
+      );
+      if (canWinWithTrump.length > 0) {
+        if (state.tricksWonByTeam >= 5 && state.isDeclaringTeam) {
+          if (nonTrumps.length > 0) {
+            return this.sortCardsByValue(nonTrumps)[0];
+          }
+          return this.sortCardsByValue(legalMoves)[0];
+        }
+        if (trumpRemaining <= 2) {
+          if (nonTrumps.length > 0) {
+            return this.sortCardsByValue(nonTrumps)[0];
+          }
+          return this.sortCardsByValue(legalMoves)[0];
+        }
+        return this.sortCardsByValue(canWinWithTrump)[0];
+      }
+      if (nonTrumps.length > 0) {
+        return this.sortCardsByValue(nonTrumps)[0];
+      }
+      return this.sortCardsByValue(legalMoves)[0];
+    }
+
+    if (nonTrumps.length > 0) {
+      return this.sortCardsByValue(nonTrumps)[0];
+    }
+
+    return this.sortCardsByValue(trumpsInHand)[0];
+  }
+
+  private static getEndgameLead(sorted: Card[], state: BotGameState, memory: TeamMemory): Card {
+    const remaining = memory.getRemainingCards();
+    
+    for (const card of sorted) {
+      const higherInSuit = remaining.filter(c => 
+        c.suit === card.suit && c.value > card.value && c.suit !== state.trumpSuit
+      );
+      if (higherInSuit.length === 0 && card.suit !== state.trumpSuit) {
+        return card;
+      }
+    }
+
+    const nonTrumpCards = sorted.filter(c => c.suit !== state.trumpSuit);
+    if (nonTrumpCards.length > 0) {
+      return nonTrumpCards[nonTrumpCards.length - 1];
+    }
+
+    return sorted[0];
+  }
+
+  private static getPartnerStrongSuits(memory: TeamMemory): Suit[] {
+    const suitWins: Record<string, number> = {};
+    for (const trick of memory.tricksWeWon) {
+      for (const entry of trick.allCards) {
+        if (entry.player % 2 === 0) {
+          const key = entry.card.suit;
+          suitWins[key] = (suitWins[key] || 0) + 1;
+        }
+      }
+    }
+    return Object.entries(suitWins)
+      .filter(([, count]) => count >= 2)
+      .map(([suit]) => suit as Suit);
+  }
+
+  private static isEndgame(state: BotGameState): boolean {
+    return state.tricksRemaining <= 3;
+  }
+
+  private static isCardBetter(candidate: Card, best: Card, trump: Suit, _lead: Suit): boolean {
     if (candidate.suit === trump && best.suit !== trump) return true;
     if (candidate.suit !== trump && best.suit === trump) return false;
     if (candidate.suit === best.suit) return candidate.value > best.value;
-    // If suits are different and neither is trump, the one matching lead suit wins (usually candidate won't be different suit if following lead)
     return false;
   }
 
-  private static getCurrentlyWinningCard(state: GameState) {
+  private static getCurrentlyWinningCard(state: BotGameState) {
     if (state.currentTrick.length === 0) return null;
     let winner = state.currentTrick[0];
     for (let i = 1; i < state.currentTrick.length; i++) {

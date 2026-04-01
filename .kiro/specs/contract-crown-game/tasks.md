@@ -947,11 +947,100 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
 - [ ] 32. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, verify deployment readiness, ask the user if questions arise.
 
+- [x] 35. Implement Smart Bot with Team-Shared Memory
+  - [x] 35.1 Create TeamMemory class
+    - Create src/bot/team-memory.ts
+    - Implement TeamMemoryRecord and TeamWonTrickRecord interfaces
+    - Implement ourPlays tracking (all cards team played, won or lost)
+    - Implement tricksWeWon tracking (complete 4-card trick records)
+    - Implement knownCards set for deduplication
+    - Implement recalculateRemaining() for perfect card calculation
+    - Implement isOpponentVoid() detection from won tricks
+    - Implement getUnaccountedHighCards() for A, K, Q tracking
+    - Implement getTrumpRemaining() for exact trump count
+    - Implement reset() for new round clearing
+    - _Requirements: 23.1, 23.3, 23.4, 23.5, 23.6, 23.7, 23.8, 23.14_
+
+  - [x] 35.2 Write property tests for TeamMemory
+    - **Property 37: Team Memory Tracks All Team Plays**
+    - **Property 38: Team Memory Records Complete Won Tricks**
+    - **Property 39: Remaining Cards Perfect Calculation**
+    - **Property 40: High Card Tracking Accuracy**
+    - **Property 41: Opponent Void Detection**
+    - **Property 42: Trump Count Accuracy**
+    - **Property 48: Memory Reset Per Round**
+    - **Property 49: Shared Team Memory**
+    - _Requirements: 23.3, 23.4, 23.5, 23.6, 23.7, 23.8, 23.14, 23.15_
+
+  - [x] 35.3 Write unit tests for TeamMemory
+    - Test recordOurPlay() correctly logs team plays
+    - Test recordTrickWeWon() stores complete trick details
+    - Test recalculateRemaining() produces correct remaining cards
+    - Test isOpponentVoid() detects voids from won tricks
+    - Test getUnaccountedHighCards() tracks A, K, Q accurately
+    - Test getTrumpRemaining() returns exact count
+    - Test reset() clears all memory
+    - Test shared memory between team bots
+    - _Requirements: 23.3, 23.4, 23.5, 23.6, 23.7, 23.8, 23.14, 23.15_
+
+  - [x] 35.4 Enhance SmartBot with memory-aware decision logic
+    - Update src/bot/bot-logic.ts to accept TeamMemory parameter
+    - Implement getBestLeadWithMemory() for memory-aware leading
+    - Implement shouldTrump() for strategic trump decisions
+    - Implement isEndgame() detection (last 2-3 tricks)
+    - Implement calculateEndgameMove() for optimal endgame play
+    - Implement partner-aware sloughing (lowest when partner winning)
+    - Implement void-aware leading (avoid opponent void suits)
+    - Implement trump conservation logic
+    - _Requirements: 23.9, 23.10, 23.11, 23.12, 23.13_
+
+  - [x] 35.5 Write property tests for enhanced SmartBot
+    - **Property 43: Bot Legal Move Selection with Memory**
+    - **Property 44: Partner-Aware Leading**
+    - **Property 45: Trump Conservation**
+    - **Property 46: Partner Win Recognition**
+    - **Property 47: Endgame Optimal Play**
+    - _Requirements: 23.9, 23.10, 23.11, 23.12, 23.13_
+
+  - [x] 35.6 Write unit tests for enhanced SmartBot
+    - Test leading decisions with various memory states
+    - Test following decisions with partner winning
+    - Test void-in-led-suit decisions (trump vs slough)
+    - Test endgame calculations with exact remaining cards
+    - Test partner strength recognition from won tricks
+    - Test opponent void exploitation
+    - Test trump conservation scenarios
+    - _Requirements: 23.9, 23.10, 23.11, 23.12, 23.13_
+
+  - [x] 35.7 Update BotManager with team memory management
+    - Update src/bot/bot-manager.ts
+    - Create two TeamMemory instances (Team 0 and Team 1)
+    - Implement recordTrickResult() to update both team memories
+    - Implement resetMemories() for round start
+    - Update selectCard() to pass correct team memory to SmartBot
+    - Update selectTrumpSuit() with enhanced strategy (high card concentration)
+    - _Requirements: 23.1, 23.2, 23.9, 23.15_
+
+  - [x] 35.8 Update OfflineGameController for memory integration
+    - Update src/ui/offline-game-controller.ts
+    - Call BotManager.recordTrickResult() after each trick completes
+    - Call BotManager.resetMemories() at round start
+    - Ensure memory updates happen before next trick begins
+    - _Requirements: 23.2, 23.14_
+
+  - [x] 35.9 Integration testing for smart bot
+    - Test full round with smart bots making memory-aware decisions
+    - Verify bots coordinate on same team using shared memory
+    - Verify bots conserve trumps appropriately
+    - Verify bots recognize partner strength and lead accordingly
+    - Verify endgame calculations produce optimal plays
+    - _Requirements: 23.9, 23.10, 23.11, 23.12, 23.13, 23.15_
+
 ## Notes
 
 - Tasks marked with `*` are optional and can be skipped for faster MVP
 - Each task references specific requirements for traceability
-- All 36 correctness properties have corresponding property tests (31 original + 1 re-deal + 4 new menu/properties)
+- All 49 correctness properties have corresponding property tests (36 original + 13 new bot memory properties)
 - Property tests use fast-check with minimum 100 iterations
 - Checkpoints ensure incremental validation at key milestones
 - **NEW WORKFLOW**: Implementation now prioritizes offline play testing before online multiplayer

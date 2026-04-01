@@ -190,26 +190,73 @@ class GameEngine {
 
 ### 2. Bot Manager (AI Opponents)
 
-Provides AI logic for offline practice and replacement of disconnected players.
+Provides AI logic for offline practice and replacement of disconnected players. Uses team-shared memory for intelligent, human-like play.
 
 **Responsibilities**:
 - Select legal cards to play within 1 second
-- Implement basic strategy (trump usage, suit following)
+- Implement smart strategy with team-shared memory (trump usage, suit following, card tracking, partner coordination)
+- Maintain TeamMemory instances per team (Team 0 and Team 1)
+- Update team memories after each trick completion
 - Simulate human-like timing delays
 - Support trump declaration decisions
 
+**Team-Shared Memory Architecture**:
+- Each team has ONE shared TeamMemory instance (not per-bot)
+- Bots on the same team share perfect knowledge of their team's plays and won tricks
+- Memory resets at the start of each new round
+- TeamMemory tracks: all team plays, complete won tricks, remaining cards, opponent voids, high card locations
+
 **Strategy Implementation**:
-- **Trump Declaration**: Choose suit with most cards in initial hand
-- **Leading**: Play highest non-trump card, or lowest trump if only trumps remain
-- **Following**: Play lowest card that follows suit, or lowest trump if cannot follow, or lowest card if no trumps
+- **Trump Declaration**: Choose suit with most cards + highest total value (A, K, Q concentration)
+- **Leading**: Lead suits where partner showed strength, avoid suits where opponents are void, lead Aces when safe
+- **Following**: If partner winning → slough lowest; if can win → play lowest winning card; if void → trump only if valuable
+- **Endgame**: Calculate exact optimal plays using remaining card knowledge (last 2-3 tricks)
+- **Trump Conservation**: Count remaining trumps, save for critical tricks, don't waste early
 - **Timing**: Random delay 500-1500ms to simulate human decision-making
 
-**Key Interface**:
+**Key Interfaces**:
 
 ```typescript
+interface TeamMemoryRecord {
+  player: number;
+  card: Card;
+  trickNumber: number;
+  didWeWin: boolean;
+}
+
+interface TeamWonTrickRecord {
+  trickNumber: number;
+  winner: number;
+  allCards: { player: number; card: Card }[];
+  ledSuit: Suit;
+}
+
+interface TeamMemory {
+  ourPlays: TeamMemoryRecord[];
+  tricksWeWon: TeamWonTrickRecord[];
+  knownCards: Set<string>;
+  remainingCards: Card[];
+  opponentVoids: { player: number; suit: Suit }[];
+  highCardsUnaccounted: Card[];
+  trumpRemaining: number;
+  
+  recordOurPlay(player: number, card: Card, trickNumber: number, didWeWin: boolean): void;
+  recordTrickWeWon(trick: TeamWonTrickRecord): void;
+  recalculateRemaining(): void;
+  getRemainingCards(): Card[];
+  isOpponentVoid(player: number, suit: Suit): boolean;
+  getUnaccountedHighCards(): Card[];
+  getTrumpRemaining(): number;
+  reset(): void;
+}
+
 class BotManager {
+  private teamMemories: Map<number, TeamMemory>; // teamId -> TeamMemory
+  
   selectTrumpSuit(hand: Card[]): Suit;
   selectCard(state: GameState, playerIndex: number): Card;
+  recordTrickResult(trick: Trick, winner: number): void;
+  resetMemories(): void;
   private evaluateHand(hand: Card[], trumpSuit: Suit | null): number;
   private shouldPlayTrump(state: GameState, hand: Card[]): boolean;
 }
@@ -797,6 +844,84 @@ These redundant properties have been consolidated into single comprehensive prop
 *For any* game state where the user's team has won zero tricks, THE Mobile_UI SHALL display the empty state message.
 
 **Validates: Requirements 22.7**
+
+### Property 37: Team Memory Tracks All Team Plays
+
+*For any* completed trick, THE TeamMemory for both teams SHALL record the card played by each player on that team, regardless of whether the team won or lost the trick.
+
+**Validates: Requirements 23.3**
+
+### Property 38: Team Memory Records Complete Won Tricks
+
+*For any* trick won by a team, THE TeamMemory for that team SHALL record all 4 cards played in the trick with player associations.
+
+**Validates: Requirements 23.4**
+
+### Property 39: Remaining Cards Perfect Calculation
+
+*For any* game state, THE TeamMemory.remainingCards SHALL equal the set of all 32 cards minus all knownCards (cards from team plays and won tricks).
+
+**Validates: Requirements 23.5**
+
+### Property 40: High Card Tracking Accuracy
+
+*For any* game state, THE TeamMemory.highCardsUnaccounted SHALL contain exactly the A, K, Q cards per suit that have not been seen in team plays or won tricks.
+
+**Validates: Requirements 23.6**
+
+### Property 41: Opponent Void Detection
+
+*For any* trick won by the team, THE TeamMemory SHALL detect and record any opponent who could not follow the led suit as void in that suit.
+
+**Validates: Requirements 23.7**
+
+### Property 42: Trump Count Accuracy
+
+*For any* game state, THE TeamMemory.trumpRemaining SHALL equal 8 minus the number of trump cards seen in team plays and won tricks.
+
+**Validates: Requirements 23.8**
+
+### Property 43: Bot Legal Move Selection with Memory
+
+*For any* game state where it is a bot's turn, THE SmartBot SHALL select a card that is marked as playable according to game rules, using TeamMemory to inform strategic decisions.
+
+**Validates: Requirements 23.9**
+
+### Property 44: Partner-Aware Leading
+
+*For any* trick where the bot is leading, THE SmartBot SHALL prefer leading suits where the partner has shown strength (won tricks or played high cards) and avoid suits where opponents are detected as void.
+
+**Validates: Requirements 23.10**
+
+### Property 45: Trump Conservation
+
+*For any* game state where the bot is void in the led suit, THE SmartBot SHALL only play a trump card when it can win the trick or when strategically necessary, based on remaining trump count.
+
+**Validates: Requirements 23.11**
+
+### Property 46: Partner Win Recognition
+
+*For any* trick where the partner is currently winning, THE SmartBot SHALL play its lowest legal card to conserve higher cards for future tricks.
+
+**Validates: Requirements 23.12**
+
+### Property 47: Endgame Optimal Play
+
+*For any* game state in the last 2-3 tricks of a round, THE SmartBot SHALL calculate optimal plays using exact remaining card knowledge from TeamMemory to maximize tricks won for its team.
+
+**Validates: Requirements 23.13**
+
+### Property 48: Memory Reset Per Round
+
+*For any* new round start, THE TeamMemory for both teams SHALL be reset to empty state with no prior round information retained.
+
+**Validates: Requirements 23.14**
+
+### Property 49: Shared Team Memory
+
+*For any* team, all bots on that team SHALL reference the same TeamMemory instance, ensuring coordinated play based on shared knowledge.
+
+**Validates: Requirements 23.15**
 
 ### 9. GameMenu Component (Played Cards Viewer)
 

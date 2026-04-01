@@ -140,7 +140,29 @@ Contract Crown is a mobile-only Progressive Web App (PWA) implementing a real-ti
 2. WHEN a bot's turn arrives, THE Bot_Manager SHALL select a legal card to play within 1 second
 3. THE Bot_Manager SHALL follow all game rules including suit-following requirements
 4. WHERE offline mode is active, THE Game_Engine SHALL run entirely in the browser without server communication
-5. THE Bot_Manager SHALL implement basic strategy including trump usage and suit-following logic
+5. THE Bot_Manager SHALL implement smart strategy with team-shared memory including trump usage, suit-following logic, card tracking, and partner coordination
+
+### Requirement 23: Smart Bot with Team-Shared Memory
+
+**User Story:** As a player practicing offline, I want the AI bots to play intelligently like humans, so that I get a realistic and challenging practice experience.
+
+#### Acceptance Criteria
+
+1. THE Bot_Manager SHALL maintain a TeamMemory instance per team that tracks cards played and tricks won
+2. WHEN a trick is completed, THE Bot_Manager SHALL update both team memories with the trick result
+3. THE TeamMemory SHALL record all cards the team has played across all tricks (won or lost)
+4. THE TeamMemory SHALL record complete trick details (all 4 cards) only for tricks the team has won
+5. THE TeamMemory SHALL perfectly calculate remaining cards as: 32 total cards minus all known cards
+6. THE TeamMemory SHALL track which high cards (A, K, Q) per suit remain unaccounted for
+7. THE TeamMemory SHALL detect opponent voids from tricks the team has won (when opponent could not follow suit)
+8. THE TeamMemory SHALL track exact count of remaining trump cards
+9. WHEN a bot makes a decision, THE Bot_Manager SHALL use TeamMemory to inform strategy including leading, following, trumping, and endgame play
+10. THE SmartBot SHALL lead suits where partner has shown strength and avoid suits where opponents are likely void
+11. THE SmartBot SHALL conserve trumps and only trump when strategically valuable
+12. THE SmartBot SHALL recognize when partner is currently winning a trick and slough lowest card to save power
+13. THE SmartBot SHALL play optimally in endgame scenarios (last 2-3 tricks) using exact remaining card calculations
+14. THE TeamMemory SHALL reset at the start of each new round
+15. Bots on the same team SHALL share the same TeamMemory instance for coordinated play
 
 ### Requirement 11: Online Multiplayer with Colyseus
 
