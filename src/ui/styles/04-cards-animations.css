@@ -1,0 +1,176 @@
+/* ===== Cards ===== */
+.card {
+  width: 48px;
+  height: 66px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px var(--game-card-shadow);
+}
+
+.card.playable {
+  background: var(--game-card-bg);
+  border: 2px solid var(--game-card-playable-border);
+  opacity: 1;
+}
+
+.card.playable:hover,
+.card.playable:active {
+  transform: translateY(-8px);
+  box-shadow: 0 6px 12px var(--game-card-shadow-hover);
+}
+
+.card.unplayable {
+  background: var(--game-card-unplayable-bg);
+  border: 2px solid var(--game-card-unplayable-border);
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.card.selected {
+  transform: translateY(-12px);
+  box-shadow: 0 8px 16px var(--game-card-selected-shadow);
+  border-color: var(--game-card-border);
+}
+
+.card.animating {
+  position: absolute;
+  z-index: 100;
+  pointer-events: none;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.card-animating {
+  opacity: 0.3;
+}
+
+.card-collected {
+  opacity: 0.3;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.card-rank {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--game-card-text);
+  line-height: 1;
+}
+
+.card-suit {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.card-suit.red {
+  color: var(--game-suit-red);
+}
+
+.card-suit.black {
+  color: var(--game-suit-black);
+}
+
+.suit-red {
+  color: var(--game-suit-red);
+}
+
+.suit-black {
+  color: var(--game-suit-black);
+}
+
+/* Individual card position in circular layout */
+.trick-card-slot {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.3s ease;
+}
+
+/* Card positions based on player relative to user (bottom) */
+/* User (bottom) */
+.trick-card-slot.position-bottom {
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Partner (top) */
+.trick-card-slot.position-top {
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Left opponent */
+.trick-card-slot.position-left {
+  left: 8%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Right opponent */
+.trick-card-slot.position-right {
+  right: 8%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Player label under card */
+.card-player-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--game-card-label-text);
+  background: var(--game-card-label-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Winner indicator */
+.card-player-label.winner {
+  color: var(--game-winner-text);
+  background: var(--game-winner-bg);
+  animation: winner-pulse 0.5s ease-in-out 3;
+}
+
+/* ===== Animations ===== */
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.7; }
+}
+
+@keyframes winner-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes redeal-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.re-dealing-message {
+  color: var(--game-redeal-text);
+  font-size: 16px;
+  font-weight: 600;
+  animation: redeal-pulse 1s ease-in-out infinite;
+}

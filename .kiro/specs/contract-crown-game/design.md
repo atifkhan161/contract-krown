@@ -264,20 +264,44 @@ class BotManager {
 
 ### 3. Mobile UI (Presentation Layer)
 
-Implements the "Felt Grid" layout with thumb-zone optimization.
+Implements the "Felt Grid" layout with thumb-zone optimization and player-specific view rendering.
+
+**Player Index Mapping**:
+- **Server Player Index**: The player's actual index in the game state (0-3)
+- **Client View Position**: The visual position relative to the current user
+  - Position 0 (Bottom): Always the current user
+  - Position 1 (Left): Opponent to the left
+  - Position 2 (Top): Partner (same team as user)
+  - Position 3 (Right): Opponent to the right
+
+**Mapping Formula**:
+```typescript
+// Convert server player index to client view position
+function getViewPosition(serverPlayerIndex: number, userPlayerIndex: number): number {
+  return (serverPlayerIndex - userPlayerIndex + 4) % 4;
+}
+
+// Convert client view position to server player index
+function getServerIndex(viewPosition: number, userPlayerIndex: number): number {
+  return (viewPosition + userPlayerIndex) % 4;
+}
+```
 
 **Layout Structure** (3x3 Grid - no separate header):
 ```
 ┌─────────────┬──────────┬─────────────┐
 │ Trump       │ Partner  │ Crown +     │ 15%
 │ Indicator   │ (Top)    │ Scores      │
+│             │ Pos 2    │             │
 ├─────────────┼──────────┼─────────────┤
 │             │          │             │
 │ Opp Left    │  Trick   │  Opp Right  │ 55%
-│             │  Area    │             │
+│ Pos 1       │  Area    │  Pos 3      │
+│             │          │             │
 ├─────────────┼──────────┼─────────────┤
 │ Trick Count │ User Hand│ Return Btn  │ 30%
 │             │ (Bottom) │             │
+│             │ Pos 0    │             │
 │             │ [Thumb]  │             │
 └─────────────┴──────────┴─────────────┘
 ```
@@ -286,13 +310,14 @@ Implements the "Felt Grid" layout with thumb-zone optimization.
 - `GameView`: Root container
   - `FeltGrid`: Full-screen 3x3 grid play area (includes header data in corner cells)
     - `topLeft`: Trump suit indicator
-    - `partnerDisplay` (top-center): Partner avatar and card count
-    - `topRight`: Crown holder name + team scores
-    - `leftOpponentDisplay`: Left opponent
+    - `partnerDisplay` (top-center): Partner avatar, username, and card count
+    - `topRight`: Crown holder name + team scores + trump declarer name
+    - `leftOpponentDisplay`: Left opponent with username
     - `trickArea` (center): Active trick cards + pending trick display buffer
-    - `rightOpponentDisplay`: Right opponent
+    - `rightOpponentDisplay`: Right opponent with username
     - `bottomLeft`: Trick count indicator
     - `userHand` (bottom-center): User's interactive hand
+    - `userDisplay`: User's own avatar with "You" or username
     - `bottomRight`: Return to lobby button
   - `TrumpSelector`: Modal for declaration
   - `RoundEndModal`: Round results
@@ -316,6 +341,7 @@ interface UIState {
   showTrumpSelector: boolean;
   showRoundEnd: boolean;
   showVictory: boolean;
+  playerNames: string[]; // Array of 4 player usernames indexed by player position
 }
 
 interface AnimatingCard {
@@ -327,13 +353,88 @@ interface AnimatingCard {
 }
 
 class MobileUI {
-  render(state: UIState): void;
+  render(state: UIState, userPlayerIndex: number): void;
   handleCardTap(card: Card): void;
   handleTrumpSelection(suit: Suit): void;
   animateCardPlay(card: Card, from: Position, to: Position): void;
   updatePlayability(state: GameState, playerIndex: number): void;
+  getViewPosition(serverPlayerIndex: number, userPlayerIndex: number): number;
+  getServerIndex(viewPosition: number, userPlayerIndex: number): number;
+  setPlayerNames(names: string[]): void; // Set player names for display
 }
 ```
+
+### 3.1 OnlineGameController (Player Mapping)
+
+Manages online game state and maps server player indices to client view positions.
+
+**Responsibilities**:
+- Connect to Colyseus server and join game room
+- Track the current user's server player index
+- Map server state to client view state with proper player rotation
+- Send user actions to server
+- Update UI with player-specific perspective
+
+**Player Index Tracking**:
+```typescript
+class OnlineGameController {
+  private userPlayerIndex: number = 0; // User's server player index
+  
+  // Called when joining room - server tells us our player index
+  async joinRoom(roomId: string): Promise<void> {
+    await this.clientWrapper.joinRoom(roomId);
+    // Server assigns player index based on join order
+    // This is stored in the room state and retrieved via onJoin callback
+    this.userPlayerIndex = this.getAssignedPlayerIndex();
+  }
+  
+  // Map server state to view state
+  private mapSchemaToGameState(schema: any): GameState {
+    // Server state has players at indices 0-3
+    // We need to rotate them so user is always at position 0 in the view
+    const rotatedPlayers = this.rotatePlayersForView(schema.players);
+    
+    return {
+      ...schema,
+      players: rotatedPlayers,
+      // Also rotate currentPlayer, crownHolder, etc.
+      currentPlayer: this.getViewPosition(schema.currentPlayer),
+      crownHolder: this.getViewPosition(schema.crownHolder),
+      // Rotate trick card player indices
+      currentTrick: {
+        ...schema.currentTrick,
+        cards: schema.currentTrick.cards.map(pc => ({
+          ...pc,
+          player: this.getViewPosition(pc.player)
+        }))
+      }
+    };
+  }
+  
+  private rotatePlayersForView(serverPlayers: Player[]): Player[] {
+    const viewPlayers: Player[] = [];
+    for (let viewPos = 0; viewPos < 4; viewPos++) {
+      const serverIndex = this.getServerIndex(viewPos);
+      viewPlayers[viewPos] = serverPlayers[serverIndex];
+    }
+    return viewPlayers;
+  }
+  
+  private getViewPosition(serverPlayerIndex: number): number {
+    return (serverPlayerIndex - this.userPlayerIndex + 4) % 4;
+  }
+  
+  private getServerIndex(viewPosition: number): number {
+    return (viewPosition + this.userPlayerIndex) % 4;
+  }
+}
+```
+
+**Key Design Decision**:
+- Server maintains players in join order (indices 0-3)
+- Each client rotates the view so they appear at position 0 (bottom)
+- All player-related indices (currentPlayer, crownHolder, trick cards) are rotated
+- When sending actions to server, client converts view position back to server index
 
 ### 4. PWA Shell (Application Container)
 
@@ -408,7 +509,7 @@ class SessionManager {
 
 ### 6. Colyseus Server (Online Multiplayer)
 
-Authoritative game server managing real-time multiplayer rooms.
+Authoritative game server managing real-time multiplayer rooms with proper player initialization and card dealing.
 
 **Responsibilities**:
 - Room creation and matchmaking
@@ -417,18 +518,53 @@ Authoritative game server managing real-time multiplayer rooms.
 - Reconnection handling (60s timeout)
 - Bot replacement for disconnected players
 - Game state persistence
+- **Player-specific card dealing**: Ensure each player receives unique cards
+- **Bot initialization**: Fill empty slots with bots before game starts
+- **Player index tracking**: Map client sessions to player indices
 
 **Room Lifecycle**:
-1. **Creation**: Player creates room, becomes host
-2. **Joining**: 3 more players join (or bots fill)
-3. **Playing**: Server processes actions, broadcasts state
-4. **Completion**: Results saved, room closes after 30s
-5. **Cleanup**: Room disposed, data persisted
+1. **Creation**: Player creates room, becomes host (admin)
+2. **Joining**: Up to 3 more players join
+3. **Pre-Game**: Admin can shuffle teams, add bots, start game
+4. **Initialization**: Fill empty slots with bots, assign player indices
+5. **Dealing**: Use game engine to deal unique cards to each player
+6. **Playing**: Server processes actions, broadcasts state
+7. **Completion**: Results saved, room closes after 30s
+8. **Cleanup**: Room disposed, data persisted
+
+**Player Index Assignment**:
+- Players are assigned indices 0-3 as they join
+- Bots fill remaining slots before game starts
+- Each client tracks their own player index via `clientToPlayer` map
+- Server broadcasts full state, clients filter to show only their own hand
+
+**Card Dealing Flow**:
+```typescript
+// In CrownRoom.startGame()
+1. Fill empty slots with bots (addBotToSlot for each empty index)
+2. Initialize game state with all 4 players
+3. Call dealInitial(gameState) - deals 4 cards to each player
+4. Sync state to all clients
+5. Wait for trump declaration
+6. Call dealFinal(gameState) - deals 4 more cards to each player
+7. Sync state to all clients
+8. Begin trick play
+```
+
+**State Synchronization**:
+- Server maintains authoritative GameState
+- Each player's hand is stored in `gameState.players[i].hand`
+- Server broadcasts full state including all hands
+- **Security Note**: In production, filter hands to send only user's hand to each client
+- For MVP, clients receive all hands but UI only displays user's hand
 
 **Key Interface**:
 
 ```typescript
 class CrownRoom extends Room<GameState> {
+  private clientToPlayer: Map<string, number>; // sessionId -> playerIndex
+  private playerToClient: Map<number, string>; // playerIndex -> sessionId
+  
   onCreate(options: any): void;
   onJoin(client: Client, options: any): void;
   onLeave(client: Client, consented: boolean): void;
@@ -440,10 +576,13 @@ class CrownRoom extends Room<GameState> {
   @Command()
   playCard(client: Client, card: Card): void;
   
+  private startGame(): void; // Fills bots, deals cards
+  private addBotToSlot(slotIndex: number): void;
   private validateAction(client: Client, action: any): boolean;
   private broadcastState(): void;
   private handleReconnection(client: Client): void;
   private replaceWithBot(playerIndex: number): void;
+  private getPlayerIndex(client: Client): number; // Get player index from session
 }
 ```
 
@@ -922,6 +1061,18 @@ These redundant properties have been consolidated into single comprehensive prop
 *For any* team, all bots on that team SHALL reference the same TeamMemory instance, ensuring coordinated play based on shared knowledge.
 
 **Validates: Requirements 23.15**
+
+### Property 50: Player Index Mapping Correctness
+
+*For any* userPlayerIndex (0-3) and serverPlayerIndex (0-3), applying getViewPosition() followed by getServerIndex() SHALL return the original serverPlayerIndex, and the user SHALL always map to view position 0.
+
+**Validates: Requirements 39.2**
+
+### Property 51: Unique Card Dealing in Online Mode
+
+*For any* game state after dealing in online mode, no two players SHALL have identical hands, and the union of all player hands SHALL equal the dealt cards with no duplicates.
+
+**Validates: Requirements 11.7, 39.5**
 
 ### 9. GameMenu Component (Played Cards Viewer)
 
@@ -1551,4 +1702,255 @@ page('/waiting/:roomId', requireAuth, showWaitingRoom);
 **Updated Lobby Callbacks**:
 - `onCreateGame`: Navigate to `/waiting/new`
 - `onJoinGame`: Show JoinRoomModal
+
+## 11. Player Name Display System
+
+### 11.1 Overview
+
+The player name display system shows actual player usernames throughout the game UI instead of generic positional labels. This helps players identify their partner, opponents, and the trump declarer by name.
+
+### 11.2 Data Flow
+
+```mermaid
+graph LR
+    Server[CrownRoom] -->|PlayerSchema.username| Client[OnlineGameController]
+    Client -->|Extract & Rotate| Names[playerNames array]
+    Names -->|Pass to render| GameView
+    GameView -->|Pass to render| FeltGrid
+    FeltGrid -->|Display in UI| Display[Player Positions]
+```
+
+### 11.3 Player Name Storage
+
+**Server State (PlayerSchema)**:
+```typescript
+@type('string') username: string = '';  // Set on join or bot creation
+```
+
+**Client State (OnlineGameController)**:
+```typescript
+private playerNames: string[] = [];  // 4 usernames in view order [user, left, partner, right]
+```
+
+**UI State (GameView)**:
+```typescript
+interface UIState {
+  // ... existing fields
+  playerNames: string[];  // Passed to FeltGrid for rendering
+}
+```
+
+### 11.4 Name Rotation Logic
+
+Player names must be rotated to match the client's view perspective, just like player indices:
+
+```typescript
+// In OnlineGameController.mapSchemaToGameState()
+private extractPlayerNames(schema: GameStateSchema): string[] {
+  const names: string[] = [];
+  for (let viewPos = 0; viewPos < 4; viewPos++) {
+    const serverIndex = this.getServerIndex(viewPos);
+    const player = schema.players.get(String(serverIndex));
+    names[viewPos] = player?.username || `Player ${serverIndex + 1}`;
+  }
+  return names;
+}
+```
+
+### 11.5 FeltGrid Rendering Updates
+
+**Partner Display (Top)**:
+```typescript
+private renderPartnerDisplay(state: GameState, userPlayerIndex: number, playerNames: string[]): void {
+  const partnerIndex = (userPlayerIndex + 2) % 4;
+  const partner = state.players[partnerIndex];
+  const partnerName = playerNames[2]; // View position 2 = partner
+  
+  this.partnerDisplay.innerHTML = `
+    <div class="player-info ${isActive ? 'active' : ''}">
+      <div class="player-avatar">...</div>
+      <div class="player-name">${partnerName}</div>
+      <div class="team-label ${teamClass}">${teamNumber}</div>
+      <div class="card-count">${partner.hand.length} cards</div>
+    </div>
+  `;
+}
+```
+
+**Opponent Displays (Left/Right)**:
+```typescript
+private renderSingleOpponent(
+  container: HTMLElement,
+  player: Player,
+  state: GameState,
+  playerIndex: number,
+  viewPosition: number,
+  playerNames: string[]
+): void {
+  const opponentName = playerNames[viewPosition];
+  
+  container.innerHTML = `
+    <div class="player-info ${isActive ? 'active' : ''}">
+      <div class="player-avatar">...</div>
+      <div class="player-name">${opponentName}</div>
+      <div class="team-label ${teamClass}">${teamNumber}</div>
+      <div class="card-count">${player.hand.length} cards</div>
+    </div>
+  `;
+}
+```
+
+**User Display (Bottom)**:
+```typescript
+private renderUserDisplay(state: GameState, userPlayerIndex: number, playerNames: string[]): void {
+  const userName = playerNames[0]; // View position 0 = user
+  const displayName = userName === state.players[userPlayerIndex].username ? 'You' : userName;
+  
+  this.userDisplay.innerHTML = `
+    <div class="player-info ${isActive ? 'active' : ''}">
+      <div class="player-avatar">...</div>
+      <div class="player-name">${displayName}</div>
+      <div class="team-label ${teamClass}">${teamNumber}</div>
+      <div class="card-count">${user.hand.length} cards</div>
+    </div>
+  `;
+}
+```
+
+### 11.6 Trump Declarer Name Display
+
+**Top-Right Scores Cell**:
+```typescript
+private renderTopRight(state: GameState, userPlayerIndex: number, playerNames: string[]): void {
+  const trumpDeclarerName = state.trumpDeclarer !== null
+    ? this.getPlayerNameByServerIndex(state.trumpDeclarer, playerNames, userPlayerIndex)
+    : null;
+  
+  this.topRight.innerHTML = `
+    <div class="scores-cell">
+      <span class="scores-cell-label">Scores</span>
+      <div class="scores-cell-row">
+        <span class="team-label team-0">T1</span>
+        <span class="team-score-mini team-0">${team0Score}</span>
+      </div>
+      <div class="scores-cell-row">
+        <span class="team-label team-1">T2</span>
+        <span class="team-score-mini team-1">${team1Score}</span>
+      </div>
+      ${trumpDeclarerName 
+        ? `<span class="trump-declarer-cell">🗣️ ${trumpDeclarerName}</span>` 
+        : `<span class="crown-cell-name">👑 ${crownHolderName}</span>`}
+    </div>
+  `;
+}
+
+private getPlayerNameByServerIndex(
+  serverIndex: number, 
+  playerNames: string[], 
+  userPlayerIndex: number
+): string {
+  const viewPos = this.getViewPosition(serverIndex, userPlayerIndex);
+  return playerNames[viewPos];
+}
+```
+
+### 11.7 CSS Styling
+
+**Player Name Styling**:
+```css
+.player-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--app-text-primary);
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trump-declarer-cell {
+  font-size: 0.75rem;
+  color: var(--app-text-secondary);
+  margin-top: 0.25rem;
+  display: block;
+}
+```
+
+### 11.8 Offline Mode Fallback
+
+For offline mode, use default names:
+```typescript
+// In OfflineGameController
+private getDefaultPlayerNames(): string[] {
+  return ['You', 'Bot Alpha', 'Bot Beta', 'Bot Gamma'];
+}
+```
+
+### 11.9 Interface Updates
+
+**FeltGrid**:
+```typescript
+class FeltGrid {
+  public render(
+    state: GameState, 
+    userPlayerIndex: number, 
+    playableCards: Card[],
+    playerNames: string[]  // NEW: Array of 4 player names
+  ): void;
+  
+  private renderPartnerDisplay(
+    state: GameState, 
+    userPlayerIndex: number,
+    playerNames: string[]  // NEW
+  ): void;
+  
+  private renderSingleOpponent(
+    container: HTMLElement,
+    player: Player,
+    state: GameState,
+    playerIndex: number,
+    viewPosition: number,  // NEW: For name lookup
+    playerNames: string[]  // NEW
+  ): void;
+  
+  private renderUserDisplay(
+    state: GameState, 
+    userPlayerIndex: number,
+    playerNames: string[]  // NEW
+  ): void;
+  
+  private renderTopRight(
+    state: GameState, 
+    userPlayerIndex: number,
+    playerNames: string[]  // NEW
+  ): void;
+}
+```
+
+**GameView**:
+```typescript
+class GameView {
+  public render(
+    state: GameState, 
+    userPlayerIndex: number,
+    playerNames: string[]  // NEW: Array of 4 player names
+  ): void;
+}
+```
+
+**OnlineGameController**:
+```typescript
+class OnlineGameController {
+  private playerNames: string[] = [];
+  
+  private extractPlayerNames(schema: GameStateSchema): string[];
+  private updateGameView(): void {
+    this.gameView.render(
+      this.gameState, 
+      this.userPlayerIndex,
+      this.playerNames  // NEW
+    );
+  }
+}
+```
 

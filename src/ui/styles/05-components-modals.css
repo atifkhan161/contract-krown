@@ -1,0 +1,675 @@
+/* ===== Modal Bottom Sheet ===== */
+/* Uses existing --game-modal-overlay for backdrop, --app-surface for panel */
+
+.modal-bottom-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-bottom-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: var(--game-modal-overlay);
+  z-index: 0;
+}
+
+.modal-bottom-sheet-backdrop.no-dismiss {
+  pointer-events: none;
+}
+
+.modal-bottom-sheet-panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: min(90vw, 600px);
+  max-height: max(85vh, 85dvh);
+  height: auto;
+  overflow-y: auto;
+  background: var(--app-surface);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 16px 16px 0 0;
+  color: var(--app-text);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.modal-bottom-sheet-panel.open {
+  transform: translateY(0);
+}
+
+.modal-bottom-sheet-content {
+  padding: 24px 16px;
+}
+
+/* ===== Context Menu ===== */
+.context-menu-panel {
+  max-height: none;
+}
+
+.context-menu-nav {
+  width: 100%;
+}
+
+.context-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  color: var(--app-text);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.context-menu-item:hover {
+  background: var(--app-surface-hover);
+}
+
+.context-menu-item:active {
+  background: var(--app-secondary-active);
+}
+
+.context-menu-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.context-menu-label {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* ===== Trump Selector ===== */
+.trump-selector-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trump-selector-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--app-primary);
+  margin: 0;
+}
+
+.trump-selector-description {
+  font-size: 14px;
+  color: var(--app-text-muted);
+  margin: 0;
+}
+
+.trump-selector-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.trump-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 76px;
+  background: var(--game-card-bg);
+  border: 1px solid var(--game-card-border);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px var(--game-card-shadow);
+}
+
+.trump-card-suit {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.trump-card-rank {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--game-card-text);
+}
+
+.trump-suit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.trump-suit-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px;
+  height: 80px;
+  background: var(--app-surface);
+  border: 2px solid var(--app-secondary-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trump-suit-btn:hover {
+  background: var(--app-surface-hover);
+  border-color: var(--app-primary);
+}
+
+.trump-suit-btn:active {
+  background: var(--app-primary-bg);
+}
+
+.trump-suit-symbol {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.trump-suit-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.trump-selector-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--app-secondary-border);
+}
+
+.trump-selector-cancel-btn {
+  padding: 10px 24px;
+  background: transparent;
+  color: var(--app-text-muted);
+  border: 1px solid var(--app-secondary-border);
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trump-selector-cancel-btn:hover {
+  background: var(--app-surface-hover);
+  color: var(--app-text);
+}
+
+/* ===== Round End Modal ===== */
+.round-end-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.round-end-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--app-primary);
+  margin: 0;
+}
+
+.round-end-result {
+  text-align: center;
+}
+
+.round-end-result-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--app-success);
+  margin: 0 0 4px 0;
+}
+
+.round-end-points {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--app-primary);
+  margin: 0;
+}
+
+.round-end-tricks {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.round-end-trick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  background: var(--app-secondary);
+  border: 1px solid var(--app-secondary-border);
+  border-radius: 8px;
+}
+
+.round-end-trick-label {
+  font-size: 12px;
+  color: var(--app-text-muted);
+}
+
+.round-end-trick-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.round-end-scores {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.round-end-score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  background: var(--app-primary-bg);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 8px;
+}
+
+.round-end-score-label {
+  font-size: 12px;
+  color: var(--app-text-muted);
+}
+
+.round-end-score-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--app-primary);
+}
+
+.round-end-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--app-secondary-border);
+}
+
+.round-end-continue-btn {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary-active) 100%);
+  color: var(--app-bg);
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px var(--app-primary-shadow);
+}
+
+.round-end-continue-btn:hover {
+  background: linear-gradient(135deg, var(--app-primary-hover) 0%, var(--app-primary) 100%);
+  box-shadow: 0 6px 16px var(--app-primary-shadow-hover);
+}
+
+/* ===== Victory Modal ===== */
+.victory-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.victory-icon {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.victory-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--app-primary);
+  margin: 0;
+}
+
+.victory-winner {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--app-success);
+  margin: 0;
+}
+
+.victory-scores {
+  width: 100%;
+}
+
+.victory-scores-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--app-text);
+  margin: 0 0 12px 0;
+  text-align: center;
+}
+
+.victory-scores-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.victory-score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px;
+  background: var(--app-primary-bg);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 10px;
+}
+
+.victory-score-label {
+  font-size: 13px;
+  color: var(--app-text-muted);
+}
+
+.victory-score-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--app-primary);
+}
+
+.victory-score-unit {
+  font-size: 12px;
+  color: var(--app-text-dim);
+}
+
+.victory-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding-top: 8px;
+  border-top: 1px solid var(--app-secondary-border);
+}
+
+.victory-new-game-btn {
+  padding: 14px 24px;
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary-active) 100%);
+  color: var(--app-bg);
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px var(--app-primary-shadow);
+}
+
+.victory-new-game-btn:hover {
+  background: linear-gradient(135deg, var(--app-primary-hover) 0%, var(--app-primary) 100%);
+  box-shadow: 0 6px 16px var(--app-primary-shadow-hover);
+}
+
+.victory-lobby-btn {
+  padding: 12px 24px;
+  background: var(--app-secondary);
+  color: var(--app-text);
+  border: 1px solid var(--app-secondary-border);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.victory-lobby-btn:hover {
+  background: var(--app-secondary-hover);
+}
+
+/* ===== Played Cards Modal ===== */
+.played-cards-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.played-cards-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--app-primary);
+  margin: 0;
+}
+
+.played-cards-content .trick-row {
+  padding: 12px;
+  background: var(--app-secondary);
+  border: 1px solid var(--app-secondary-border);
+  border-radius: 8px;
+}
+
+.trick-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.trick-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.trick-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.trick-status.status-won {
+  background: var(--app-primary-bg);
+  color: var(--app-primary);
+}
+
+.trick-status.status-in-progress {
+  background: var(--app-info);
+  color: var(--app-bg);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.played-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 6px;
+  min-height: 60px;
+  justify-content: center;
+}
+
+.played-card.played-card-empty {
+  opacity: 0.5;
+}
+
+.played-card-value {
+  font-size: 16px;
+  font-weight: 700;
+  border: 1px solid var(--app-surface-border);
+  border-radius: 6px;
+  background-color: var(--game-card-bg);
+}
+
+.played-card-player {
+  font-size: 11px;
+  color: var(--app-text-muted);
+}
+
+.empty-state {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: var(--app-text-muted);
+  margin: 0;
+}
+
+.empty-state-hint {
+  font-size: 13px !important;
+  color: var(--app-text-dim) !important;
+}
+
+/* ===== Theme Selector Overlay ===== */
+.theme-selector-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background-color: var(--game-modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-selector-overlay.open {
+  opacity: 1;
+}
+
+.theme-selector-panel {
+  width: 100%;
+  max-width: 360px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+}
+
+.theme-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.theme-selector-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--app-primary);
+  margin: 0;
+}
+
+.theme-selector-close {
+  background: transparent;
+  border: none;
+  color: var(--app-text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.theme-selector-close:hover {
+  background: var(--app-surface-hover);
+  color: var(--app-text);
+}
+
+.theme-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* ===== Room Code Modal ===== */
+.room-code-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--game-modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.room-code-modal {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--app-bg);
+  border: 1px solid var(--app-surface-border);
+  border-radius: 16px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+}
+
+.room-code-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.room-code-modal-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.room-code-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.room-code-display {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  font-family: monospace;
+  color: var(--app-text);
+  background: var(--app-surface);
+  border: 2px dashed var(--app-surface-border);
+  border-radius: 12px;
+  padding: 16px 24px;
+  width: 100%;
+  text-align: center;
+}
+
+.room-code-waiting {
+  font-size: 14px;
+  color: var(--app-text-muted);
+  margin-top: 4px;
+}

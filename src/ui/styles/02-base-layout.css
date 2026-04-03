@@ -1,0 +1,31 @@
+/* ===== Root Layout ===== */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--app-bg);
+  color: var(--app-text);
+  font-family: system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Safe area insets for notch devices ===== */
+@supports (padding: max(0px)) {
+  .felt-grid {
+    padding-top: max(3px, env(safe-area-inset-top));
+    padding-bottom: max(3px, env(safe-area-inset-bottom));
+  }
+  .user-hand {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+}

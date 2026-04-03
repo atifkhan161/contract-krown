@@ -107,6 +107,9 @@ Contract Crown is a mobile-only Progressive Web App (PWA) implementing a real-ti
 3. THE Mobile_UI SHALL display the user's interactive hand at the bottom of the screen
 4. THE Mobile_UI SHALL display the active trick area in the center of the screen
 5. THE Mobile_UI SHALL display the Trump_Suit, Crown_Holder indicator, and team scores within the grid layout corners to maximize screen space for gameplay
+6. THE Mobile_UI SHALL always position the current user at the bottom of the screen regardless of their server player index
+7. THE Mobile_UI SHALL map server player indices to client view positions such that: user at bottom, partner at top, opponents at left and right
+8. EACH player SHALL see their own unique hand of cards at the bottom, not the same cards as other players
 
 ### Requirement 8: Card Playability Indication
 
@@ -176,6 +179,9 @@ Contract Crown is a mobile-only Progressive Web App (PWA) implementing a real-ti
 4. WHEN a player disconnects, THE Colyseus_Server SHALL pause the game and wait for reconnection for up to 60 seconds
 5. WHEN a player fails to reconnect within 60 seconds, THE Colyseus_Server SHALL replace that player with a bot
 6. THE Colyseus_Server SHALL support multiple concurrent game rooms
+7. WHEN the game starts, THE Colyseus_Server SHALL deal unique cards to each player ensuring no two players receive identical hands
+8. EACH client SHALL receive only their own hand cards from the server, not other players' hands
+9. THE Colyseus_Server SHALL properly initialize bot players in empty slots before dealing cards
 
 ### Requirement 12: Client-Side Routing
 
@@ -353,3 +359,37 @@ Contract Crown is a mobile-only Progressive Web App (PWA) implementing a real-ti
 1. WHEN the admin clicks "Shuffle Teams", THE system SHALL randomly reassign all human players to teams while preserving team sizes (2 per team)
 2. THE team assignments SHALL be synchronized to all connected clients in real-time
 3. THE "Shuffle Teams" button SHALL only be visible to the room admin
+
+### Requirement 39: Online Multiplayer Player-Specific Views
+
+**User Story:** As a player in an online game, I want to see my own unique cards and perspective, so that I can play my hand independently from other players.
+
+#### Acceptance Criteria
+
+1. WHEN a player joins an online game, THE OnlineGameController SHALL store the player's server index for view mapping
+2. THE OnlineGameController SHALL map server player indices to client view positions: user at bottom (position 0), left opponent (position 1), partner at top (position 2), right opponent (position 3)
+3. THE GameView SHALL render the user's hand at the bottom showing only the cards dealt to that specific player
+4. THE GameView SHALL render other players' positions relative to the user's perspective
+5. WHEN the server deals cards, EACH player SHALL receive a unique hand with no duplicate cards across players
+6. THE CrownRoom SHALL initialize all 4 player slots (human or bot) before dealing cards
+7. THE CrownRoom SHALL use the game engine's dealInitial() and dealFinal() functions to ensure proper card distribution
+8. EACH client SHALL only see their own hand cards, with other players showing card backs or card counts
+9. THE OnlineGameController SHALL correctly identify which player index corresponds to the current user's session
+10. WHEN rendering trick cards, THE GameView SHALL map played card player indices to the correct visual positions relative to the user
+
+### Requirement 40: Player Name Display in Online Multiplayer
+
+**User Story:** As a player in an online game, I want to see the actual usernames of all players, so that I can identify who is on my team and who is declaring trump.
+
+#### Acceptance Criteria
+
+1. THE FeltGrid SHALL display the actual username for the partner player at the top position
+2. THE FeltGrid SHALL display the actual usernames for opponent players at the left and right positions
+3. THE FeltGrid SHALL display "You" or the user's own username at the bottom position
+4. WHEN trump is being declared, THE FeltGrid SHALL display the trump declarer's username in the top-right scores cell
+5. THE PlayerSchema SHALL include a username field that is synchronized from server to all clients
+6. THE CrownRoom SHALL include player usernames in the state synchronization to all clients
+7. THE OnlineGameController SHALL extract player usernames from the server state and pass them to the GameView
+8. THE GameView SHALL pass player usernames to the FeltGrid for rendering in each player position
+9. THE FeltGrid SHALL replace positional labels ("Partner", "Left", "Right") with actual usernames while maintaining "You" for the user's own position
+10. THE username display SHALL be visible at all times during gameplay, not just during specific phases

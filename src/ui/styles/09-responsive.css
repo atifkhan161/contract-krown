@@ -1,0 +1,1528 @@
+/* ===== Responsive: iPhone 14 Pro Max Portrait (430×932) ===== */
+@media (min-width: 428px) and (max-width: 432px) and (orientation: portrait) {
+  /* Felt Grid - Optimized for 430px width */
+  .felt-grid {
+    gap: 4px;
+    padding: 4px;
+    grid-template-rows: 12% 58% 30%;
+    grid-template-columns: 1fr 2.5fr 1fr;
+  }
+
+  /* Modal panels */
+  .modal-bottom-sheet-panel {
+    max-width: min(90vw, 430px);
+    max-height: 85dvh;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .modal-bottom-sheet-content {
+    padding: 20px 16px;
+  }
+
+  /* Cards - Optimal thumb reach size */
+  .card {
+    width: 52px;
+    height: 72px;
+  }
+
+  .card-rank {
+    font-size: 15px;
+  }
+
+  .card-suit {
+    font-size: 20px;
+  }
+
+  /* Player displays */
+  .player-info {
+    min-width: 72px;
+    padding: 8px;
+  }
+
+  .player-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .player-name {
+    font-size: 12px;
+  }
+
+  .card-count {
+    font-size: 11px;
+  }
+
+  .team-label {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  /* Corner cells */
+  .trump-cell {
+    min-width: 48px;
+    padding: 6px;
+  }
+
+  .trump-cell-label {
+    font-size: 10px;
+  }
+
+  .trump-cell-value {
+    font-size: 24px;
+  }
+
+  .scores-cell {
+    min-width: 56px;
+    padding: 6px;
+  }
+
+  .scores-cell-label {
+    font-size: 10px;
+  }
+
+  .team-score-mini {
+    font-size: 18px;
+  }
+
+  .trick-count-cell {
+    min-width: 44px;
+    padding: 6px;
+  }
+
+  .trick-count-value {
+    font-size: 18px;
+  }
+
+  .trick-count-label {
+    font-size: 10px;
+  }
+
+  /* User hand - thumb zone optimized */
+  .user-hand {
+    padding: 8px 4px 12px;
+  }
+
+  .hand-cards {
+    gap: 6px;
+  }
+
+  /* Trump selector */
+  .trump-card {
+    width: 60px;
+    height: 82px;
+  }
+
+  .trump-card-suit {
+    font-size: 22px;
+  }
+
+  .trump-card-rank {
+    font-size: 15px;
+  }
+
+  .trump-suit-btn {
+    height: 88px;
+    padding: 18px;
+  }
+
+  .trump-suit-symbol {
+    font-size: 30px;
+  }
+
+  .trump-suit-name {
+    font-size: 14px;
+  }
+
+  /* Waiting room */
+  .waiting-room-view {
+    padding: 16px;
+  }
+
+  .waiting-room-title {
+    font-size: 20px;
+  }
+
+  .room-code-text {
+    font-size: 36px;
+    letter-spacing: 6px;
+  }
+
+  .team-slots-container {
+    gap: 12px;
+  }
+
+  .avatar-circle {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .player-slot {
+    padding: 10px;
+  }
+
+  .player-name {
+    font-size: 14px;
+  }
+
+  /* Join room modal */
+  .join-room-modal {
+    gap: 12px;
+  }
+
+  .join-room-title {
+    font-size: 18px;
+  }
+
+  .join-room-code-field {
+    font-size: 18px;
+  }
+
+  .join-room-room-card {
+    padding: 14px 18px;
+  }
+
+  .join-room-room-code {
+    font-size: 18px;
+  }
+
+  .join-room-room-host {
+    font-size: 14px;
+  }
+
+  .join-room-room-players {
+    font-size: 12px;
+  }
+
+  /* Login/Lobby */
+  .login-container, .lobby-container {
+    padding: 36px 28px;
+    max-width: 420px;
+  }
+
+  .app-title {
+    font-size: 34px;
+  }
+
+  .form-input {
+    padding: 16px 18px;
+  }
+
+  .btn-primary, .btn-secondary, .btn-outline {
+    padding: 16px 28px;
+  }
+}
+
+/* ===== Responsive: iPhone 14 Pro Max Landscape (932×430) ===== */
+@media (min-width: 930px) and (max-height: 432px) and (orientation: landscape) {
+  /* Felt Grid - Compact for landscape */
+  .felt-grid {
+    grid-template-rows: 20% 50% 30%;
+    grid-template-columns: 1fr 3fr 1fr;
+    gap: 3px;
+    padding: 3px;
+  }
+
+  /* Modal panels - centered, wider */
+  .modal-bottom-sheet-panel {
+    max-width: min(95vw, 700px);
+    max-height: 90vh;
+    border-radius: 16px;
+  }
+
+  .modal-bottom-sheet-content {
+    padding: 16px;
+  }
+
+  /* Cards - compact for landscape */
+  .card {
+    width: 38px;
+    height: 54px;
+  }
+
+  .card-rank {
+    font-size: 10px;
+  }
+
+  .card-suit {
+    font-size: 13px;
+  }
+
+  /* Player displays - compact vertical */
+  .player-info {
+    min-width: 52px;
+    padding: 4px 5px;
+    gap: 2px;
+  }
+
+  .player-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .player-name {
+    font-size: 8px;
+  }
+
+  .card-count {
+    font-size: 7px;
+  }
+
+  .team-label {
+    font-size: 7px;
+    padding: 1px 3px;
+  }
+
+  .crown-icon {
+    top: -7px;
+    font-size: 10px;
+  }
+
+  .active-ring {
+    inset: -3px;
+    border-width: 1.5px;
+  }
+
+  /* Corner cells */
+  .trump-cell {
+    min-width: 36px;
+    padding: 3px;
+  }
+
+  .trump-cell-label {
+    font-size: 7px;
+  }
+
+  .trump-cell-value {
+    font-size: 16px;
+  }
+
+  .scores-cell {
+    min-width: 44px;
+    padding: 3px;
+  }
+
+  .scores-cell-label {
+    font-size: 7px;
+  }
+
+  .team-score-mini {
+    font-size: 13px;
+  }
+
+  .crown-cell-name {
+    font-size: 8px;
+  }
+
+  .trump-declarer-cell {
+    font-size: 8px;
+  }
+
+  .trick-count-cell {
+    min-width: 32px;
+    padding: 3px;
+  }
+
+  .trick-count-value {
+    font-size: 13px;
+  }
+
+  .trick-count-label {
+    font-size: 7px;
+  }
+
+  .round-score {
+    font-size: 10px;
+  }
+
+  /* Trick area */
+  .trick-area {
+    border-radius: 8px;
+  }
+
+  .trick-placeholder {
+    font-size: 10px;
+  }
+
+  .trick-card-slot {
+    gap: 2px;
+  }
+
+  .trick-card-slot .card.unplayable {
+    opacity: 1;
+  }
+
+  .card-player-label {
+    font-size: 7px;
+    padding: 1px 3px;
+  }
+
+  /* User hand - compact */
+  .user-hand {
+    padding: 3px 4px 6px;
+  }
+
+  .hand-cards {
+    gap: 2px;
+  }
+
+  /* Menu button */
+  .menu-toggle-btn .menu-icon {
+    font-size: 18px;
+  }
+
+  .re-dealing-message {
+    font-size: 12px;
+  }
+
+  /* Trump selector - compact */
+  .trump-card {
+    width: 50px;
+    height: 68px;
+  }
+
+  .trump-card-suit {
+    font-size: 19px;
+  }
+
+  .trump-card-rank {
+    font-size: 13px;
+  }
+
+  .trump-suit-btn {
+    height: 68px;
+    padding: 14px;
+  }
+
+  .trump-suit-symbol {
+    font-size: 26px;
+  }
+
+  .trump-suit-name {
+    font-size: 12px;
+  }
+
+  /* Waiting room - horizontal layout */
+  .waiting-room-view {
+    padding: 10px 16px;
+  }
+
+  .waiting-room-info {
+    padding: 10px 14px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .room-code-text {
+    font-size: 28px;
+    letter-spacing: 5px;
+  }
+
+  .room-timer {
+    font-size: 15px;
+  }
+
+  .team-slots-container {
+    gap: 8px;
+  }
+
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .player-name {
+    font-size: 12px;
+  }
+
+  /* Join room modal */
+  .join-room-modal {
+    gap: 10px;
+  }
+
+  .join-room-title {
+    font-size: 16px;
+  }
+
+  .join-room-room-card {
+    padding: 10px 14px;
+  }
+
+  .join-room-room-code {
+    font-size: 16px;
+  }
+
+  .join-room-room-host {
+    font-size: 13px;
+  }
+
+  .join-room-room-players {
+    font-size: 12px;
+  }
+
+  /* Login/Lobby - 2 column grid */
+  .login-view, .lobby-view {
+    padding: 10px 16px;
+  }
+
+  .login-container, .lobby-container {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    grid-template-rows: auto auto auto auto auto;
+    max-width: min(90vw, 650px);
+    padding: 18px 24px;
+    gap: 10px 18px;
+    align-items: center;
+  }
+
+  .login-container > .app-title {
+    grid-column: 1;
+    grid-row: 1 / span 5;
+    font-size: 24px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-right: 18px;
+    border-right: 1px solid var(--app-secondary-border);
+    margin-bottom: 0;
+  }
+
+  .login-container > .app-subtitle {
+    display: none;
+  }
+
+  .login-container > .form-group {
+    grid-column: 2;
+    max-width: 100%;
+    margin-bottom: 0;
+    gap: 10px;
+  }
+
+  .login-container > .form-group:nth-of-type(1) {
+    grid-row: 1;
+  }
+
+  .login-container > .form-group:nth-of-type(2) {
+    grid-row: 2;
+  }
+
+  .login-container > .btn-primary {
+    grid-column: 2;
+    grid-row: 3;
+    max-width: 100%;
+  }
+
+  .login-container > .btn-outline {
+    grid-column: 2;
+    grid-row: 4;
+    max-width: 100%;
+  }
+
+  .login-container > .register-link {
+    grid-column: 2;
+    grid-row: 5;
+    margin-top: 0;
+  }
+
+  .login-container > .login-link {
+    grid-column: 2;
+    grid-row: 5;
+    margin-top: 0;
+  }
+
+  .login-container > .success-message {
+    grid-column: 2;
+    max-width: 100%;
+  }
+
+  .form-input {
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+
+  .error-message {
+    grid-column: 2;
+    max-width: 100%;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 0;
+  }
+
+  .success-message {
+    grid-column: 2;
+    max-width: 100%;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 0;
+  }
+
+  .btn-primary {
+    max-width: 100%;
+    padding: 12px 18px;
+    font-size: 15px;
+  }
+
+  .btn-outline {
+    max-width: 100%;
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+
+  .btn-secondary {
+    max-width: 100%;
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+
+  .btn-lg {
+    padding: 14px 22px;
+    font-size: 15px;
+  }
+
+  .register-link, .login-link {
+    font-size: 13px;
+    margin-top: 0;
+  }
+
+  /* Lobby landscape */
+  .lobby-container {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    grid-template-rows: auto auto auto;
+    max-width: min(90vw, 700px);
+    padding: 18px 24px;
+    gap: 10px 18px;
+    align-items: center;
+  }
+
+  .lobby-header {
+    grid-column: 1;
+    grid-row: 1;
+    margin-bottom: 0;
+    text-align: left;
+  }
+
+  .lobby-header h1 {
+    font-size: 24px;
+  }
+
+  .lobby-header .subtitle {
+    font-size: 12px;
+  }
+
+  .user-section {
+    grid-column: 1;
+    grid-row: 2;
+    max-width: 100%;
+    margin-bottom: 0;
+    padding: 14px;
+  }
+
+  .user-info {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+
+  .username {
+    font-size: 16px;
+  }
+
+  .stats-section {
+    gap: 10px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .lobby-actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    max-width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .lobby-footer {
+    grid-column: 1 / span 2;
+    grid-row: 3;
+    max-width: 100%;
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .theme-badge-btn {
+    padding: 8px 14px;
+  }
+
+  .theme-dot {
+    width: 11px;
+    height: 11px;
+  }
+
+  .theme-name {
+    font-size: 12px;
+  }
+
+  /* Theme selector modal */
+  .theme-selector-content {
+    max-width: min(95vw, 550px);
+    max-height: 90vh;
+    padding: 18px;
+  }
+
+  .theme-option-card {
+    padding: 12px 10px;
+  }
+
+  .theme-option-preview {
+    width: 34px;
+    height: 34px;
+    margin-bottom: 8px;
+  }
+
+  .theme-option-preview-text {
+    font-size: 16px;
+  }
+
+  .theme-option-name {
+    font-size: 13px;
+  }
+
+  .theme-option-desc {
+    font-size: 11px;
+  }
+
+  .theme-option-active-badge {
+    font-size: 10px;
+  }
+}
+
+/* ===== Responsive: iPhone 14 Pro Max Landscape Short-height ===== */
+@media (orientation: landscape) and (max-height: 450px) and (min-width: 850px) {
+  .modal-bottom-sheet-panel {
+    max-height: 90vh;
+    border-radius: 14px;
+  }
+
+  .modal-bottom-sheet-content {
+    padding: 14px;
+  }
+
+  .waiting-room-view {
+    padding: 12px 18px;
+  }
+
+  .waiting-room-info {
+    padding: 12px 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .room-code-text {
+    font-size: 30px;
+  }
+
+  .team-slots-container {
+    gap: 10px;
+  }
+
+  .avatar-circle {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+}
+
+/* ===== Responsive: Portrait-first Mobile Layout ===== */
+
+/* iPhone SE / small phones (≤375px width) */
+@media (max-width: 375px) {
+  .join-room-modal {
+    gap: 12px;
+  }
+
+  .join-room-title {
+    font-size: 16px;
+  }
+
+  .join-room-code-field {
+    font-size: 16px;
+  }
+
+  .join-room-room-code {
+    font-size: 16px;
+    letter-spacing: 3px;
+  }
+
+  .join-room-room-host {
+    font-size: 12px;
+  }
+
+  .join-room-room-players {
+    font-size: 11px;
+  }
+
+  .join-room-rooms {
+    gap: 6px;
+  }
+
+  .waiting-room-view {
+    padding: 12px;
+  }
+
+  .waiting-room-title {
+    font-size: 16px;
+  }
+
+  .room-code-text {
+    font-size: 28px;
+    letter-spacing: 5px;
+  }
+
+  .team-slots-container {
+    gap: 8px;
+  }
+
+  .team-slot {
+    padding: 8px;
+  }
+
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .player-name {
+    font-size: 12px;
+  }
+}
+
+/* Portrait phones (376-440px width) */
+@media (min-width: 376px) and (max-width: 440px) and (orientation: portrait) {
+  .modal-bottom-sheet-content {
+    padding: 16px 14px;
+  }
+
+  .join-room-modal {
+    gap: 10px;
+  }
+
+  .join-room-title {
+    font-size: 17px;
+  }
+
+  .join-room-code-field {
+    font-size: 17px;
+  }
+
+  .join-room-room-card {
+    padding: 10px 14px;
+    gap: 2px;
+  }
+
+  .join-room-room-code {
+    font-size: 17px;
+  }
+
+  .join-room-room-host {
+    font-size: 13px;
+  }
+
+  .join-room-rooms {
+    gap: 8px;
+  }
+
+  .waiting-room-view {
+    padding: 14px;
+  }
+
+  .waiting-room-info {
+    padding: 14px;
+    gap: 6px;
+  }
+
+  .room-code-text {
+    font-size: 30px;
+    letter-spacing: 5px;
+  }
+
+  .room-timer {
+    font-size: 15px;
+  }
+
+  .team-slots-container {
+    gap: 10px;
+  }
+
+  .avatar-circle {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+
+  .player-name {
+    font-size: 12px;
+  }
+}
+
+/* ===== Responsive: Landscape / Short-height Devices ===== */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Modal Panel */
+  .modal-bottom-sheet-panel {
+    max-height: 95vh;
+    max-width: min(95vw, 700px);
+    border-radius: 12px;
+  }
+
+  .modal-bottom-sheet-content {
+    padding: 12px;
+  }
+
+  /* Join Room Modal */
+  .join-room-modal {
+    gap: 8px;
+  }
+
+  .join-room-title {
+    font-size: 15px;
+  }
+
+  .join-room-label {
+    font-size: 12px;
+  }
+
+  .join-room-input-row {
+    gap: 6px;
+  }
+
+  .join-room-code-field {
+    font-size: 16px;
+    letter-spacing: 3px;
+    padding: 6px 8px;
+  }
+
+  .join-room-divider {
+    gap: 8px;
+    font-size: 12px;
+    padding: 4px 0;
+  }
+
+  .join-room-rooms-list {
+    gap: 6px;
+  }
+
+  .join-room-rooms-title {
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  .join-room-room-card {
+    padding: 8px 12px;
+    gap: 1px;
+    border-radius: 8px;
+  }
+
+  .join-room-room-code {
+    font-size: 15px;
+    letter-spacing: 3px;
+  }
+
+  .join-room-room-host {
+    font-size: 12px;
+  }
+
+  .join-room-room-players {
+    font-size: 11px;
+    padding: 1px 6px;
+  }
+
+  .join-room-empty {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  /* Waiting Room */
+  .waiting-room-wrapper {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .waiting-room-view {
+    padding: 8px 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .waiting-room-header {
+    margin-bottom: 6px;
+  }
+
+  .waiting-room-title {
+    font-size: 14px;
+  }
+
+  .waiting-room-info {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+
+  .room-code-label {
+    font-size: 10px;
+  }
+
+  .room-code-text {
+    font-size: 22px;
+    letter-spacing: 4px;
+  }
+
+  .room-timer {
+    font-size: 14px;
+  }
+
+  .room-player-count {
+    font-size: 12px;
+  }
+
+  .team-slots-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .team-slot {
+    padding: 6px;
+    border-radius: 8px;
+  }
+
+  .team-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .player-slot {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .avatar-circle {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+
+  .player-name {
+    font-size: 10px;
+  }
+
+  .player-name-empty {
+    font-size: 10px;
+  }
+
+  .admin-badge {
+    font-size: 9px;
+  }
+
+  .admin-crown {
+    font-size: 10px;
+  }
+
+  .trump-declarer-badge {
+    font-size: 10px;
+  }
+
+  .trump-declarer-text {
+    font-size: 9px;
+  }
+
+  .trump-declarer-section {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+  }
+
+  .trump-declarer-label {
+    font-size: 0.85rem;
+  }
+
+  .waiting-room-controls {
+    gap: 6px;
+    padding-top: 6px;
+  }
+
+  .admin-controls {
+    gap: 6px;
+  }
+
+  .admin-controls .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-height: 32px;
+  }
+
+  .waiting-room-controls .btn-block {
+    padding: 6px 8px;
+    font-size: 13px;
+    min-height: 36px;
+  }
+}
+
+/* Tall phones (>750px height portrait) */
+@media (min-height: 750px) and (orientation: portrait) {
+  .join-room-room-card {
+    padding: 14px 18px;
+  }
+
+  .join-room-room-code {
+    font-size: 19px;
+  }
+
+  .room-code-text {
+    font-size: 34px;
+  }
+}
+
+/* ===== Landscape Responsiveness (General) ===== */
+@media (orientation: landscape) and (max-height: 500px) {
+  .felt-grid {
+    grid-template-areas:
+      "top-left partner top-right"
+      "left-opponent trick-area right-opponent"
+      "bottom-left user-hand bottom-right";
+    grid-template-rows: 18% 52% 30%;
+    grid-template-columns: 1fr 3fr 1fr;
+    gap: 2px;
+    padding: 2px;
+  }
+
+  /* Player displays: compact vertical layout */
+  .player-info {
+    min-width: 44px;
+    padding: 2px 3px;
+    gap: 1px;
+  }
+
+  .player-avatar {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+
+  .player-name {
+    font-size: 7px;
+  }
+
+  .card-count {
+    font-size: 6px;
+  }
+
+  .team-label {
+    font-size: 6px;
+    padding: 1px 2px;
+  }
+
+  .crown-icon {
+    top: -6px;
+    font-size: 8px;
+  }
+
+  .active-ring {
+    inset: -2px;
+    border-width: 1px;
+  }
+
+  .partner-display {
+    align-self: center;
+  }
+
+  /* Corner cells */
+  .trump-cell {
+    min-width: 28px;
+    padding: 2px;
+  }
+
+  .trump-cell-label {
+    font-size: 6px;
+  }
+
+  .trump-cell-value {
+    font-size: 14px;
+  }
+
+  .scores-cell {
+    min-width: 36px;
+    padding: 2px;
+    gap: 1px;
+  }
+
+  .scores-cell-label {
+    font-size: 6px;
+  }
+
+  .team-score-mini {
+    font-size: 11px;
+  }
+
+  .crown-cell-name {
+    font-size: 7px;
+  }
+
+  .trump-declarer-cell {
+    font-size: 7px;
+  }
+
+  .trick-count-cell {
+    min-width: 28px;
+    padding: 2px;
+  }
+
+  .trick-count-value {
+    font-size: 11px;
+  }
+
+  .trick-count-label {
+    font-size: 6px;
+  }
+
+  .round-score {
+    font-size: 9px;
+  }
+
+  /* Trick area */
+  .trick-area {
+    border-radius: 6px;
+  }
+
+  .trick-placeholder {
+    font-size: 9px;
+  }
+
+  .trick-card-slot {
+    gap: 2px;
+  }
+
+  .trick-card-slot .card.unplayable {
+    opacity: 1;
+  }
+
+  .card-player-label {
+    font-size: 6px;
+    padding: 1px 2px;
+  }
+
+  /* User hand: compact cards */
+  .user-hand {
+    padding: 2px 3px 4px;
+  }
+
+  .hand-cards {
+    gap: 1px;
+  }
+
+  .card {
+    width: 34px;
+    height: 48px;
+  }
+
+  .card-rank {
+    font-size: 9px;
+  }
+
+  .card-suit {
+    font-size: 11px;
+  }
+
+  /* Modal panel: use full width in landscape to avoid scrollbar */
+  .modal-bottom-sheet-panel {
+    max-width: min(95vw, 700px);
+  }
+
+  /* Trump selector cards: use full width */
+  .trump-selector-cards {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .trump-card {
+    width: 48px;
+    height: 64px;
+  }
+
+  .trump-card-suit {
+    font-size: 18px;
+  }
+
+  .trump-card-rank {
+    font-size: 12px;
+  }
+
+  .trump-suit-btn {
+    height: 64px;
+    padding: 12px;
+  }
+
+  .trump-suit-symbol {
+    font-size: 24px;
+  }
+
+  .trump-suit-name {
+    font-size: 11px;
+  }
+
+  /* Login View Landscape */
+  .login-view, .lobby-view {
+    padding: 8px 12px;
+  }
+
+  .login-container {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    grid-template-rows: auto auto auto auto auto;
+    max-width: min(85vw, 600px);
+    padding: 16px 20px;
+    gap: 8px 16px;
+    align-items: center;
+  }
+
+  .login-container > .app-title {
+    grid-column: 1;
+    grid-row: 1 / span 5;
+    font-size: 22px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-right: 16px;
+    border-right: 1px solid var(--app-secondary-border);
+    margin-bottom: 0;
+  }
+
+  .login-container > .app-subtitle {
+    display: none;
+  }
+
+  .login-container > .form-group {
+    grid-column: 2;
+    max-width: 100%;
+    margin-bottom: 0;
+    gap: 8px;
+  }
+
+  .login-container > .form-group:nth-of-type(1) {
+    grid-row: 1;
+  }
+
+  .login-container > .form-group:nth-of-type(2) {
+    grid-row: 2;
+  }
+
+  .login-container > .btn-primary {
+    grid-column: 2;
+    grid-row: 3;
+    max-width: 100%;
+  }
+
+  .login-container > .btn-outline {
+    grid-column: 2;
+    grid-row: 4;
+    max-width: 100%;
+  }
+
+  .login-container > .register-link {
+    grid-column: 2;
+    grid-row: 5;
+    margin-top: 0;
+  }
+
+  .login-container > .login-link {
+    grid-column: 2;
+    grid-row: 5;
+    margin-top: 0;
+  }
+
+  .login-container > .success-message {
+    grid-column: 2;
+    max-width: 100%;
+  }
+
+  .form-input {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .error-message {
+    grid-column: 2;
+    max-width: 100%;
+    padding: 8px 12px;
+    font-size: 12px;
+    margin-bottom: 0;
+  }
+
+  .success-message {
+    grid-column: 2;
+    max-width: 100%;
+    padding: 8px 12px;
+    font-size: 12px;
+    margin-bottom: 0;
+  }
+
+  .btn-primary {
+    max-width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .btn-outline {
+    max-width: 100%;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .btn-secondary {
+    max-width: 100%;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .btn-lg {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .register-link, .login-link {
+    font-size: 12px;
+    margin-top: 0;
+  }
+
+  /* Lobby View Landscape */
+  .lobby-container {
+    display: grid;
+    grid-template-columns: 1fr 180px;
+    grid-template-rows: auto auto auto;
+    max-width: min(85vw, 650px);
+    padding: 16px 20px;
+    gap: 8px 16px;
+    align-items: center;
+  }
+
+  .lobby-header {
+    grid-column: 1;
+    grid-row: 1;
+    margin-bottom: 0;
+    text-align: left;
+  }
+
+  .lobby-header h1 {
+    font-size: 22px;
+  }
+
+  .lobby-header .subtitle {
+    font-size: 11px;
+  }
+
+  .user-section {
+    grid-column: 1;
+    grid-row: 2;
+    max-width: 100%;
+    margin-bottom: 0;
+    padding: 12px;
+  }
+
+  .user-info {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+
+  .username {
+    font-size: 15px;
+  }
+
+  .stats-section {
+    gap: 8px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+
+  .lobby-actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    max-width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .lobby-footer {
+    grid-column: 1 / span 2;
+    grid-row: 3;
+    max-width: 100%;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .theme-badge-btn {
+    padding: 6px 12px;
+  }
+
+  .theme-dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .theme-name {
+    font-size: 11px;
+  }
+
+  /* Theme Selector Modal Landscape */
+  .theme-selector-content {
+    max-width: min(90vw, 500px);
+    max-height: 85vh;
+    padding: 16px;
+  }
+
+  .theme-option-card {
+    padding: 10px 8px;
+  }
+
+  .theme-option-preview {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 6px;
+  }
+
+  .theme-option-preview-text {
+    font-size: 14px;
+  }
+
+  .theme-option-name {
+    font-size: 12px;
+  }
+
+  .theme-option-desc {
+    font-size: 10px;
+  }
+
+  .theme-option-active-badge {
+    font-size: 9px;
+  }
+}

@@ -1,0 +1,268 @@
+/* ===== Theme System: Dual-Layer Design Tokens ===== */
+/* App-theme: Controls login, lobby, menus, buttons (changes per theme) */
+/* Game-theme: Controls felt grid, cards, trick area (always green) */
+
+/* Default Theme: Golden Ascent */
+:root,
+[data-theme="golden-ascent"] {
+  /* App Theme - Black & Gold */
+  --app-bg: #0a0a0a;
+  --app-bg-gradient-start: #0a0a0a;
+  --app-bg-gradient-mid: #1a1a1a;
+  --app-bg-gradient-end: #0d0d0d;
+  --app-surface: rgba(255, 255, 255, 0.05);
+  --app-surface-border: rgba(212, 175, 55, 0.3);
+  --app-surface-hover: rgba(255, 255, 255, 0.1);
+  --app-text: #ffffff;
+  --app-text-muted: rgba(255, 255, 255, 0.6);
+  --app-text-dim: rgba(255, 255, 255, 0.4);
+  --app-primary: #d4af37;
+  --app-primary-hover: #e0bf4a;
+  --app-primary-active: #b8972e;
+  --app-primary-active-deep: #9a7d24;
+  --app-primary-bg: rgba(212, 175, 55, 0.1);
+  --app-primary-bg-hover: rgba(212, 175, 55, 0.2);
+  --app-primary-shadow: rgba(212, 175, 55, 0.3);
+  --app-primary-shadow-hover: rgba(212, 175, 55, 0.4);
+  --app-secondary: rgba(255, 255, 255, 0.08);
+  --app-secondary-border: rgba(255, 255, 255, 0.25);
+  --app-secondary-hover: rgba(255, 255, 255, 0.15);
+  --app-secondary-active: rgba(255, 255, 255, 0.2);
+  --app-error-bg: rgba(220, 38, 38, 0.15);
+  --app-error-border: rgba(220, 38, 38, 0.3);
+  --app-error-text: #fca5a5;
+  --app-success: #22c55e;
+  --app-info: #3b82f6;
+  --app-input-bg: rgba(255, 255, 255, 0.08);
+  --app-input-border: rgba(255, 255, 255, 0.2);
+  --app-input-focus-bg: rgba(255, 255, 255, 0.12);
+  --app-input-focus-ring: rgba(212, 175, 55, 0.15);
+  --app-glow-1: rgba(212, 175, 55, 0.08);
+  --app-glow-2: rgba(212, 175, 55, 0.05);
+
+  /* Felt Grid - Theme-Aware */
+  --felt-bg: #1a1a1a;
+  --felt-bg-gradient: #2a2a2a;
+  --felt-glow: rgba(212, 175, 55, 0.08);
+
+  /* Game Theme - Always Green Felt */
+  --game-bg: #1a472a;
+  --game-bg-gradient-start: #1a472a;
+  --game-bg-gradient-center: #2d6b45;
+  --game-surface: rgba(0, 0, 0, 0.25);
+  --game-surface-border: rgba(255, 255, 255, 0.05);
+  --game-text: #ffffff;
+  --game-text-muted: rgba(255, 255, 255, 0.6);
+  --game-text-dim: rgba(255, 255, 255, 0.4);
+  --game-text-dark: rgba(255, 255, 255, 0.3);
+  --game-primary: #d4af37;
+  --game-primary-bg: rgba(212, 175, 55, 0.2);
+  --game-primary-border: rgba(212, 175, 55, 0.6);
+  --game-card-bg: #ffffff;
+  --game-card-border: #d4af37;
+  --game-card-playable-border: #d4af37;
+  --game-card-unplayable-bg: #e0e0e0;
+  --game-card-unplayable-border: #999;
+  --game-card-text: #1a1a2e;
+  --game-accent-ring: #d4af37;
+  --game-trick-area-bg: rgba(0, 0, 0, 0.15);
+  --game-trick-area-border: rgba(255, 255, 255, 0.05);
+  --game-hand-gradient: rgba(0, 0, 0, 0.3);
+  --game-player-bg: rgba(0, 0, 0, 0.3);
+  --game-player-active-bg: rgba(212, 175, 55, 0.2);
+  --game-player-active-border: rgba(212, 175, 55, 0.6);
+  --game-avatar-bg: rgba(255, 255, 255, 0.15);
+  --game-card-label-bg: rgba(0, 0, 0, 0.5);
+  --game-card-label-text: rgba(255, 255, 255, 0.7);
+  --game-card-shadow: rgba(0, 0, 0, 0.3);
+  --game-card-shadow-hover: rgba(0, 0, 0, 0.4);
+  --game-card-selected-shadow: rgba(212, 175, 55, 0.5);
+  --game-team-0-bg: rgba(212, 175, 55, 0.3);
+  --game-team-0-border: rgba(212, 175, 55, 0.5);
+  --game-team-0-text: #d4af37;
+  --game-team-1-bg: rgba(59, 130, 246, 0.3);
+  --game-team-1-border: rgba(59, 130, 246, 0.5);
+  --game-team-1-text: #60a5fa;
+  --game-suit-red: #dc2626;
+  --game-suit-black: #1a1a2e;
+  --game-menu-bg: rgba(20, 60, 30, 0.95);
+  --game-menu-border: rgba(212, 175, 55, 0.5);
+  --game-menu-item-hover: rgba(255, 255, 255, 0.15);
+  --game-offline-bg: rgba(0, 0, 0, 0.5);
+  --game-offline-text: rgba(255, 255, 255, 0.7);
+  --game-lobby-btn-bg: rgba(255, 255, 255, 0.15);
+  --game-lobby-btn-border: rgba(255, 255, 255, 0.3);
+  --game-lobby-btn-hover: rgba(255, 255, 255, 0.25);
+  --game-modal-overlay: rgba(0, 0, 0, 0.5);
+  --game-redeal-text: #d4af37;
+  --game-winner-text: #d4af37;
+  --game-winner-bg: rgba(212, 175, 55, 0.2);
+}
+
+/* Theme: Royal Emerald */
+[data-theme="royal-emerald"] {
+  --app-bg: #0a1a0f;
+  --app-bg-gradient-start: #0a1a0f;
+  --app-bg-gradient-mid: #1a2e1a;
+  --app-bg-gradient-end: #0d1a0f;
+  --app-surface: rgba(255, 255, 255, 0.05);
+  --app-surface-border: rgba(34, 197, 94, 0.3);
+  --app-surface-hover: rgba(255, 255, 255, 0.1);
+  --app-text: #ffffff;
+  --app-text-muted: rgba(255, 255, 255, 0.6);
+  --app-text-dim: rgba(255, 255, 255, 0.4);
+  --app-primary: #22c55e;
+  --app-primary-hover: #4ade80;
+  --app-primary-active: #16a34a;
+  --app-primary-active-deep: #15803d;
+  --app-primary-bg: rgba(34, 197, 94, 0.1);
+  --app-primary-bg-hover: rgba(34, 197, 94, 0.2);
+  --app-primary-shadow: rgba(34, 197, 94, 0.3);
+  --app-primary-shadow-hover: rgba(34, 197, 94, 0.4);
+  --app-secondary: rgba(255, 255, 255, 0.08);
+  --app-secondary-border: rgba(255, 255, 255, 0.25);
+  --app-secondary-hover: rgba(255, 255, 255, 0.15);
+  --app-secondary-active: rgba(255, 255, 255, 0.2);
+  --app-error-bg: rgba(220, 38, 38, 0.15);
+  --app-error-border: rgba(220, 38, 38, 0.3);
+  --app-error-text: #fca5a5;
+  --app-success: #22c55e;
+  --app-info: #3b82f6;
+  --app-input-bg: rgba(255, 255, 255, 0.08);
+  --app-input-border: rgba(255, 255, 255, 0.2);
+  --app-input-focus-bg: rgba(255, 255, 255, 0.12);
+  --app-input-focus-ring: rgba(34, 197, 94, 0.15);
+  --app-glow-1: rgba(34, 197, 94, 0.08);
+  --app-glow-2: rgba(34, 197, 94, 0.05);
+
+  /* Felt Grid - Theme-Aware */
+  --felt-bg: #1a472a;
+  --felt-bg-gradient: #2d6b45;
+  --felt-glow: rgba(34, 197, 94, 0.08);
+}
+
+/* Theme: Crimson Velvet */
+[data-theme="crimson-velvet"] {
+  --app-bg: #1a0a0a;
+  --app-bg-gradient-start: #1a0a0a;
+  --app-bg-gradient-mid: #2a1515;
+  --app-bg-gradient-end: #1a0d0d;
+  --app-surface: rgba(255, 255, 255, 0.05);
+  --app-surface-border: rgba(239, 68, 68, 0.3);
+  --app-surface-hover: rgba(255, 255, 255, 0.1);
+  --app-text: #ffffff;
+  --app-text-muted: rgba(255, 255, 255, 0.6);
+  --app-text-dim: rgba(255, 255, 255, 0.4);
+  --app-primary: #ef4444;
+  --app-primary-hover: #f87171;
+  --app-primary-active: #dc2626;
+  --app-primary-active-deep: #b91c1c;
+  --app-primary-bg: rgba(239, 68, 68, 0.1);
+  --app-primary-bg-hover: rgba(239, 68, 68, 0.2);
+  --app-primary-shadow: rgba(239, 68, 68, 0.3);
+  --app-primary-shadow-hover: rgba(239, 68, 68, 0.4);
+  --app-secondary: rgba(255, 255, 255, 0.08);
+  --app-secondary-border: rgba(255, 255, 255, 0.25);
+  --app-secondary-hover: rgba(255, 255, 255, 0.15);
+  --app-secondary-active: rgba(255, 255, 255, 0.2);
+  --app-error-bg: rgba(220, 38, 38, 0.15);
+  --app-error-border: rgba(220, 38, 38, 0.3);
+  --app-error-text: #fca5a5;
+  --app-success: #22c55e;
+  --app-info: #3b82f6;
+  --app-input-bg: rgba(255, 255, 255, 0.08);
+  --app-input-border: rgba(255, 255, 255, 0.2);
+  --app-input-focus-bg: rgba(255, 255, 255, 0.12);
+  --app-input-focus-ring: rgba(239, 68, 68, 0.15);
+  --app-glow-1: rgba(239, 68, 68, 0.08);
+  --app-glow-2: rgba(239, 68, 68, 0.05);
+
+  /* Felt Grid - Theme-Aware */
+  --felt-bg: #2a1515;
+  --felt-bg-gradient: #3d1f1f;
+  --felt-glow: rgba(239, 68, 68, 0.08);
+}
+
+/* Theme: Midnight Sapphire */
+[data-theme="midnight-sapphire"] {
+  --app-bg: #0a1628;
+  --app-bg-gradient-start: #0a1628;
+  --app-bg-gradient-mid: #1e3a5f;
+  --app-bg-gradient-end: #0d1a2e;
+  --app-surface: rgba(255, 255, 255, 0.05);
+  --app-surface-border: rgba(59, 130, 246, 0.3);
+  --app-surface-hover: rgba(255, 255, 255, 0.1);
+  --app-text: #ffffff;
+  --app-text-muted: rgba(255, 255, 255, 0.6);
+  --app-text-dim: rgba(255, 255, 255, 0.4);
+  --app-primary: #3b82f6;
+  --app-primary-hover: #60a5fa;
+  --app-primary-active: #2563eb;
+  --app-primary-active-deep: #1d4ed8;
+  --app-primary-bg: rgba(59, 130, 246, 0.1);
+  --app-primary-bg-hover: rgba(59, 130, 246, 0.2);
+  --app-primary-shadow: rgba(59, 130, 246, 0.3);
+  --app-primary-shadow-hover: rgba(59, 130, 246, 0.4);
+  --app-secondary: rgba(255, 255, 255, 0.08);
+  --app-secondary-border: rgba(255, 255, 255, 0.25);
+  --app-secondary-hover: rgba(255, 255, 255, 0.15);
+  --app-secondary-active: rgba(255, 255, 255, 0.2);
+  --app-error-bg: rgba(220, 38, 38, 0.15);
+  --app-error-border: rgba(220, 38, 38, 0.3);
+  --app-error-text: #fca5a5;
+  --app-success: #22c55e;
+  --app-info: #3b82f6;
+  --app-input-bg: rgba(255, 255, 255, 0.08);
+  --app-input-border: rgba(255, 255, 255, 0.2);
+  --app-input-focus-bg: rgba(255, 255, 255, 0.12);
+  --app-input-focus-ring: rgba(59, 130, 246, 0.15);
+  --app-glow-1: rgba(59, 130, 246, 0.08);
+  --app-glow-2: rgba(59, 130, 246, 0.05);
+
+  /* Felt Grid - Theme-Aware */
+  --felt-bg: #1e3a5f;
+  --felt-bg-gradient: #2a4a6f;
+  --felt-glow: rgba(59, 130, 246, 0.08);
+}
+
+/* Theme: Royal Amethyst */
+[data-theme="royal-amethyst"] {
+  --app-bg: #1a0a2e;
+  --app-bg-gradient-start: #1a0a2e;
+  --app-bg-gradient-mid: #3b1a6e;
+  --app-bg-gradient-end: #1a0d2e;
+  --app-surface: rgba(255, 255, 255, 0.05);
+  --app-surface-border: rgba(139, 92, 246, 0.3);
+  --app-surface-hover: rgba(255, 255, 255, 0.1);
+  --app-text: #ffffff;
+  --app-text-muted: rgba(255, 255, 255, 0.6);
+  --app-text-dim: rgba(255, 255, 255, 0.4);
+  --app-primary: #8b5cf6;
+  --app-primary-hover: #a78bfa;
+  --app-primary-active: #7c3aed;
+  --app-primary-active-deep: #6d28d9;
+  --app-primary-bg: rgba(139, 92, 246, 0.1);
+  --app-primary-bg-hover: rgba(139, 92, 246, 0.2);
+  --app-primary-shadow: rgba(139, 92, 246, 0.3);
+  --app-primary-shadow-hover: rgba(139, 92, 246, 0.4);
+  --app-secondary: rgba(255, 255, 255, 0.08);
+  --app-secondary-border: rgba(255, 255, 255, 0.25);
+  --app-secondary-hover: rgba(255, 255, 255, 0.15);
+  --app-secondary-active: rgba(255, 255, 255, 0.2);
+  --app-error-bg: rgba(220, 38, 38, 0.15);
+  --app-error-border: rgba(220, 38, 38, 0.3);
+  --app-error-text: #fca5a5;
+  --app-success: #22c55e;
+  --app-info: #3b82f6;
+  --app-input-bg: rgba(255, 255, 255, 0.08);
+  --app-input-border: rgba(255, 255, 255, 0.2);
+  --app-input-focus-bg: rgba(255, 255, 255, 0.12);
+  --app-input-focus-ring: rgba(139, 92, 246, 0.15);
+  --app-glow-1: rgba(139, 92, 246, 0.08);
+  --app-glow-2: rgba(139, 92, 246, 0.05);
+
+  /* Felt Grid - Theme-Aware */
+  --felt-bg: #3b1a6e;
+  --felt-bg-gradient: #4a2a7e;
+  --felt-glow: rgba(139, 92, 246, 0.08);
+}
