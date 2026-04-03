@@ -12,7 +12,7 @@ const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // --- Colyseus WebSocket Server ---
 import { Server } from 'colyseus';
-import { WebSocketTransport } from '@colyseus/ws-transport/build/WebSocketTransport.js';
+import { WebSocketTransport } from '@colyseus/ws-transport';
 import { CrownRoom } from './rooms.js';
 
 const gameServer = new Server({

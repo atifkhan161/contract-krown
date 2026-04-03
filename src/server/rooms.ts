@@ -35,6 +35,7 @@ export class CrownRoom extends Room<GameStateSchema> {
   // --- Lifecycle ---
 
   onCreate(options: any) {
+    console.log('[CrownRoom] onCreate called, roomId:', this.roomId, 'options:', JSON.stringify(options));
     this.gameState = createInitialState();
     this.gameState.dealer = options.dealer ?? 0;
     this.botManager = new BotManager();
@@ -51,7 +52,9 @@ export class CrownRoom extends Room<GameStateSchema> {
     schema.roomCreatedAt = now;
     schema.roomExpiryAt = now + ROOM_EXPIRY_MS;
     schema.adminSessionId = ''; // Set when first player joins
+    
     this.setState(schema);
+    console.log('[CrownRoom] setState called, roomCode:', this.roomCode, 'phase:', schema.phase);
 
     // Set room metadata for matchMaker query
     this.setMetadata({
@@ -122,10 +125,13 @@ export class CrownRoom extends Room<GameStateSchema> {
     }
   }
 
-  async onJoin(client: Client, _options: any) {
+  async onJoin(client: Client, options: any) {
+    console.log('[CrownRoom] onJoin, sessionId:', client.sessionId, 'options:', JSON.stringify(options));
+
     // Check for reconnection by sessionId
     const prevIndex = this.findReconnectingPlayer(client);
     if (prevIndex !== -1) {
+      console.log('[CrownRoom] Reconnecting player, index:', prevIndex);
       this.gameState.players[prevIndex].isBot = false;
       const ps = this.state.players.get(String(prevIndex));
       if (ps) {
@@ -149,6 +155,7 @@ export class CrownRoom extends Room<GameStateSchema> {
       }
     }
     if (playerIndex === -1) {
+      console.log('[CrownRoom] Room is full, rejecting client');
       client.leave(4001, 'Room is full');
       return;
     }
@@ -165,11 +172,16 @@ export class CrownRoom extends Room<GameStateSchema> {
     // Create player in schema
     const ps = new PlayerSchema();
     ps.id = playerIndex;
+    ps.username = options.username || `Player ${playerIndex + 1}`;
     ps.team = playerIndex % 2 === 0 ? 0 : 1;
     ps.isBot = false;
     ps.sessionId = client.sessionId;
     ps.disconnected = false;
     this.state.players.set(String(playerIndex), ps);
+
+    console.log('[CrownRoom] Player added, index:', playerIndex, 'username:', ps.username, 'sessionId:', client.sessionId);
+    console.log('[CrownRoom] Current state.phase:', this.state.phase, 'roomCode:', this.state.roomCode);
+    console.log('[CrownRoom] Players in state:', Array.from(this.state.players.entries()));
 
     this.syncState();
 
@@ -182,14 +194,14 @@ export class CrownRoom extends Room<GameStateSchema> {
     });
   }
 
-  async onLeave(client: Client, consented: boolean) {
+  async onLeave(client: Client, code?: number) {
     const playerIndex = this.clientToPlayer.get(client.sessionId);
     if (playerIndex === undefined) return;
 
     this.clientToPlayer.delete(client.sessionId);
 
-    if (!consented) {
-      // Unexpected disconnect — start reconnection timer
+    if (code !== undefined) {
+      // Unexpected disconnect (code is defined) — start reconnection timer
       this.state.disconnectedPlayerIndex = playerIndex;
       this.state.disconnectedAt = Date.now();
       const ps = this.state.players.get(String(playerIndex));
@@ -374,7 +386,10 @@ export class CrownRoom extends Room<GameStateSchema> {
   }
 
   private handleAddBot(client: Client): void {
-    if (!this.isAdmin(client)) {
+    const isAdmin = client.sessionId === this.state.adminSessionId;
+    console.log('[CrownRoom] handleAddBot, client.sessionId:', client.sessionId, 'adminSessionId:', this.state.adminSessionId, 'isAdmin:', isAdmin, 'phase:', this.state.phase);
+    
+    if (!isAdmin) {
       client.send('error', { message: 'Only the admin can add bots' });
       return;
     }

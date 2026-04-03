@@ -1,7 +1,7 @@
 // Contract Crown Colyseus Client Wrapper
 // Manages WebSocket connection, room lifecycle, and state synchronization
 
-import { Client, Room } from 'colyseus.js';
+import { Client, Room } from '@colyseus/sdk';
 import type { Card, Suit } from '../engine/types.js';
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
@@ -54,26 +54,37 @@ export class ColyseusClientWrapper {
   async createRoom(roomName: string = 'crown', options: any = {}): Promise<string> {
     if (!this.client) throw new Error('Not connected. Call connect() first.');
 
+    console.log('[ColyseusClient] Creating room:', roomName, 'options:', JSON.stringify(options));
+    
     this.room = await this.client.create(roomName, options);
-    this.setupRoomListeners();
     this.reconnectionToken = this.room.reconnectionToken;
+    console.log('[ColyseusClient] Room created, roomId:', this.room.roomId, 'sessionId:', this.room.sessionId);
+
+    this.setupRoomListeners();
+
     return this.room.roomId;
   }
 
-  async joinRoom(roomId: string, _roomName: string = 'crown'): Promise<void> {
+  async joinRoom(roomId: string, _roomName: string = 'crown', options: any = {}): Promise<void> {
     if (!this.client) throw new Error('Not connected. Call connect() first.');
 
-    this.room = await this.client.joinById(roomId);
-    this.setupRoomListeners();
+    console.log('[ColyseusClient] Joining room:', roomId, 'options:', JSON.stringify(options));
+    
+    this.room = await this.client.joinById(roomId, options);
     this.reconnectionToken = this.room.reconnectionToken;
+    console.log('[ColyseusClient] Joined room, sessionId:', this.room.sessionId);
+
+    this.setupRoomListeners();
   }
 
   async joinOrCreate(roomName: string = 'crown', options: any = {}): Promise<string> {
     if (!this.client) throw new Error('Not connected. Call connect() first.');
 
     this.room = await this.client.joinOrCreate(roomName, options);
-    this.setupRoomListeners();
     this.reconnectionToken = this.room.reconnectionToken;
+
+    this.setupRoomListeners();
+
     return this.room.roomId;
   }
 
@@ -142,15 +153,22 @@ export class ColyseusClientWrapper {
   private setupRoomListeners(): void {
     if (!this.room) return;
 
+    console.log('[ColyseusClient] setupRoomListeners called, roomId:', this.room.roomId);
+
     this.room.onStateChange((state) => {
+      console.log('[ColyseusClient] onStateChange fired');
+      console.log('[ColyseusClient] state.roomCode:', state.roomCode);
+      console.log('[ColyseusClient] state.phase:', state.phase);
       this.callbacks.onStateChange(state);
     });
 
     this.room.onError((code, message) => {
+      console.error('[ColyseusClient] onError:', code, message);
       this.callbacks.onError(code ?? 0, message ?? 'Unknown error');
     });
 
     this.room.onLeave((code, _reason) => {
+      console.log('[ColyseusClient] onLeave, code:', code);
       this.connectionState = 'disconnected';
       this.callbacks.onLeave(code);
     });

@@ -6,6 +6,7 @@ import { ColyseusClientWrapper, ConnectionState } from './colyseus-client-wrappe
 import { GameView } from './game-view.js';
 import { HapticController } from './haptic-controller.js';
 import { canPlayCard } from '../engine/index.js';
+import type { WaitingRoomState, WaitingRoomPlayer } from './waiting-room-view.js';
 
 export type OnlineGameCallback = (state: GameState) => void;
 
@@ -27,6 +28,8 @@ export class OnlineGameController {
   private previousTrickCount: number = 0;
   private previousPhase: string = 'WAITING_FOR_PLAYERS';
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private waitingRoomCallbacks: Array<(state: any) => void> = [];
+  private currentUsername: string = '';
 
   constructor(config: OnlineGameConfig = {}) {
     this.userPlayerIndex = config.userPlayerIndex ?? 0;
@@ -94,6 +97,12 @@ export class OnlineGameController {
   }
 
   private handleStateChange(schema: any): void {
+    console.log('[OnlineGameController] handleStateChange called');
+    console.log('[OnlineGameController] schema.roomCode:', schema?.roomCode);
+    console.log('[OnlineGameController] schema.phase:', schema?.phase);
+    console.log('[OnlineGameController] schema.adminSessionId:', schema?.adminSessionId);
+    console.log('[OnlineGameController] schema.players size:', schema?.players?.size);
+    
     this.serverState = schema;
     const gameState = this.mapSchemaToGameState(schema);
     this.detectStateTransitions(gameState);
@@ -102,6 +111,25 @@ export class OnlineGameController {
     if (this.onStateChange) {
       this.onStateChange(gameState);
     }
+
+    for (const cb of this.waitingRoomCallbacks) {
+      const waitingRoomState = this.transformToWaitingRoomState(schema);
+      cb(waitingRoomState);
+    }
+  }
+
+  private transformToWaitingRoomState(schema: any): WaitingRoomState {
+    const players = this.extractPlayers(schema);
+    return {
+      roomId: this.clientWrapper.roomId || '',
+      roomCode: schema.roomCode || '',
+      adminSessionId: schema.adminSessionId || '',
+      players,
+      timeRemaining: Math.max(0, Math.floor((schema.roomExpiryAt - Date.now()) / 1000)),
+      isFull: players.filter(p => !p.isBot).length >= 4,
+      isAdmin: this.clientWrapper.sessionId === schema.adminSessionId,
+      playerCount: players.filter(p => !p.isBot).length
+    };
   }
 
   private detectStateTransitions(gameState: GameState): void {
@@ -250,6 +278,7 @@ export class OnlineGameController {
 
   private mapHand(hand: any): Card[] {
     const cards: Card[] = [];
+    if (!hand) return cards;
     for (const cs of hand as any[]) {
       cards.push({
         suit: cs.suit as Suit,
@@ -262,6 +291,7 @@ export class OnlineGameController {
 
   private mapPlayedCards(cards: any): { card: Card; player: number }[] {
     const result: { card: Card; player: number }[] = [];
+    if (!cards) return result;
     for (const pc of cards as any[]) {
       result.push({
         card: {
@@ -344,20 +374,36 @@ export class OnlineGameController {
 
   // --- Waiting Room Methods ---
 
+  setUsername(username: string): void {
+    this.currentUsername = username;
+  }
+
   async createWaitingRoom(serverUrl: string = DEFAULT_SERVER_URL): Promise<{ roomId: string; roomCode: string }> {
     await this.clientWrapper.connect(serverUrl);
-    const roomId = await this.clientWrapper.createRoom('crown');
+    console.log('Creating room with username:', this.currentUsername || 'Player');
+    const roomId = await this.clientWrapper.createRoom('crown', {
+      username: this.currentUsername || 'Player'
+    });
+    console.log('createRoom returned, roomId:', roomId);
     this.isRunning = true;
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        console.log('Timeout waiting for room state, serverState:', this.serverState);
+        reject(new Error('Timed out waiting for room state'));
+      }, 10000);
+
       const checkState = () => {
-        if (this.serverState && this.serverState.roomCode) {
-          resolve({ roomId, roomCode: this.serverState.roomCode });
+        const code = this.serverState?.roomCode;
+        console.log('Polling for roomCode, got:', code, 'at', new Date().toISOString());
+        if (code && code.length > 0) {
+          clearTimeout(timeout);
+          resolve({ roomId, roomCode: code });
         } else {
           setTimeout(checkState, 100);
         }
       };
-      setTimeout(checkState, 200);
+      setTimeout(checkState, 100);
     });
   }
 
@@ -369,32 +415,25 @@ export class OnlineGameController {
     players: Array<{ playerIndex: number; username: string; sessionId: string; isBot: boolean; isAdmin: boolean; team: 0 | 1 }>;
   }> {
     await this.clientWrapper.connect(serverUrl);
-    await this.clientWrapper.joinRoom(roomId);
+    await this.clientWrapper.joinRoom(roomId, 'crown', {
+      username: this.currentUsername || 'Player'
+    });
     this.isRunning = true;
 
-    return new Promise((resolve) => {
-      const checkState = () => {
-        if (this.serverState) {
-          const players: Array<any> = [];
-          const playerMap = this.serverState.players as unknown as Map<string, any>;
-          for (let i = 0; i < 4; i++) {
-            const ps = playerMap.get(String(i));
-            if (ps && !ps.isBot) {
-              players.push({
-                playerIndex: ps.id,
-                username: `Player ${ps.id + 1}`,
-                sessionId: ps.sessionId,
-                isBot: ps.isBot,
-                isAdmin: ps.sessionId === this.serverState.adminSessionId,
-                team: ps.team as 0 | 1
-              });
-            }
-          }
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Timed out waiting for room state'));
+      }, 10000);
 
+      const checkState = () => {
+        const state = this.serverState;
+        if (state && state.roomCode && state.roomCode.length > 0) {
+          clearTimeout(timeout);
+          const players = this.extractPlayers(state);
           resolve({
             roomId,
-            roomCode: this.serverState.roomCode || roomId.substring(0, 4).toUpperCase(),
-            isAdmin: this.clientWrapper.sessionId === this.serverState.adminSessionId,
+            roomCode: state.roomCode,
+            isAdmin: this.clientWrapper.sessionId === state.adminSessionId,
             playerCount: players.length,
             players
           });
@@ -402,8 +441,27 @@ export class OnlineGameController {
           setTimeout(checkState, 100);
         }
       };
-      setTimeout(checkState, 200);
+      setTimeout(checkState, 100);
     });
+  }
+
+  private extractPlayers(state: any): Array<{ playerIndex: number; username: string; sessionId: string; isBot: boolean; isAdmin: boolean; team: 0 | 1 }> {
+    const players: Array<any> = [];
+    const playerMap = state.players as unknown as Map<string, any>;
+    for (let i = 0; i < 4; i++) {
+      const ps = playerMap.get(String(i));
+      if (ps && !ps.isBot) {
+        players.push({
+          playerIndex: ps.id,
+          username: ps.username || `Player ${ps.id + 1}`,
+          sessionId: ps.sessionId,
+          isBot: ps.isBot,
+          isAdmin: ps.sessionId === state.adminSessionId,
+          team: ps.team as 0 | 1
+        });
+      }
+    }
+    return players;
   }
 
   shuffleTeams(): void {
@@ -419,10 +477,6 @@ export class OnlineGameController {
   }
 
   onWaitingRoomStateChange(callback: (state: any) => void): void {
-    const originalCallback = this.onStateChange;
-    this.onStateChange = (gameState) => {
-      if (originalCallback) originalCallback(gameState);
-      callback(this.serverState);
-    };
+    this.waitingRoomCallbacks.push(callback);
   }
 }

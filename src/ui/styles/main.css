@@ -1278,6 +1278,27 @@ html, body {
 }
 
 /* Waiting Room View */
+.waiting-room-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waiting-room-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--app-text);
+}
+
+.waiting-room-loading p {
+  font-size: 16px;
+  color: var(--app-text-muted);
+}
+
 .waiting-room-view {
   width: 100%;
   height: 100%;

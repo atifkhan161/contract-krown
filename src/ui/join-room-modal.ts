@@ -97,8 +97,27 @@ export class JoinRoomModal {
         return;
       }
       this.hideError();
-      this.onJoin(code);
-      this.hide();
+      joinBtn.setAttribute('disabled', 'true');
+      joinBtn.textContent = 'Resolving...';
+
+      fetch('/api/rooms/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      })
+        .then(res => {
+          if (!res.ok) return res.json().then(d => { throw new Error(d.message || 'Room not found'); });
+          return res.json();
+        })
+        .then(data => {
+          this.onJoin(data.roomId);
+          this.hide();
+        })
+        .catch(err => {
+          this.showError(err.message || 'Room not found');
+          joinBtn.removeAttribute('disabled');
+          joinBtn.textContent = 'Join';
+        });
     });
 
     codeInput?.addEventListener('keydown', (e) => {

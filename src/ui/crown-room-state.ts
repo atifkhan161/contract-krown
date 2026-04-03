@@ -1,5 +1,5 @@
-// Contract Crown Colyseus Schema
-// State serialization classes for efficient delta synchronization
+// Contract Crown Client Schema
+// Must match server schema EXACTLY for proper state decoding
 
 import { Schema, type, ArraySchema, MapSchema } from '@colyseus/schema';
 
@@ -44,7 +44,6 @@ export class GameStateSchema extends Schema {
   @type('number') tricksWonByTeam: number = 0;
   @type('number') roundNumber: number = 0;
 
-  // Waiting room fields
   @type('string') roomCode: string = '';
   @type('string') adminSessionId: string = '';
   @type('number') roomExpiryAt: number = 0;

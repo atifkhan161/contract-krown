@@ -23,8 +23,8 @@
     "postinstall": "node scripts/patch-colyseus.mjs"
   },
   "dependencies": {
-    "colyseus": "^0.15.23",
-    "colyseus.js": "0.15.28",
+    "colyseus": "^0.17.0",
+    "@colyseus/sdk": "^0.17.0",
     "daisyui": "^4.12.14",
     "elysia": "^1.1.16",
     "lokijs": "^1.5.12",

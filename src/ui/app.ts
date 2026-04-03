@@ -27,7 +27,6 @@ class App {
       console.error('App mount point #app not found');
       return;
     }
-    console.log('App initialized, container:', this.container);
     this.setupRoutes();
     router.setSessionManager(this.sessionManager);
     console.log('Routes setup complete');
@@ -183,6 +182,12 @@ class App {
 
     const viewContainer = document.createElement('div');
     viewContainer.className = 'waiting-room-wrapper';
+    viewContainer.innerHTML = `
+      <div class="waiting-room-loading">
+        <div class="reconnection-spinner"></div>
+        <p>${isNewRoom ? 'Creating room...' : 'Joining room...'}</p>
+      </div>
+    `;
     this.container.appendChild(viewContainer);
     this.currentView = viewContainer;
 
@@ -196,7 +201,10 @@ class App {
 
     if (isNewRoom) {
       this.onlineController = new OnlineGameController();
+      this.onlineController.setUsername(username);
       this.onlineController.createWaitingRoom().then(({ roomId, roomCode }) => {
+        viewContainer.innerHTML = '';
+
         const waitingView = new WaitingRoomView({
           roomId,
           roomCode,
@@ -234,12 +242,13 @@ class App {
         this.onlineController?.onWaitingRoomStateChange((state) => {
           waitingView.updateState(state);
         });
-      }).catch((err) => {
+      }).catch((err: any) => {
         console.error('Failed to create waiting room:', err);
         viewContainer.innerHTML = `
           <div class="game-error">
             <h2>Room Creation Failed</h2>
-            <p>Could not create a game room.</p>
+            <p>Could not create a game room. Make sure the server is running.</p>
+            <p class="error-detail">${err?.message || 'Unknown error'}</p>
             <button class="btn btn-primary" id="lobby-btn">Return to Lobby</button>
           </div>
         `;
@@ -249,7 +258,10 @@ class App {
       });
     } else {
       this.onlineController = new OnlineGameController();
+      this.onlineController.setUsername(username);
       this.onlineController.joinWaitingRoom(roomIdParam).then(({ roomId, roomCode, isAdmin, playerCount, players }) => {
+        viewContainer.innerHTML = '';
+
         const waitingView = new WaitingRoomView({
           roomId,
           roomCode,
@@ -280,12 +292,12 @@ class App {
         this.onlineController?.onWaitingRoomStateChange((state) => {
           waitingView.updateState(state);
         });
-      }).catch((err) => {
+      }).catch((err: any) => {
         console.error('Failed to join waiting room:', err);
         viewContainer.innerHTML = `
           <div class="game-error">
             <h2>Room Not Found</h2>
-            <p>Could not find the room. It may have expired.</p>
+            <p>Could not find the room. It may have expired or the code is invalid.</p>
             <button class="btn btn-primary" id="lobby-btn">Return to Lobby</button>
           </div>
         `;
