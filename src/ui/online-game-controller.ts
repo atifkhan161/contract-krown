@@ -6,7 +6,7 @@ import { ColyseusClientWrapper, ConnectionState } from './colyseus-client-wrappe
 import { GameView } from './game-view.js';
 import { HapticController } from './haptic-controller.js';
 import { canPlayCard } from '../engine/index.js';
-import type { WaitingRoomState, WaitingRoomPlayer } from './waiting-room-view.js';
+import type { WaitingRoomState } from './waiting-room-view.js';
 
 export type OnlineGameCallback = (state: GameState) => void;
 
@@ -24,6 +24,7 @@ export class OnlineGameController {
   private userPlayerIndex: number = 0;
   private serverState: any = null;
   private onStateChange: OnlineGameCallback | null = null;
+  private onGameStarted: ((data: { roomId: string; roomCode: string }) => void) | null = null;
   private isRunning: boolean = false;
   private previousTrickCount: number = 0;
   private previousPhase: string = 'WAITING_FOR_PLAYERS';
@@ -39,7 +40,11 @@ export class OnlineGameController {
     this.clientWrapper = new ColyseusClientWrapper({
       onStateChange: (state) => this.handleStateChange(state),
       onError: (code, message) => this.handleError(code, message),
-      onLeave: (code) => this.handleLeave(code)
+      onLeave: (code) => this.handleLeave(code),
+      onGameStarted: (data) => {
+        console.log('[OnlineGameController] game_started received:', data);
+        this.onGameStarted?.(data);
+      }
     });
 
     this.setupEventHandlers();
@@ -126,9 +131,10 @@ export class OnlineGameController {
       adminSessionId: schema.adminSessionId || '',
       players,
       timeRemaining: Math.max(0, Math.floor((schema.roomExpiryAt - Date.now()) / 1000)),
-      isFull: players.filter(p => !p.isBot).length >= 4,
+      isFull: players.length >= 4,
       isAdmin: this.clientWrapper.sessionId === schema.adminSessionId,
-      playerCount: players.filter(p => !p.isBot).length
+      playerCount: players.length,
+      trumpDeclarer: schema.trumpDeclarer ?? undefined
     };
   }
 
@@ -450,7 +456,7 @@ export class OnlineGameController {
     const playerMap = state.players as unknown as Map<string, any>;
     for (let i = 0; i < 4; i++) {
       const ps = playerMap.get(String(i));
-      if (ps && !ps.isBot) {
+      if (ps) {
         players.push({
           playerIndex: ps.id,
           username: ps.username || `Player ${ps.id + 1}`,
@@ -478,5 +484,14 @@ export class OnlineGameController {
 
   onWaitingRoomStateChange(callback: (state: any) => void): void {
     this.waitingRoomCallbacks.push(callback);
+  }
+
+  setOnGameStarted(callback: (data: { roomId: string; roomCode: string }) => void): void {
+    this.onGameStarted = callback;
+  }
+
+  isConnectedToRoom(roomId: string): boolean {
+    return this.clientWrapper.roomId === roomId && 
+           this.clientWrapper.state === 'connected';
   }
 }

@@ -21,6 +21,7 @@ export interface WaitingRoomState {
   isFull: boolean;
   isAdmin: boolean;
   playerCount: number;
+  trumpDeclarer?: number;
 }
 
 export interface WaitingRoomCallbacks {
@@ -80,6 +81,12 @@ export class WaitingRoomView {
         <div class="room-player-count">
           <span id="wr-player-count">${this.state.playerCount}/4 players</span>
         </div>
+        ${this.state.trumpDeclarer !== undefined ? `
+        <div class="trump-declarer-section" id="wr-trump-declarer">
+          <span class="trump-declarer-label">🎯 Trump Declares:</span>
+          <span class="trump-declarer-name">${this.getTrumpDeclarerName()}</span>
+        </div>
+        ` : ''}
       </div>
 
       <div class="team-slots-container">
@@ -113,28 +120,32 @@ export class WaitingRoomView {
   }
 
   private renderTeamSlots(team: 0 | 1): string {
-    const slots = team === 0 ? [0, 2] : [1, 3];
+    const teamPlayers = this.state.players.filter(p => p.team === team);
     let html = '';
 
-    for (const slotIndex of slots) {
-      const player = this.state.players.find(p => p.playerIndex === slotIndex);
+    for (let i = 0; i < 2; i++) {
+      const player = teamPlayers[i];
+      const playerIndex = player?.playerIndex ?? -1;
 
       if (player) {
+        const isTrumpDeclarer = this.state.trumpDeclarer !== undefined && this.state.trumpDeclarer === player.playerIndex;
         html += `
-          <div class="player-slot ${player.isAdmin ? 'player-slot-admin' : ''}" data-player-index="${slotIndex}">
+          <div class="player-slot ${player.isAdmin ? 'player-slot-admin' : ''}" data-player-index="${playerIndex}">
             <div class="player-avatar">
               <div class="avatar-circle">${player.username.charAt(0).toUpperCase()}</div>
               ${player.isAdmin ? '<span class="admin-crown">👑</span>' : ''}
+              ${isTrumpDeclarer ? '<span class="trump-declarer-badge">🎯</span>' : ''}
             </div>
             <div class="player-info">
               <span class="player-name">${player.username}${player.isBot ? ' (Bot)' : ''}</span>
               ${player.isAdmin ? '<span class="admin-badge">Admin</span>' : ''}
+              ${isTrumpDeclarer ? '<span class="trump-declarer-text">Trump Declares</span>' : ''}
             </div>
           </div>
         `;
       } else {
         html += `
-          <div class="player-slot player-slot-empty" data-player-index="${slotIndex}">
+          <div class="player-slot player-slot-empty" data-player-index="${i}">
             <div class="player-avatar">
               <div class="avatar-circle avatar-empty">?</div>
             </div>
@@ -250,11 +261,32 @@ export class WaitingRoomView {
     }
 
     // Update admin controls
-    if (updates.isAdmin !== undefined || updates.playerCount !== undefined || updates.isFull !== undefined) {
+    if (updates.isAdmin !== undefined || updates.playerCount !== undefined || updates.isFull !== undefined || updates.players) {
       const controlsEl = this.container.querySelector('#wr-controls');
       if (controlsEl) {
         controlsEl.innerHTML = this.state.isAdmin ? this.renderAdminControls() : '';
         this.setupEventListeners();
+      }
+    }
+
+    // Update trump declarer info section
+    if (updates.trumpDeclarer !== undefined) {
+      const infoSection = this.container?.querySelector('.waiting-room-info');
+      if (infoSection) {
+        const existingDeclarer = infoSection.querySelector('.trump-declarer-section');
+        if (existingDeclarer) {
+          existingDeclarer.remove();
+        }
+        if (this.state.trumpDeclarer !== undefined) {
+          const declarerHtml = document.createElement('div');
+          declarerHtml.className = 'trump-declarer-section';
+          declarerHtml.id = 'wr-trump-declarer';
+          declarerHtml.innerHTML = `
+            <span class="trump-declarer-label">🎯 Trump Declares:</span>
+            <span class="trump-declarer-name">${this.getTrumpDeclarerName()}</span>
+          `;
+          infoSection.appendChild(declarerHtml);
+        }
       }
     }
   }
@@ -300,6 +332,12 @@ export class WaitingRoomView {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  private getTrumpDeclarerName(): string {
+    if (this.state.trumpDeclarer === undefined) return '';
+    const player = this.state.players.find(p => p.playerIndex === this.state.trumpDeclarer);
+    return player?.username || `Player ${this.state.trumpDeclarer + 1}`;
   }
 
   destroy(): void {

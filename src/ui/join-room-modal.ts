@@ -6,6 +6,7 @@ import { ModalBottomSheet } from './modal-bottom-sheet.js';
 export interface AvailableRoom {
   roomId: string;
   roomCode: string;
+  adminUsername: string;
   playerCount: number;
   maxPlayers: number;
   adminSessionId: string;
@@ -63,7 +64,8 @@ export class JoinRoomModal {
             : `<div class="join-room-rooms">${availableRooms.map(room => `
                 <button class="join-room-room-card" data-room-id="${room.roomId}">
                   <span class="join-room-room-code">${room.roomCode}</span>
-                  <span class="join-room-room-players">${room.playerCount}/${room.maxPlayers} players</span>
+                  <span class="join-room-room-host">${room.adminUsername || 'Waiting for host...'}</span>
+                  <span class="join-room-room-players">${room.playerCount}/${room.maxPlayers}</span>
                 </button>
               `).join('')}</div>`
           }

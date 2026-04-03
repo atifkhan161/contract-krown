@@ -13,6 +13,7 @@ import {
 import type { GameState, Card, Suit } from '../engine/types.js';
 import { BotManager } from '../bot/bot-manager.js';
 import { roomCodeGenerator } from './room-code-generator.js';
+import { roomRegistry } from './room-registry.js';
 
 const MAX_PLAYERS = 4;
 const RECONNECT_TIMEOUT_MS = 60_000;
@@ -62,6 +63,18 @@ export class CrownRoom extends Room<GameStateSchema> {
       phase: 'WAITING_FOR_PLAYERS'
     });
 
+    // Register in room registry for listing API
+    roomRegistry.register({
+      roomId: this.roomId,
+      roomCode: this.roomCode,
+      adminUsername: '', // Set when first player joins
+      playerCount: 0,
+      maxPlayers: MAX_PLAYERS,
+      adminSessionId: '',
+      phase: 'WAITING_FOR_PLAYERS',
+      createdAt: now
+    });
+
     // Start expiry check timer
     this.expiryCheckTimer = setInterval(() => {
       this.checkRoomExpiry();
@@ -100,6 +113,7 @@ export class CrownRoom extends Room<GameStateSchema> {
       this.expiryCheckTimer = null;
     }
     roomCodeGenerator.removeCode(this.roomCode);
+    roomRegistry.remove(this.roomId);
   }
 
   // --- Expiry Check ---
@@ -146,14 +160,31 @@ export class CrownRoom extends Room<GameStateSchema> {
       return;
     }
 
-    // Find first empty player slot
+    // Check if there's a bot slot to replace (never replace admin slot 0)
     let playerIndex = -1;
-    for (let i = 0; i < MAX_PLAYERS; i++) {
-      if (!this.playerToClient.has(i)) {
-        playerIndex = i;
-        break;
+    const botSlots: number[] = [];
+    for (const [, ps] of this.state.players) {
+      if (ps.isBot && ps.id !== 0) {
+        botSlots.push(ps.id);
       }
     }
+
+    // If bot slots exist, replace a random one; otherwise find first empty slot
+    if (botSlots.length > 0) {
+      playerIndex = botSlots[Math.floor(Math.random() * botSlots.length)];
+      console.log('[CrownRoom] Replacing bot at slot:', playerIndex, 'with new human player');
+      this.state.players.delete(String(playerIndex));
+      this.playerToClient.delete(playerIndex);
+    } else {
+      // Find first empty player slot
+      for (let i = 0; i < MAX_PLAYERS; i++) {
+        if (!this.playerToClient.has(i)) {
+          playerIndex = i;
+          break;
+        }
+      }
+    }
+
     if (playerIndex === -1) {
       console.log('[CrownRoom] Room is full, rejecting client');
       client.leave(4001, 'Room is full');
@@ -192,6 +223,13 @@ export class CrownRoom extends Room<GameStateSchema> {
       adminSessionId: this.state.adminSessionId,
       roomExpiryAt: this.state.roomExpiryAt
     });
+
+    // Update room registry with current player count and admin info
+    roomRegistry.updatePlayerCount(this.roomId, this.clientToPlayer.size);
+    roomRegistry.updateAdminSessionId(this.roomId, this.state.adminSessionId);
+    if (this.clientToPlayer.size === 1) {
+      roomRegistry.updateAdminUsername(this.roomId, ps.username);
+    }
   }
 
   async onLeave(client: Client, code?: number) {
@@ -199,6 +237,9 @@ export class CrownRoom extends Room<GameStateSchema> {
     if (playerIndex === undefined) return;
 
     this.clientToPlayer.delete(client.sessionId);
+
+    // Update room registry with new player count
+    roomRegistry.updatePlayerCount(this.roomId, this.clientToPlayer.size);
 
     if (code !== undefined) {
       // Unexpected disconnect (code is defined) — start reconnection timer
@@ -329,6 +370,7 @@ export class CrownRoom extends Room<GameStateSchema> {
     }
 
     dealInitial(this.gameState);
+    this.state.phase = this.gameState.phase;
     this.syncState();
   }
 
@@ -343,45 +385,48 @@ export class CrownRoom extends Room<GameStateSchema> {
       client.send('error', { message: 'Only the admin can shuffle teams' });
       return;
     }
-    if (this.state.phase !== 'WAITING_FOR_PLAYERS') {
-      client.send('error', { message: 'Can only shuffle teams in waiting room' });
+
+    // Allow in waiting or dealing phases
+    if (this.state.phase !== 'WAITING_FOR_PLAYERS' && this.state.phase !== 'DEALING_INITIAL') {
+      client.send('error', { message: 'Can only shuffle teams before game starts' });
       return;
     }
 
-    // Get all human players
-    const humanPlayers: number[] = [];
+    // Get ALL players (humans + bots)
+    const allSlots: number[] = [];
     for (let i = 0; i < MAX_PLAYERS; i++) {
-      const ps = this.state.players.get(String(i));
-      if (ps && !ps.isBot) {
-        humanPlayers.push(i);
+      if (this.state.players.has(String(i))) {
+        allSlots.push(i);
       }
     }
 
-    if (humanPlayers.length < 2) {
+    if (allSlots.length < 2) {
       client.send('error', { message: 'Need at least 2 players to shuffle' });
       return;
     }
 
-    // Fisher-Yates shuffle
-    const shuffled = [...humanPlayers];
+    // Fisher-Yates shuffle all positions
+    const shuffled = [...allSlots];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    // Assign teams: even indices -> Team 0, odd -> Team 1
+    // Assign teams based on new position: even -> Team 0, odd -> Team 1
     for (let i = 0; i < shuffled.length; i++) {
-      const playerIdx = shuffled[i];
+      const originalSlot = shuffled[i];
       const newTeam = i % 2 === 0 ? 0 : 1;
-      const ps = this.state.players.get(String(playerIdx));
+      
+      const ps = this.state.players.get(String(originalSlot));
       if (ps) {
         ps.team = newTeam;
       }
-      if (this.gameState.players[playerIdx]) {
-        this.gameState.players[playerIdx].team = newTeam as 0 | 1;
+      if (this.gameState.players[originalSlot]) {
+        this.gameState.players[originalSlot].team = newTeam as 0 | 1;
       }
     }
 
+    console.log('[CrownRoom] Shuffled all', allSlots.length, 'players');
     this.syncState();
   }
 
@@ -393,21 +438,28 @@ export class CrownRoom extends Room<GameStateSchema> {
       client.send('error', { message: 'Only the admin can add bots' });
       return;
     }
-    if (this.state.phase !== 'WAITING_FOR_PLAYERS') {
-      client.send('error', { message: 'Can only add bots in waiting room' });
+
+    // Allow adding bots in both waiting and dealing phases
+    if (this.state.phase !== 'WAITING_FOR_PLAYERS' && this.state.phase !== 'DEALING_INITIAL') {
+      client.send('error', { message: 'Can only add bots before game starts' });
       return;
     }
 
-    // Find next empty slot
+    // Fill ALL empty slots with bots (not just one)
+    let botsAdded = 0;
     for (let i = 0; i < MAX_PLAYERS; i++) {
-      if (!this.playerToClient.has(i)) {
+      if (!this.state.players.has(String(i))) {
         this.addBotToSlot(i);
-        this.syncState();
-        return;
+        botsAdded++;
       }
     }
-
-    client.send('error', { message: 'Room is full' });
+    
+    if (botsAdded > 0) {
+      console.log('[CrownRoom] Added', botsAdded, 'bot(s) to empty slots');
+      this.syncState();
+    } else {
+      client.send('error', { message: 'Room is full' });
+    }
   }
 
   private handleStartGame(client: Client): void {
@@ -415,21 +467,49 @@ export class CrownRoom extends Room<GameStateSchema> {
       client.send('error', { message: 'Only the admin can start the game' });
       return;
     }
-    if (this.state.phase !== 'WAITING_FOR_PLAYERS') {
+
+    // Allow starting in both waiting and dealing phases
+    if (this.state.phase !== 'WAITING_FOR_PLAYERS' && this.state.phase !== 'DEALING_INITIAL') {
       client.send('error', { message: 'Game already started' });
       return;
     }
-    if (this.clientToPlayer.size < 1) {
+
+    // Count total players (humans + bots) in state
+    const totalPlayers = this.state.players.size;
+    if (totalPlayers < 1) {
       client.send('error', { message: 'Need at least 1 player to start' });
       return;
     }
 
+    // Fill remaining slots with bots if needed
+    for (let i = 0; i < MAX_PLAYERS; i++) {
+      if (!this.state.players.has(String(i))) {
+        this.addBotToSlot(i);
+      }
+    }
+
+    // Select random trump declarer from all players
+    const playerIndices = Array.from(this.state.players.keys());
+    const randomIndex = playerIndices[Math.floor(Math.random() * playerIndices.length)];
+    const randomPlayer = this.state.players.get(randomIndex);
+    this.state.trumpDeclarer = randomPlayer ? randomPlayer.id : 0;
+    console.log('[CrownRoom] Trump declarer selected:', this.state.trumpDeclarer, 'player:', randomPlayer?.username);
+
     this.startGame();
+
+    // Broadcast game_started to all clients so they all redirect
+    this.broadcast('game_started', { roomId: this.roomId, roomCode: this.roomCode });
+
+    // Update registry phase so room no longer appears in available listing
+    roomRegistry.updatePhase(this.roomId, this.state.phase);
   }
 
   private addBotToSlot(slotIndex: number): void {
+    const botNames = ['Bot Alpha', 'Bot Beta', 'Bot Gamma', 'Bot Delta'];
+    
     const ps = new PlayerSchema();
     ps.id = slotIndex;
+    ps.username = botNames[slotIndex] || `Bot ${slotIndex}`;
     ps.team = slotIndex % 2 === 0 ? 0 : 1;
     ps.isBot = true;
     ps.sessionId = `bot-${slotIndex}`;

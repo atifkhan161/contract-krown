@@ -544,7 +544,8 @@ html, body {
   z-index: 1;
   width: 100%;
   max-width: min(90vw, 600px);
-  max-height: 85vh;
+  max-height: max(85vh, 85dvh);
+  height: auto;
   overflow-y: auto;
   background: var(--app-surface);
   border: 1px solid var(--app-surface-border);
@@ -553,6 +554,8 @@ html, body {
   transform: translateY(100%);
   transition: transform 0.3s ease;
   backdrop-filter: blur(8px);
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .modal-bottom-sheet-panel.open {
@@ -1284,6 +1287,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, var(--app-bg-gradient-start) 0%, var(--app-bg-gradient-mid) 50%, var(--app-bg-gradient-end) 100%);
 }
 
 .waiting-room-loading {
@@ -1307,6 +1311,7 @@ html, body {
   padding: 16px;
   background: linear-gradient(135deg, var(--app-bg-gradient-start) 0%, var(--app-bg-gradient-mid) 50%, var(--app-bg-gradient-end) 100%);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .waiting-room-header {
@@ -1337,6 +1342,54 @@ html, body {
   border: 1px solid var(--app-surface-border);
   border-radius: 12px;
   margin-bottom: 16px;
+  backdrop-filter: blur(8px);
+}
+
+.trump-declarer-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary-dark, #1a365d) 100%);
+  border-radius: 20px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); }
+  50% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.8); }
+}
+
+.trump-declarer-label {
+  font-size: 1rem;
+}
+
+.trump-declarer-name {
+  font-weight: 700;
+}
+
+.trump-declarer-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 0.8rem;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.trump-declarer-text {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--app-primary);
+  font-weight: 600;
+  margin-top: 2px;
 }
 
 .room-code-section {
@@ -1451,7 +1504,7 @@ html, body {
   gap: 8px;
   padding: 8px;
   border-radius: 8px;
-  background: var(--app-bg);
+  background: var(--app-surface);
   border: 1px solid var(--app-surface-border);
 }
 
@@ -1545,7 +1598,7 @@ html, body {
 .join-room-modal {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .join-room-title {
@@ -1559,7 +1612,7 @@ html, body {
 .join-room-code-input {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .join-room-label {
@@ -1571,6 +1624,12 @@ html, body {
 .join-room-input-row {
   display: flex;
   gap: 8px;
+  align-items: center;
+}
+
+.join-room-input-row .btn {
+  flex-shrink: 0;
+  min-height: 44px;
 }
 
 .join-room-code-field {
@@ -1581,11 +1640,28 @@ html, body {
   font-family: monospace;
   font-size: 18px;
   font-weight: 700;
+  background: var(--app-input-bg);
+  color: var(--app-text);
+  border: 1px solid var(--app-input-border);
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-height: 44px;
+}
+
+.join-room-code-field:focus {
+  outline: none;
+  border-color: var(--app-primary);
+  box-shadow: 0 0 0 3px var(--app-input-focus-ring);
+  background: var(--app-input-focus-bg);
 }
 
 .join-room-error {
   font-size: 12px;
   color: var(--app-error-text);
+  background: var(--app-error-bg);
+  border: 1px solid var(--app-error-border);
+  border-radius: 6px;
+  padding: 8px 12px;
 }
 
 .join-room-divider {
@@ -1622,72 +1698,156 @@ html, body {
   color: var(--app-text-muted);
   text-align: center;
   padding: 16px;
+  background: var(--app-surface);
+  border: 1px dashed var(--app-surface-border);
+  border-radius: 8px;
 }
 
 .join-room-rooms {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 200px;
+  max-height: min(200px, 35vh);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--app-surface-border) transparent;
+}
+
+.join-room-rooms::-webkit-scrollbar {
+  width: 4px;
+}
+
+.join-room-rooms::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.join-room-rooms::-webkit-scrollbar-thumb {
+  background: var(--app-surface-border);
+  border-radius: 2px;
 }
 
 .join-room-room-card {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   padding: 12px 16px;
-  background: var(--app-bg);
+  background: var(--app-surface);
   border: 1px solid var(--app-surface-border);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
   width: 100%;
   text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.join-room-room-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--app-primary);
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .join-room-room-card:hover {
   border-color: var(--app-primary);
   background: var(--app-surface-hover);
+  box-shadow: 0 2px 8px var(--app-glow-1, rgba(0, 0, 0, 0.1));
+}
+
+.join-room-room-card:hover::before {
+  opacity: 1;
+}
+
+.join-room-room-card:active {
+  transform: scale(0.98);
 }
 
 .join-room-room-code {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
   font-family: monospace;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
+  color: var(--app-primary);
+  line-height: 1;
+}
+
+.join-room-room-host {
+  font-size: 13px;
+  font-weight: 500;
   color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.2;
 }
 
 .join-room-room-players {
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--app-text-muted);
+  white-space: nowrap;
+  line-height: 1;
+  padding: 2px 8px;
+  background: var(--app-surface);
+  border-radius: 9999px;
+  border: 1px solid var(--app-surface-border);
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
-/* Landscape overrides for waiting room */
-@media (orientation: landscape) and (max-height: 500px) {
-  .waiting-room-view {
-    padding: 8px;
+/* ===== Responsive: Portrait-first Mobile Layout ===== */
+
+/* iPhone SE / small phones (≤375px width) */
+@media (max-width: 375px) {
+  .join-room-modal {
+    gap: 12px;
   }
 
-  .waiting-room-header {
-    margin-bottom: 8px;
+  .join-room-title {
+    font-size: 16px;
+  }
+
+  .join-room-code-field {
+    font-size: 16px;
+  }
+
+  .join-room-room-code {
+    font-size: 16px;
+    letter-spacing: 3px;
+  }
+
+  .join-room-room-host {
+    font-size: 12px;
+  }
+
+  .join-room-room-players {
+    font-size: 11px;
+  }
+
+  .join-room-rooms {
+    gap: 6px;
+  }
+
+  .waiting-room-view {
+    padding: 12px;
   }
 
   .waiting-room-title {
     font-size: 16px;
   }
 
-  .waiting-room-info {
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    flex-direction: row;
-    justify-content: space-between;
-  }
-
   .room-code-text {
-    font-size: 24px;
-    letter-spacing: 4px;
+    font-size: 28px;
+    letter-spacing: 5px;
   }
 
   .team-slots-container {
@@ -1699,13 +1859,363 @@ html, body {
   }
 
   .avatar-circle {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .player-name {
+    font-size: 12px;
+  }
+}
+
+/* iPhone 14 Pro Max portrait (430x932) — default portrait phones */
+@media (min-width: 376px) and (max-width: 440px) and (orientation: portrait) {
+  .modal-bottom-sheet-content {
+    padding: 16px 14px;
+  }
+
+  .join-room-modal {
+    gap: 10px;
+  }
+
+  .join-room-title {
+    font-size: 17px;
+  }
+
+  .join-room-code-field {
+    font-size: 17px;
+  }
+
+  .join-room-room-card {
+    padding: 10px 14px;
+    gap: 2px;
+  }
+
+  .join-room-room-code {
+    font-size: 17px;
+  }
+
+  .join-room-room-host {
+    font-size: 13px;
+  }
+
+  .join-room-rooms {
+    gap: 8px;
+  }
+
+  .waiting-room-view {
+    padding: 14px;
+  }
+
+  .waiting-room-info {
+    padding: 14px;
+    gap: 6px;
+  }
+
+  .room-code-text {
+    font-size: 30px;
+    letter-spacing: 5px;
+  }
+
+  .room-timer {
+    font-size: 15px;
+  }
+
+  .team-slots-container {
+    gap: 10px;
+  }
+
+  .avatar-circle {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+
+  .player-name {
+    font-size: 12px;
+  }
+}
+
+/* ===== Responsive: Landscape / Short-height Devices ===== */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* -- Modal Panel — */
+  .modal-bottom-sheet-panel {
+    max-height: 95vh;
+    max-width: min(95vw, 700px);
+    border-radius: 12px;
+  }
+
+  .modal-bottom-sheet-content {
+    padding: 12px;
+  }
+
+  /* -- Join Room Modal -- */
+  .join-room-modal {
+    gap: 8px;
+  }
+
+  .join-room-title {
+    font-size: 15px;
+  }
+
+  .join-room-label {
+    font-size: 12px;
+  }
+
+  .join-room-input-row {
+    gap: 6px;
+  }
+
+  .join-room-code-field {
+    font-size: 16px;
+    letter-spacing: 3px;
+    padding: 6px 8px;
+  }
+
+  .join-room-divider {
+    gap: 8px;
+    font-size: 12px;
+    padding: 4px 0;
+  }
+
+  .join-room-rooms-list {
+    gap: 6px;
+  }
+
+  .join-room-rooms-title {
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  .join-room-room-card {
+    padding: 8px 12px;
+    gap: 1px;
+    border-radius: 8px;
+  }
+
+  .join-room-room-code {
+    font-size: 15px;
+    letter-spacing: 3px;
+  }
+
+  .join-room-room-host {
+    font-size: 12px;
+  }
+
+  .join-room-room-players {
+    font-size: 11px;
+    padding: 1px 6px;
+  }
+
+  .join-room-empty {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  /* -- Waiting Room — */
+  .waiting-room-wrapper {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .waiting-room-view {
+    padding: 8px 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .waiting-room-header {
+    margin-bottom: 6px;
+  }
+
+  .waiting-room-title {
+    font-size: 14px;
+  }
+
+  .waiting-room-info {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+
+  .room-code-label {
+    font-size: 10px;
+  }
+
+  .room-code-text {
+    font-size: 22px;
+    letter-spacing: 4px;
+  }
+
+  .room-timer {
+    font-size: 14px;
+  }
+
+  .room-player-count {
+    font-size: 12px;
+  }
+
+  .team-slots-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .team-slot {
+    padding: 6px;
+    border-radius: 8px;
+  }
+
+  .team-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .player-slot {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .avatar-circle {
+    width: 26px;
+    height: 26px;
     font-size: 12px;
   }
 
   .player-name {
+    font-size: 10px;
+  }
+
+  .player-name-empty {
+    font-size: 10px;
+  }
+
+  .admin-badge {
+    font-size: 9px;
+  }
+
+  .admin-crown {
+    font-size: 10px;
+  }
+
+  .trump-declarer-badge {
+    font-size: 10px;
+  }
+
+  .trump-declarer-text {
+    font-size: 9px;
+  }
+
+  .trump-declarer-section {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+  }
+
+  .trump-declarer-label {
+    font-size: 0.85rem;
+  }
+
+  .waiting-room-controls {
+    gap: 6px;
+    padding-top: 6px;
+  }
+
+  .admin-controls {
+    gap: 6px;
+  }
+
+  .admin-controls .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-height: 32px;
+  }
+
+  .waiting-room-controls .btn-block {
+    padding: 6px 8px;
+    font-size: 13px;
+    min-height: 36px;
+  }
+}
+
+/* iPhone 14 Pro Max landscape (932x430) */
+@media (orientation: landscape) and (min-height: 400px) and (max-height: 450px) and (min-width: 850px) {
+  .modal-bottom-sheet-panel {
+    max-height: 90vh;
+    border-radius: 14px;
+  }
+
+  .modal-bottom-sheet-content {
+    padding: 14px;
+  }
+
+  .join-room-modal {
+    gap: 10px;
+  }
+
+  .join-room-title {
+    font-size: 16px;
+  }
+
+  .join-room-room-card {
+    padding: 10px 14px;
+  }
+
+  .join-room-room-code {
+    font-size: 16px;
+  }
+
+  .join-room-room-host {
+    font-size: 13px;
+  }
+
+  .join-room-room-players {
+    font-size: 12px;
+  }
+
+  .waiting-room-view {
+    padding: 10px 16px;
+  }
+
+  .waiting-room-info {
+    padding: 10px 14px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .room-code-text {
+    font-size: 26px;
+  }
+
+  .team-slots-container {
+    gap: 8px;
+  }
+
+  .avatar-circle {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+
+  .player-name {
     font-size: 11px;
+  }
+}
+
+/* Tall phones (>750px height portrait) */
+@media (min-height: 750px) and (orientation: portrait) {
+  .join-room-room-card {
+    padding: 14px 18px;
+  }
+
+  .join-room-room-code {
+    font-size: 19px;
+  }
+
+  .room-code-text {
+    font-size: 34px;
   }
 }
 

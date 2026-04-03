@@ -95,9 +95,9 @@ describe('CrownRoom', () => {
       expect(room.state.players.get('3')?.team).toBe(1);
     });
 
-    it('starts game when 4 players join', () => {
+    it('does NOT auto-start when 4 players join (admin must click Start Game)', () => {
       joinFourPlayers(room);
-      expect(room.state.phase).toBe('TRUMP_DECLARATION');
+      expect(room.state.phase).toBe('WAITING_FOR_PLAYERS');
     });
 
     it('deals 4 cards to each player when game starts', () => {
@@ -187,6 +187,93 @@ describe('CrownRoom', () => {
     it('cleans up timers on dispose', () => {
       room.onDispose();
       expect(room).toBeDefined();
+    });
+  });
+
+  describe('Waiting Room Flow', () => {
+    it('stays in WAITING_FOR_PLAYERS after second player joins (no auto-start)', () => {
+      const c1 = makeMockClient('c1');
+      const c2 = makeMockClient('c2');
+      room.onJoin(c1 as any, { username: 'Admin' });
+      room.onJoin(c2 as any, { username: 'Player2' });
+      expect(room.state.phase).toBe('WAITING_FOR_PLAYERS');
+    });
+
+    it('admin can manually start game by calling handleStartGame', () => {
+      const c1 = makeMockClient('c1');
+      room.onJoin(c1 as any, { username: 'Admin' });
+      room.onJoin(makeMockClient('c2') as any, { username: 'Player2' });
+      room.onJoin(makeMockClient('c3') as any, { username: 'Player3' });
+      room.onJoin(makeMockClient('c4') as any, { username: 'Player4' });
+      
+      (room as any).handleStartGame(c1 as any);
+      
+      expect(room.state.phase).not.toBe('WAITING_FOR_PLAYERS');
+    });
+
+    it('addBot fills all empty slots with bots', () => {
+      const c1 = makeMockClient('c1');
+      room.onJoin(c1 as any, { username: 'Admin' });
+      
+      (room as any).handleAddBot(c1 as any);
+      
+      const bots = Array.from(room.state.players.values()).filter(p => p.isBot);
+      expect(bots.length).toBe(3);
+      expect(bots.some(b => b.username === 'Bot Alpha')).toBe(true);
+      expect(bots.some(b => b.username === 'Bot Beta')).toBe(true);
+      expect(bots.some(b => b.username === 'Bot Gamma')).toBe(true);
+    });
+
+    it('new human replaces random bot slot (not admin slot 0)', () => {
+      const c1 = makeMockClient('c1');
+      room.onJoin(c1 as any, { username: 'Admin' });
+      (room as any).handleAddBot(c1 as any);
+      
+      const c2 = makeMockClient('c2');
+      room.onJoin(c2 as any, { username: 'Human2' });
+      
+      const humanPlayer = Array.from(room.state.players.values()).find(p => p.sessionId === 'c2');
+      expect(humanPlayer?.id).not.toBe(0);
+      expect(humanPlayer?.isBot).toBe(false);
+    });
+
+    it('admin slot 0 is never replaced when human joins', () => {
+      const c1 = makeMockClient('c1');
+      room.onJoin(c1 as any, { username: 'Admin' });
+      (room as any).handleAddBot(c1 as any);
+      
+      const c2 = makeMockClient('c2');
+      room.onJoin(c2 as any, { username: 'Human2' });
+      
+      const adminPlayer = room.state.players.get('0');
+      expect(adminPlayer?.sessionId).toBe('c1');
+      expect(adminPlayer?.username).toBe('Admin');
+    });
+
+    it('shuffle randomizes all 4 positions including bots', () => {
+      const c1 = makeMockClient('c1');
+      room.onJoin(c1 as any, { username: 'Admin' });
+      (room as any).handleAddBot(c1 as any);
+      
+      const before = Array.from(room.state.players.values()).map(p => ({ id: p.id, team: p.team }));
+      
+      (room as any).handleShuffleTeams(c1 as any);
+      
+      const after = Array.from(room.state.players.values()).map(p => ({ id: p.id, team: p.team }));
+      const teamsChanged = before.some((p, i) => p.team !== after[i].team);
+      expect(teamsChanged).toBe(true);
+    });
+
+    it('handleStartGame fills remaining slots with bots and starts game', () => {
+      const c1 = makeMockClient('c1');
+      room.onJoin(c1 as any, { username: 'Admin' });
+      room.onJoin(makeMockClient('c2') as any, { username: 'Player2' });
+      
+      (room as any).handleStartGame(c1 as any);
+      
+      const bots = Array.from(room.state.players.values()).filter(p => p.isBot);
+      expect(bots.length).toBe(2);
+      expect(room.state.phase).not.toBe('WAITING_FOR_PLAYERS');
     });
   });
 });

@@ -230,7 +230,6 @@ class App {
           },
           onStartGame: () => {
             this.onlineController?.startGame();
-            page.redirect(`/game/${roomId}`);
           },
           onReturnToLobby: handleReturnToLobby,
           onCopyCode: () => {}
@@ -241,6 +240,11 @@ class App {
 
         this.onlineController?.onWaitingRoomStateChange((state) => {
           waitingView.updateState(state);
+        });
+
+        this.onlineController?.setOnGameStarted((data) => {
+          console.log('[App] game_started received, redirecting to:', `/game/${data.roomId}`);
+          page.redirect(`/game/${data.roomId}`);
         });
       }).catch((err: any) => {
         console.error('Failed to create waiting room:', err);
@@ -280,7 +284,6 @@ class App {
           },
           onStartGame: () => {
             this.onlineController?.startGame();
-            page.redirect(`/game/${roomId}`);
           },
           onReturnToLobby: handleReturnToLobby,
           onCopyCode: () => {}
@@ -291,6 +294,11 @@ class App {
 
         this.onlineController?.onWaitingRoomStateChange((state) => {
           waitingView.updateState(state);
+        });
+
+        this.onlineController?.setOnGameStarted((data) => {
+          console.log('[App] game_started received (join), redirecting to:', `/game/${data.roomId}`);
+          page.redirect(`/game/${data.roomId}`);
         });
       }).catch((err: any) => {
         console.error('Failed to join waiting room:', err);
@@ -331,6 +339,44 @@ class App {
   private showGame(roomId: string): void {
     this.clearCurrentView();
 
+    if (!this.container) return;
+
+    const isAlreadyConnected = this.onlineController?.isConnectedToRoom(roomId);
+    
+    if (isAlreadyConnected) {
+      console.log('[App] Reusing existing connection for game room:', roomId);
+      this.setupGameViewFromExisting();
+    } else {
+      console.log('[App] Creating new controller for game room:', roomId);
+      this.setupNewGameController(roomId);
+    }
+  }
+
+  private setupGameViewFromExisting(): void {
+    if (!this.onlineController || !this.container) return;
+
+    const gameView = this.onlineController.getGameView();
+    gameView.setReturnToLobbyHandler(() => {
+      this.onlineController?.stop();
+      this.onlineController = null;
+      page.redirect('/lobby');
+    });
+    gameView.setRestartGameHandler(() => {
+      window.location.reload();
+    });
+
+    const viewContainer = document.createElement('div');
+    viewContainer.className = 'online-game-container';
+    this.container.appendChild(viewContainer);
+    this.currentView = viewContainer;
+
+    const gameViewContainer = gameView.getContainer();
+    if (gameViewContainer) {
+      viewContainer.appendChild(gameViewContainer);
+    }
+  }
+
+  private setupNewGameController(roomId: string): void {
     if (!this.container) return;
 
     this.onlineController = new OnlineGameController();

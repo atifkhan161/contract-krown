@@ -4,6 +4,7 @@
 import { Elysia, t } from 'elysia';
 import { join } from 'path';
 import { database, hashPassword } from './database.js';
+import { roomRegistry } from './room-registry.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const WS_PORT = Number(process.env.WS_PORT) || 2567;
@@ -25,34 +26,8 @@ const app = new Elysia()
   // API endpoints
   .get('/health', () => ({ status: 'ok' }))
   .get('/api/games', () => ({ games: [] }))
-  .get('/api/rooms', async () => {
-    const { matchMaker } = await import('colyseus');
-    const rooms = await matchMaker.query({ name: 'crown' });
-    const now = Date.now();
-
-    const available: Array<{ roomId: string; roomCode: string; playerCount: number; maxPlayers: number; adminSessionId: string }> = [];
-
-    for (const room of rooms) {
-      // Skip full rooms
-      if (room.clients >= 4) continue;
-      // Skip rooms that are past their waiting phase
-      if (room.locked) continue;
-
-      // Extract metadata from room presence
-      const meta = room.metadata as any;
-      if (meta?.phase && meta.phase !== 'WAITING_FOR_PLAYERS') continue;
-      if (meta?.roomExpiryAt && meta.roomExpiryAt <= now) continue;
-
-      available.push({
-        roomId: room.roomId,
-        roomCode: meta?.roomCode ?? room.roomId.substring(0, 4).toUpperCase(),
-        playerCount: room.clients,
-        maxPlayers: 4,
-        adminSessionId: meta?.adminSessionId ?? ''
-      });
-    }
-
-    return available;
+  .get('/api/rooms', () => {
+    return roomRegistry.listAvailable();
   })
   .post('/api/rooms', () => {
     const roomId = generateRoomId();
@@ -62,23 +37,20 @@ const app = new Elysia()
       httpUrl: `http://localhost:${PORT}`
     };
   })
-  .post('/api/rooms/resolve', async ({ body }) => {
+  .post('/api/rooms/resolve', ({ body }) => {
     const { code } = body;
     const upperCode = code.toUpperCase();
 
-    // Query matchMaker to find room by code in metadata
-    const { matchMaker } = await import('colyseus');
-    const rooms = await matchMaker.query({ name: 'crown' });
-    const match = rooms.find(r => (r.metadata as any)?.roomCode === upperCode);
+    const room = roomRegistry.getByCode(upperCode);
 
-    if (!match) {
+    if (!room) {
       return new Response(
-        JSON.stringify({ message: 'Room not found', searchedCode: upperCode, totalRooms: rooms.length }),
+        JSON.stringify({ message: 'Room not found', searchedCode: upperCode }),
         { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    return { roomId: match.roomId };
+    return { roomId: room.roomId };
   }, {
     body: t.Object({
       code: t.String()

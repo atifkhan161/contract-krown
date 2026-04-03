@@ -10,6 +10,7 @@ export interface OnlineGameCallbacks {
   onStateChange: (state: any) => void;
   onError: (code: number, message: string) => void;
   onLeave: (code: number) => void;
+  onGameStarted?: (data: { roomId: string; roomCode: string }) => void;
 }
 
 export class ColyseusClientWrapper {
@@ -160,6 +161,13 @@ export class ColyseusClientWrapper {
       console.log('[ColyseusClient] state.roomCode:', state.roomCode);
       console.log('[ColyseusClient] state.phase:', state.phase);
       this.callbacks.onStateChange(state);
+    });
+
+    this.room.onMessage('game_started', (data) => {
+      console.log('[ColyseusClient] game_started message received:', data);
+      if (this.callbacks.onGameStarted) {
+        this.callbacks.onGameStarted(data);
+      }
     });
 
     this.room.onError((code, message) => {
