@@ -139,6 +139,7 @@ const app = new Elysia()
   // Serve static files from dist/client
   .get('/styles.css', () => Bun.file(join(STATIC_DIR, 'styles.css')))
   .get('/app.js', () => Bun.file(join(STATIC_DIR, 'app.js')))
+  .get('/app.js.map', () => Bun.file(join(STATIC_DIR, 'app.js.map')))
   .get('/manifest.json', () => Bun.file(join(STATIC_DIR, 'manifest.json')))
 
   // SPA fallback - serve index.html for all other routes

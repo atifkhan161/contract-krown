@@ -7,11 +7,11 @@
   "scripts": {
     "dev": "bun run build:copy && concurrently -n \"CSS,JS,SERVER\" -c \"blue,green,yellow\" \"bun run dev:css\" \"bun run dev:js\" \"bun run --watch src/server/serve.ts\" --kill-others-on-fail",
     "dev:css": "tailwindcss -i src/ui/styles/main.css -o dist/client/styles.css --watch",
-    "dev:js": "bun build src/ui/app.ts --outdir dist/client --target browser --watch",
+    "dev:js": "bun build src/ui/app.ts --outdir dist/client --target browser --sourcemap=external --watch",
     "build": "bun run build:server && bun run build:client",
     "build:server": "bun build src/server/serve.ts --outdir dist/server --target bun",
     "build:client": "bun run build:js && bun run build:css && bun run build:copy",
-    "build:js": "bun build src/ui/app.ts --outdir dist/client --target browser",
+    "build:js": "bun build src/ui/app.ts --outdir dist/client --target browser --sourcemap=external",
     "build:css": "tailwindcss -i src/ui/styles/main.css -o dist/client/styles.css --minify",
     "build:copy": "cp public/index.html public/manifest.json dist/client/",
     "start": "bun run dist/server/index.js",
