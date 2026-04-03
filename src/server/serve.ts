@@ -10,6 +10,17 @@ const WS_PORT = Number(process.env.WS_PORT) || 2567;
 const STATIC_DIR = join(import.meta.dir, '../../dist/client');
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
 
+// --- Colyseus WebSocket Server ---
+import { Server } from 'colyseus';
+import { WebSocketTransport } from '@colyseus/ws-transport/build/WebSocketTransport.js';
+import { CrownRoom } from './rooms.js';
+
+const gameServer = new Server({
+  transport: new WebSocketTransport()
+});
+
+gameServer.define('crown', CrownRoom);
+
 const app = new Elysia()
   // API endpoints
   .get('/health', () => ({ status: 'ok' }))
@@ -50,6 +61,28 @@ const app = new Elysia()
       wsUrl: `ws://localhost:${WS_PORT}`,
       httpUrl: `http://localhost:${PORT}`
     };
+  })
+  .post('/api/rooms/resolve', async ({ body }) => {
+    const { code } = body;
+    const upperCode = code.toUpperCase();
+
+    // Query matchMaker to find room by code in metadata
+    const { matchMaker } = await import('colyseus');
+    const rooms = await matchMaker.query({ name: 'crown' });
+    const match = rooms.find(r => (r.metadata as any)?.roomCode === upperCode);
+
+    if (!match) {
+      return new Response(
+        JSON.stringify({ message: 'Room not found', searchedCode: upperCode, totalRooms: rooms.length }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return { roomId: match.roomId };
+  }, {
+    body: t.Object({
+      code: t.String()
+    })
   })
   .post('/api/games', () => ({ created: true }))
 
@@ -134,18 +167,23 @@ function generateToken(): string {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-// --- Colyseus WebSocket Server ---
-import { Server } from 'colyseus';
-import { WebSocketTransport } from '@colyseus/ws-transport/build/WebSocketTransport.js';
-import { CrownRoom } from './rooms.js';
+// Start WebSocket server
+await gameServer.listen(WS_PORT);
 
-const gameServer = new Server({
-  transport: new WebSocketTransport()
-});
-
-gameServer.define('crown', CrownRoom);
-
-gameServer.listen(WS_PORT);
-
-console.log(`Contract Crown HTTP server running at http://localhost:${app.server?.port}`);
+console.log(`Contract Crown HTTP server running at http://localhost:${PORT}`);
 console.log(`Contract Crown WebSocket server running at ws://localhost:${WS_PORT}`);
+console.log('Server ready for connections...');
+
+// Graceful shutdown for clean restarts during development
+const shutdown = async () => {
+  console.log('Shutting down gracefully...');
+  try {
+    await gameServer.gracefullyShutdown();
+  } catch (e) {
+    // Ignore errors during shutdown
+  }
+  process.exit(0);
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
