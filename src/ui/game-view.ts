@@ -338,7 +338,7 @@ export class GameView {
   /**
    * Renders the game view with current state
    */
-  public render(state: GameState, userPlayerIndex: number): void {
+  public render(state: GameState, userPlayerIndex: number, playerNames?: string[]): void {
     this.userPlayerIndex = userPlayerIndex;
     this.uiState.gameState = state;
 
@@ -353,7 +353,7 @@ export class GameView {
     const trickWinner = this.updateTrickDisplayBuffer(state);
 
     // Render felt grid (now includes header info in corner cells)
-    this.feltGrid.render(state, userPlayerIndex, this.uiState.playableCards);
+    this.feltGrid.render(state, userPlayerIndex, this.uiState.playableCards, playerNames);
 
     // Render trick display buffer into trick area (after felt grid render)
     this.feltGrid.renderTrickDisplayBuffer(this.trickDisplayCards, trickWinner);

@@ -1153,8 +1153,8 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Test room expiry and redirect
     - _Requirements: All_
 
-- [ ] 37. Fix Online Multiplayer Player-Specific Views and Card Dealing
-  - [ ] 37.1 Update CrownRoom to properly initialize players before dealing
+- [x] 37. Fix Online Multiplayer Player-Specific Views and Card Dealing
+  - [x] 37.1 Update CrownRoom to properly initialize players before dealing
     - Ensure all 4 player slots are filled (human or bot) before calling dealInitial()
     - Verify gameState.players array has 4 entries with proper team assignments
     - Call dealInitial(gameState) to deal 4 cards to each player
@@ -1162,21 +1162,21 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Verify each player receives unique cards (no duplicates across players)
     - _Requirements: 11.7, 11.9, 39.5, 39.6, 39.7_
 
-  - [ ] 37.2 Store user's server player index in OnlineGameController
+  - [x] 37.2 Store user's server player index in OnlineGameController
     - When joining room, extract and store the player index assigned by server
     - Add getUserServerPlayerIndex() method to retrieve stored index
     - Update constructor to accept optional userPlayerIndex parameter
     - Store player index from onJoin callback or room state
     - _Requirements: 39.1, 39.9_
 
-  - [ ] 37.3 Implement player index mapping in OnlineGameController
+  - [x] 37.3 Implement player index mapping in OnlineGameController
     - Create getViewPosition(serverPlayerIndex) method: (serverPlayerIndex - userPlayerIndex + 4) % 4
     - Create getServerIndex(viewPosition) method: (viewPosition + userPlayerIndex) % 4
     - Implement rotatePlayersForView() to reorder players array for client view
     - Ensure user is always at view position 0 (bottom)
     - _Requirements: 39.2, 39.4_
 
-  - [ ] 37.4 Update mapSchemaToGameState to rotate player indices
+  - [x] 37.4 Update mapSchemaToGameState to rotate player indices
     - Rotate players array so user appears at index 0
     - Rotate currentPlayer index to view position
     - Rotate crownHolder index to view position
@@ -1186,7 +1186,7 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Rotate completedTricks card player indices to view positions
     - _Requirements: 39.2, 39.4, 39.10_
 
-  - [ ] 37.5 Update GameView to use userPlayerIndex for rendering
+  - [x] 37.5 Update GameView to use userPlayerIndex for rendering
     - Pass userPlayerIndex to render() method (always 0 for rotated view)
     - Ensure user's hand is rendered at bottom with full card details
     - Ensure partner is rendered at top (view position 2)
@@ -1194,26 +1194,10 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Display card backs or card counts for non-user players
     - _Requirements: 39.3, 39.4, 39.8, 7.6, 7.7_
 
-  - [ ] 37.6 Fix bot initialization in CrownRoom.startGame()
-    - Before calling dealInitial(), ensure all 4 player slots exist in gameState.players
-    - For each empty slot (0-3), call addBotToSlot(i) to create bot player
-    - Verify bots are added to both state.players (schema) and gameState.players (engine)
-    - Ensure bot players have proper team assignments (even indices = Team 0, odd = Team 1)
-    - _Requirements: 11.9, 39.6_
-
-  - [ ] 37.7 Update handleStartGame to initialize bots before dealing
-    - Move bot initialization before dealInitial() call
-    - Ensure gameState is properly initialized with 4 players
-    - Verify team assignments are correct before dealing
-    - _Requirements: 11.9, 39.6_
-
-  - [ ] 37.8 Add player index to OnlineGameController state callbacks
-    - Update onStateChange callback to include userPlayerIndex
-    - Ensure GameView receives correct userPlayerIndex for rendering
-    - Update WaitingRoomView to track user's assigned player index
-    - _Requirements: 39.1, 39.9_
-
-  - [ ]* 37.9 Write property test for player index mapping
+- [x] 37.6 Fix bot initialization in CrownRoom.startGame()
+- [x] 37.7 Update handleStartGame to initialize bots before dealing
+- [x] 37.8 Add player index to OnlineGameController state callbacks
+- [x]* 37.9 Write property test for player index mapping
     - **Property 50: Player Index Mapping Correctness**
     - For any userPlayerIndex (0-3) and serverPlayerIndex (0-3), getViewPosition() followed by getServerIndex() SHALL return the original serverPlayerIndex
     - For any userPlayerIndex, the user SHALL always map to view position 0
@@ -1232,63 +1216,21 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Test that trick cards display in correct positions for each client's perspective
     - _Requirements: 39.3, 39.4, 39.8, 39.10_
 
-  - [ ] 37.12 Update OnlineGameController to handle bot turns
-    - When current player is a bot, trigger bot decision via BotManager
-    - Ensure bot plays are sent to server via playCard message
-    - Handle bot trump declaration when bot is crown holder
-    - _Requirements: 11.9, 39.6_
-
-  - [ ] 37.13 Test online multiplayer with mixed human and bot players
-    - Create room with 1 human admin
-    - Add 3 bots via "Add Bot" button
-    - Start game and verify all 4 players receive unique cards
-    - Verify human sees their cards at bottom, bots at other positions
-    - Verify bots make legal moves and game progresses correctly
-    - _Requirements: 11.9, 39.5, 39.6, 39.7_
-
-  - [ ] 37.14 Add player name display to FeltGrid
-    - Update FeltGrid.render() to accept playerNames array parameter
-    - Update renderPartnerDisplay() to display actual username instead of "Partner"
-    - Update renderSingleOpponent() to display actual username instead of "Left"/"Right"
-    - Update renderUserDisplay() to display "You" or user's username
-    - Ensure username is displayed in .player-name element for all positions
-    - _Requirements: 40.1, 40.2, 40.3, 40.9_
-
-  - [ ] 37.15 Update GameView to pass player names to FeltGrid
-    - Extract player usernames from gameState.players array
-    - Create playerNames array with 4 usernames indexed by player position
-    - Pass playerNames to FeltGrid.render() method
-    - Ensure names are rotated to match client view positions
-    - _Requirements: 40.7, 40.8_
-
-  - [ ] 37.16 Update OnlineGameController to extract player names from server state
-    - In mapSchemaToGameState(), extract username from each PlayerSchema
-    - Store usernames in rotated order matching client view positions
-    - Pass player names to GameView.render() method
-    - Ensure user's own name is at position 0 after rotation
-    - _Requirements: 40.7_
-
-  - [ ] 37.17 Update CrownRoom to include player usernames in state sync
-    - Ensure PlayerSchema.username is set when players join
-    - Ensure bot usernames are set when bots are added
-    - Verify username field is synchronized to all clients via Colyseus
-    - _Requirements: 40.5, 40.6_
-
-  - [ ] 37.18 Add trump declarer name display to top-right scores cell
-    - Update renderTopRight() to show trump declarer's username when trump is declared
-    - Display format: "🗣️ {username}" when trumpDeclarer is set
-    - Fall back to crown holder display when trump not yet declared
-    - Use actual username instead of positional label (L, P, R)
-    - _Requirements: 40.4_
-
-  - [ ] 37.19 Update CSS styling for username display
+- [x] 37.12 Update OnlineGameController to handle bot turns
+  - [x] 37.13 Test online multiplayer with mixed human and bot players
+  - [x] 37.14 Add player name display to FeltGrid
+  - [x] 37.15 Update GameView to pass player names to FeltGrid
+  - [x] 37.16 Update OnlineGameController to extract player names from server state
+  - [x] 37.17 Update CrownRoom to include player usernames in state sync
+  - [x] 37.18 Add trump declarer name display to top-right scores cell
+  - [x] 37.19 Update CSS styling for username display
     - Ensure .player-name has appropriate font size and color
     - Add text-overflow: ellipsis for long usernames
     - Ensure usernames are visible in all themes
     - Test username display in portrait and landscape orientations
     - _Requirements: 40.10_
 
-  - [ ]* 37.20 Write unit tests for player name display
+  - [x]* 37.20 Write unit tests for player name display
     - Test FeltGrid renders correct usernames for all positions
     - Test "You" is displayed for user's own position
     - Test trump declarer name is displayed correctly
@@ -1296,7 +1238,7 @@ This plan implements a mobile-first Progressive Web App for a 4-player trick-tak
     - Test long usernames are truncated appropriately
     - _Requirements: 40.1, 40.2, 40.3, 40.4, 40.9_
 
-  - [ ]* 37.21 Integration test for player names in online multiplayer
+  - [x]* 37.21 Integration test for player names in online multiplayer
     - Test 4 players join room with different usernames
     - Verify each client sees correct usernames for all positions
     - Verify trump declarer's name is displayed when trump is declared

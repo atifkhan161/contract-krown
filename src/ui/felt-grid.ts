@@ -93,7 +93,7 @@ export class FeltGrid {
    * Renders the felt grid with current game state
    * Note: Trick area is NOT rendered here - use renderTrickDisplayBuffer() separately
    */
-  public render(state: GameState, userPlayerIndex: number, playableCards: Card[]): void {
+  public render(state: GameState, userPlayerIndex: number, playableCards: Card[], playerNames?: string[]): void {
     if (!this.container) return;
 
     // Clear previous content (except trick area - handled by renderTrickDisplayBuffer)
@@ -101,13 +101,13 @@ export class FeltGrid {
 
     // Render corner cells
     this.renderTopLeft(state);
-    this.renderPartnerDisplay(state, userPlayerIndex);
-    this.renderTopRight(state, userPlayerIndex);
-    this.renderOpponentDisplays(state, userPlayerIndex);
+    this.renderPartnerDisplay(state, userPlayerIndex, playerNames);
+    this.renderTopRight(state, userPlayerIndex, playerNames);
+    this.renderOpponentDisplays(state, userPlayerIndex, playerNames);
     // Note: Trick area is rendered separately via renderTrickDisplayBuffer()
     this.renderBottomLeft(state);
     this.renderUserHand(state, userPlayerIndex, playableCards);
-    this.renderUserDisplay(state, userPlayerIndex);
+    this.renderUserDisplay(state, userPlayerIndex, playerNames);
     this.renderBottomRight();
   }
 
@@ -157,7 +157,7 @@ export class FeltGrid {
   /**
    * Renders partner display at top-center position
    */
-  private renderPartnerDisplay(state: GameState, userPlayerIndex: number): void {
+  private renderPartnerDisplay(state: GameState, userPlayerIndex: number, playerNames?: string[]): void {
     if (!this.partnerDisplay) return;
 
     const partnerIndex = (userPlayerIndex + 2) % 4;
@@ -166,6 +166,7 @@ export class FeltGrid {
     const isCrownHolder = state.crownHolder === partnerIndex;
     const teamNumber = partner.team === 0 ? 'Team 1' : 'Team 2';
     const teamClass = partner.team === 0 ? 'team-0' : 'team-1';
+    const partnerName = playerNames?.[partnerIndex] || 'Partner';
 
     this.partnerDisplay.innerHTML = `
       <div class="player-info ${isActive ? 'active' : ''} ${isCrownHolder ? 'crown-holder' : ''}">
@@ -173,7 +174,7 @@ export class FeltGrid {
           ${isCrownHolder ? '<span class="crown-icon">👑</span>' : ''}
           ${isActive ? '<div class="active-ring"></div>' : ''}
         </div>
-        <div class="player-name">Partner</div>
+        <div class="player-name">${partnerName}</div>
         <div class="team-label ${teamClass}">${teamNumber}</div>
         <div class="card-count">${partner.hand.length} cards</div>
       </div>
@@ -183,14 +184,14 @@ export class FeltGrid {
   /**
    * Renders top-right corner: Crown holder + team scores + trump declarer
    */
-  private renderTopRight(state: GameState, userPlayerIndex: number): void {
+  private renderTopRight(state: GameState, userPlayerIndex: number, playerNames?: string[]): void {
     if (!this.topRight) return;
 
-    const crownHolderName = this.getCrownHolderName(state.crownHolder, userPlayerIndex);
+    const crownHolderName = this.getCrownHolderName(state.crownHolder, userPlayerIndex, playerNames);
     const team0Score = state.scores[0];
     const team1Score = state.scores[1];
     const trumpDeclarerName = state.trumpDeclarer !== null
-      ? this.getCrownHolderName(state.trumpDeclarer, userPlayerIndex)
+      ? this.getCrownHolderName(state.trumpDeclarer, userPlayerIndex, playerNames)
       : null;
 
     this.topRight.innerHTML = `
@@ -274,12 +275,12 @@ export class FeltGrid {
   /**
    * Gets crown holder name relative to user
    */
-  private getCrownHolderName(crownHolder: number, userPlayerIndex: number): string {
+  private getCrownHolderName(crownHolder: number, userPlayerIndex: number, playerNames?: string[]): string {
     const positionMap: Record<number, string> = {
-      [userPlayerIndex]: 'You',
-      [(userPlayerIndex + 1) % 4]: 'L',
-      [(userPlayerIndex + 2) % 4]: 'P',
-      [(userPlayerIndex + 3) % 4]: 'R'
+      [userPlayerIndex]: playerNames?.[userPlayerIndex] || 'You',
+      [(userPlayerIndex + 1) % 4]: playerNames?.[(userPlayerIndex + 1) % 4] || 'Left',
+      [(userPlayerIndex + 2) % 4]: playerNames?.[(userPlayerIndex + 2) % 4] || 'Partner',
+      [(userPlayerIndex + 3) % 4]: playerNames?.[(userPlayerIndex + 3) % 4] || 'Right'
     };
     return positionMap[crownHolder] || `P${crownHolder}`;
   }
@@ -287,14 +288,14 @@ export class FeltGrid {
   /**
    * Renders opponent displays at left and right positions
    */
-  private renderOpponentDisplays(state: GameState, userPlayerIndex: number): void {
+  private renderOpponentDisplays(state: GameState, userPlayerIndex: number, playerNames?: string[]): void {
     if (!this.leftOpponentDisplay || !this.rightOpponentDisplay) return;
 
     const leftOpponentIndex = (userPlayerIndex + 1) % 4;
     const rightOpponentIndex = (userPlayerIndex + 3) % 4;
 
-    this.renderSingleOpponent(this.leftOpponentDisplay, state.players[leftOpponentIndex], state, leftOpponentIndex, 'Left');
-    this.renderSingleOpponent(this.rightOpponentDisplay, state.players[rightOpponentIndex], state, rightOpponentIndex, 'Right');
+    this.renderSingleOpponent(this.leftOpponentDisplay, state.players[leftOpponentIndex], state, leftOpponentIndex, playerNames?.[leftOpponentIndex] || 'Left');
+    this.renderSingleOpponent(this.rightOpponentDisplay, state.players[rightOpponentIndex], state, rightOpponentIndex, playerNames?.[rightOpponentIndex] || 'Right');
   }
 
   /**
@@ -326,37 +327,10 @@ export class FeltGrid {
   }
 
   /**
-   * Renders the trick area in the center
-   * Now supports circular card arrangement with player labels
+   * Renders the trick area in the center (now handled by renderTrickDisplayBuffer)
    */
-  private renderTrickArea(state: GameState): void {
-    if (!this.trickArea) return;
-
-    const trickCards = state.currentTrick.cards;
-    
-    if (trickCards.length === 0) {
-      this.trickArea.innerHTML = '<div class="trick-placeholder">Play a card</div>';
-      return;
-    }
-
-    // Render cards in circular arrangement with player labels
-    let cardsHtml = '<div class="trick-cards">';
-    for (const playedCard of trickCards) {
-      const position = this.getCardPosition(playedCard.player);
-      const playerLabel = this.getPlayerLabel(playedCard.player);
-      const isWinner = state.currentTrick.winner === playedCard.player;
-      
-      cardsHtml += `
-        <div class="trick-card-slot ${position}">
-          ${this.renderCard(playedCard.card, false, false)}
-          <span class="card-player-label ${isWinner ? 'winner' : ''}">${playerLabel}</span>
-        </div>
-      `;
-    }
-    cardsHtml += '</div>';
-
-    this.trickArea.innerHTML = cardsHtml;
-  }
+  // Note: renderTrickArea is now handled by renderTrickDisplayBuffer
+  // Keeping this as a placeholder for potential future use
 
   /**
    * Renders trick cards from a display buffer (used during animations)
@@ -461,7 +435,7 @@ export class FeltGrid {
   /**
    * Renders user display element
    */
-  private renderUserDisplay(state: GameState, userPlayerIndex: number): void {
+  private renderUserDisplay(state: GameState, userPlayerIndex: number, playerNames?: string[]): void {
     if (!this.userDisplay) return;
 
     const user = state.players[userPlayerIndex];
@@ -469,6 +443,7 @@ export class FeltGrid {
     const isCrownHolder = state.crownHolder === userPlayerIndex;
     const teamNumber = user.team === 0 ? 'Team 1' : 'Team 2';
     const teamClass = user.team === 0 ? 'team-0' : 'team-1';
+    const userName = playerNames?.[userPlayerIndex] || 'You';
 
     this.userDisplay.innerHTML = `
       <div class="player-info ${isActive ? 'active' : ''} ${isCrownHolder ? 'crown-holder' : ''}">
@@ -476,7 +451,7 @@ export class FeltGrid {
           ${isCrownHolder ? '<span class="crown-icon">👑</span>' : ''}
           ${isActive ? '<div class="active-ring"></div>' : ''}
         </div>
-        <div class="player-name">You</div>
+        <div class="player-name">${userName}</div>
         <div class="team-label ${teamClass}">${teamNumber}</div>
         <div class="card-count">${user.hand.length} cards</div>
       </div>

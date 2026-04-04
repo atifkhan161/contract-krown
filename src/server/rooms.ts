@@ -74,6 +74,7 @@ export class CrownRoom extends Room<GameStateSchema> {
       phase: 'WAITING_FOR_PLAYERS',
       createdAt: now
     });
+    console.log('[CrownRoom] Registered room in registry, roomCode:', this.roomCode, 'roomId:', this.roomId);
 
     // Start expiry check timer
     this.expiryCheckTimer = setInterval(() => {
@@ -287,7 +288,10 @@ export class CrownRoom extends Room<GameStateSchema> {
       setFirstTrickLeader(this.gameState);
       this.gameState.phase = 'TRICK_PLAY';
       this.syncState();
+
+      // If next crown holder is a bot (for subsequent rounds), auto-declare
       this.maybeTriggerBotTurn();
+      this.maybeTriggerBotTrumpDeclaration();
     } catch (err: any) {
       client.send('error', { message: err.message });
     }
@@ -372,6 +376,45 @@ export class CrownRoom extends Room<GameStateSchema> {
     dealInitial(this.gameState);
     this.state.phase = this.gameState.phase;
     this.syncState();
+
+    // If crown holder is a bot, auto-declare trump
+    this.maybeTriggerBotTrumpDeclaration();
+  }
+
+  private maybeTriggerBotTrumpDeclaration(): void {
+    // Only trigger if we're in TRUMP_DECLARATION phase
+    if (this.gameState.phase !== 'TRUMP_DECLARATION') return;
+
+    const crownHolder = this.gameState.crownHolder;
+    const crownHolderPlayer = this.gameState.players[crownHolder];
+
+    // Only trigger if crown holder is a bot
+    if (!crownHolderPlayer || !crownHolderPlayer.isBot) {
+      console.log('[CrownRoom] Crown holder is not a bot, waiting for human declaration');
+      return;
+    }
+
+    console.log('[CrownRoom] Crown holder is bot, auto-declaring trump');
+
+    // Bot selects trump suit
+    const selectedSuit = this.botManager.selectTrumpSuit(crownHolderPlayer.hand);
+
+    // Declare trump
+    declareTrump(this.gameState, selectedSuit);
+
+    // Deal final cards
+    dealFinal(this.gameState);
+
+    // Set first trick leader
+    setFirstTrickLeader(this.gameState);
+
+    // Transition to trick play
+    this.gameState.phase = 'TRICK_PLAY';
+    this.state.phase = 'TRICK_PLAY';
+    this.syncState();
+
+    // Trigger bot turn if needed
+    this.maybeTriggerBotTurn();
   }
 
   // --- Waiting Room Handlers ---

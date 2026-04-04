@@ -2,6 +2,7 @@
 // Feature: contract-crown-game, Property 28: Session Token Expiration
 // Feature: contract-crown-game, Property 29: Expired Token Redirect
 
+import '@tests/setup.js';
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
 import { SessionManager } from '@src/session/session-manager.js';

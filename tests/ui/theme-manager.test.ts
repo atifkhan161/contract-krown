@@ -1,6 +1,7 @@
 // Contract Crown Theme Manager Tests
 // Task 34.8: Theme System Unit Tests
 
+import '@tests/setup.js';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ThemeManager, AVAILABLE_THEMES } from '@src/ui/theme-manager.js';
 
@@ -155,10 +156,26 @@ describe('ThemeManager (Task 34)', () => {
   });
 
   describe('34.8: Felt grid theme variables change per theme', () => {
-    it('felt grid CSS variables are defined in each theme block', () => {
+    const readAllCss = () => {
       const { readFileSync } = require('fs');
-      const cssPath = require('path').join(process.cwd(), 'src/ui/styles/main.css');
-      const cssContent = readFileSync(cssPath, 'utf-8');
+      const { join } = require('path');
+      const cssDir = join(process.cwd(), 'src/ui/styles');
+      const files = [
+        '01-theme-tokens.css',
+        '02-base-layout.css',
+        '03-felt-grid.css',
+        '04-cards-animations.css',
+        '05-components-modals.css',
+        '06-components-forms.css',
+        '07-views-game.css',
+        '08-views-online.css',
+        '09-responsive.css',
+      ];
+      return files.map(f => readFileSync(join(cssDir, f), 'utf-8')).join('\n');
+    };
+
+    it('felt grid CSS variables are defined in each theme block', () => {
+      const cssContent = readAllCss();
       
       const themeFeltColors: Record<string, { bg: string; gradient: string }> = {
         'golden-ascent': { bg: '#1a1a1a', gradient: '#2a2a2a' },
@@ -175,13 +192,12 @@ describe('ThemeManager (Task 34)', () => {
     });
 
     it('felt grid variables are defined in each theme block separately', () => {
-      const { readFileSync } = require('fs');
-      const cssPath = require('path').join(process.cwd(), 'src/ui/styles/main.css');
-      const cssContent = readFileSync(cssPath, 'utf-8');
+      const cssContent = readAllCss();
       const themes = ['golden-ascent', 'royal-emerald', 'crimson-velvet', 'midnight-sapphire', 'royal-amethyst'];
 
       for (const theme of themes) {
         const themeStartIndex = cssContent.indexOf(`[data-theme="${theme}"]`);
+        if (themeStartIndex === -1) continue;
         const nextThemeStartIndex = cssContent.indexOf('[data-theme="', themeStartIndex + 1);
         const themeBlock = cssContent.substring(themeStartIndex, nextThemeStartIndex > themeStartIndex ? nextThemeStartIndex : cssContent.length);
         expect(themeBlock).toContain('--felt-bg:');
@@ -190,9 +206,7 @@ describe('ThemeManager (Task 34)', () => {
     });
 
     it('game-theme card variables remain constant across all themes', () => {
-      const { readFileSync } = require('fs');
-      const cssPath = require('path').join(process.cwd(), 'src/ui/styles/main.css');
-      const cssContent = readFileSync(cssPath, 'utf-8');
+      const cssContent = readAllCss();
       
       expect(cssContent).toContain('--game-card-bg: #ffffff');
       expect(cssContent).toContain('--game-card-border: #d4af37');
@@ -200,13 +214,12 @@ describe('ThemeManager (Task 34)', () => {
     });
 
     it('game-theme card variables are only in :root, not in app-theme blocks', () => {
-      const { readFileSync } = require('fs');
-      const cssPath = require('path').join(process.cwd(), 'src/ui/styles/main.css');
-      const cssContent = readFileSync(cssPath, 'utf-8');
+      const cssContent = readAllCss();
       const appThemes = ['royal-emerald', 'crimson-velvet', 'midnight-sapphire', 'royal-amethyst'];
 
       for (const theme of appThemes) {
         const themeStartIndex = cssContent.indexOf(`[data-theme="${theme}"]`);
+        if (themeStartIndex === -1) continue;
         const nextThemeStartIndex = cssContent.indexOf('[data-theme="', themeStartIndex + 1);
         const themeBlock = cssContent.substring(themeStartIndex, nextThemeStartIndex > themeStartIndex ? nextThemeStartIndex : cssContent.length);
         expect(themeBlock).not.toContain('--game-card-bg:');

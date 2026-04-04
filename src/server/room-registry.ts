@@ -59,6 +59,7 @@ class RoomRegistry {
     maxPlayers: number;
     adminSessionId: string;
   }> {
+    console.log('[RoomRegistry] listAvailable called, total rooms:', this.rooms.size);
     const now = Date.now();
     const available: Array<{
       roomId: string;
@@ -70,6 +71,7 @@ class RoomRegistry {
     }> = [];
 
     for (const room of this.rooms.values()) {
+      console.log('[RoomRegistry] Checking room:', room.roomCode, 'phase:', room.phase, 'playerCount:', room.playerCount);
       // Only rooms waiting for players
       if (room.phase !== 'WAITING_FOR_PLAYERS') continue;
       // Skip full rooms
@@ -88,11 +90,15 @@ class RoomRegistry {
       });
     }
 
+    console.log('[RoomRegistry] Available rooms:', available.map(r => r.roomCode));
     return available;
   }
 
   getByCode(code: string): RoomInfo | undefined {
+    console.log('[RoomRegistry] getByCode called, code:', code);
+    console.log('[RoomRegistry] Available rooms:', Array.from(this.rooms.values()).map(r => r.roomCode));
     for (const room of this.rooms.values()) {
+      console.log('[RoomRegistry] Checking room:', room.roomCode, '===', code, '?', room.roomCode === code);
       if (room.roomCode === code) return room;
     }
     return undefined;
