@@ -90,22 +90,8 @@ export class WaitingRoomView {
       </div>
 
       <div class="team-slots-container">
-        <div class="team-slot team-slot-0">
-          <div class="team-slot-header">
-            <span class="team-badge team-badge-0">Team 0</span>
-          </div>
-          <div class="team-slot-players" id="wr-team-0">
-            ${this.renderTeamSlots(0)}
-          </div>
-        </div>
-        <div class="team-slot team-slot-1">
-          <div class="team-slot-header">
-            <span class="team-badge team-badge-1">Team 1</span>
-          </div>
-          <div class="team-slot-players" id="wr-team-1">
-            ${this.renderTeamSlots(1)}
-          </div>
-        </div>
+        ${this.renderTeamSection(0)}
+        ${this.renderTeamSection(1)}
       </div>
 
       <div class="waiting-room-controls" id="wr-controls">
@@ -117,6 +103,19 @@ export class WaitingRoomView {
     this.startCountdown();
 
     return this.container;
+  }
+
+  private renderTeamSection(team: 0 | 1): string {
+    return `
+      <div class="team-section">
+        <div class="team-section-header">
+          <span class="team-badge team-badge-${team}">Team ${team}</span>
+        </div>
+        <div class="team-players-list" id="wr-team-${team}">
+          ${this.renderTeamSlots(team)}
+        </div>
+      </div>
+    `;
   }
 
   private renderTeamSlots(team: 0 | 1): string {
@@ -258,6 +257,17 @@ export class WaitingRoomView {
       const team1El = this.container.querySelector('#wr-team-1');
       if (team0El) team0El.innerHTML = this.renderTeamSlots(0);
       if (team1El) team1El.innerHTML = this.renderTeamSlots(1);
+    }
+
+    // Update team sections (re-render entire sections if player structure changed)
+    if (updates.players || updates.isAdmin) {
+      const slotsContainer = this.container?.querySelector('.team-slots-container');
+      if (slotsContainer) {
+        slotsContainer.innerHTML = `
+          ${this.renderTeamSection(0)}
+          ${this.renderTeamSection(1)}
+        `;
+      }
     }
 
     // Update admin controls

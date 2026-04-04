@@ -38,18 +38,16 @@ export class JoinRoomModal {
 
         <div class="join-room-code-input">
           <label class="join-room-label" for="jr-code-input">Enter Room Code</label>
-          <div class="join-room-input-row">
-            <input
-              type="text"
-              id="jr-code-input"
-              class="input input-bordered input-sm join-room-code-field"
-              placeholder="e.g. A3KF"
-              maxlength="4"
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <button class="btn btn-primary btn-sm" id="jr-join-btn">Join</button>
-          </div>
+          <input
+            type="text"
+            id="jr-code-input"
+            class="input input-bordered join-room-code-field"
+            placeholder="e.g. A3KF"
+            maxlength="4"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="btn btn-primary join-room-join-btn" id="jr-join-btn">Join</button>
           <p class="join-room-error" id="jr-error-text" style="display: none;"></p>
         </div>
 
@@ -86,7 +84,7 @@ export class JoinRoomModal {
     if (!sheet) return;
 
     const codeInput = sheet.querySelector('#jr-code-input') as HTMLInputElement;
-    const joinBtn = sheet.querySelector('#jr-join-btn') as HTMLElement;
+    const joinBtn = sheet.querySelector('.join-room-join-btn') as HTMLElement;
 
     joinBtn?.addEventListener('click', () => {
       const code = codeInput?.value.trim().toUpperCase();

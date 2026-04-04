@@ -1525,4 +1525,232 @@
   .theme-option-active-badge {
     font-size: 9px;
   }
+
+  /* Waiting Room Landscape - Horizontal Layout */
+  .waiting-room-view {
+    padding: 8px 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .waiting-room-header {
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .waiting-room-title {
+    font-size: 14px;
+  }
+
+  .waiting-room-info {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .room-code-section {
+    flex-direction: row;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .room-code-label {
+    font-size: 9px;
+  }
+
+  .room-code-text {
+    font-size: 20px;
+    letter-spacing: 3px;
+  }
+
+  .room-timer {
+    font-size: 13px;
+    gap: 4px;
+  }
+
+  .room-timer .timer-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .room-player-count {
+    font-size: 12px;
+  }
+
+  .trump-declarer-section {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
+
+  .trump-declarer-label {
+    font-size: 0.8rem;
+  }
+
+  .team-slots-container {
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex: 1;
+  }
+
+  .team-section {
+    flex: 1;
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .team-section-header {
+    margin-bottom: 4px;
+  }
+
+  .team-badge {
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+
+  .team-players-list {
+    gap: 6px;
+  }
+
+  .player-slot {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .avatar-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .player-name {
+    font-size: 10px;
+  }
+
+  .player-name-empty {
+    font-size: 10px;
+  }
+
+  .admin-badge {
+    font-size: 9px;
+  }
+
+  .admin-crown {
+    font-size: 10px;
+  }
+
+  .trump-declarer-badge {
+    font-size: 10px;
+  }
+
+  .trump-declarer-text {
+    font-size: 9px;
+  }
+
+  .waiting-room-controls {
+    gap: 6px;
+    padding-top: 6px;
+  }
+
+  .admin-controls {
+    gap: 6px;
+  }
+
+  .admin-controls .btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+
+  .waiting-room-controls .btn-block {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+
+  /* Join Room Modal Landscape - Horizontal Layout */
+  .join-room-modal {
+    gap: 8px;
+  }
+
+  .join-room-title {
+    font-size: 15px;
+  }
+
+  .join-room-code-input {
+    flex-direction: row;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .join-room-label {
+    display: none; /* Hide label in landscape to save space */
+  }
+
+  .join-room-code-field {
+    font-size: 15px;
+    letter-spacing: 3px;
+    padding: 8px;
+    min-height: 40px;
+    flex: 1;
+  }
+
+  .join-room-join-btn {
+    min-height: 40px;
+    padding: 8px 16px;
+    font-size: 14px;
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .join-room-divider {
+    gap: 8px;
+    font-size: 11px;
+    padding: 2px 0;
+  }
+
+  .join-room-rooms-list {
+    gap: 6px;
+  }
+
+  .join-room-rooms-title {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+
+  .join-room-room-card {
+    padding: 8px 12px;
+    gap: 8px;
+    border-radius: 8px;
+    min-height: 48px;
+  }
+
+  .join-room-room-code {
+    font-size: 14px;
+    letter-spacing: 2px;
+    min-width: 48px;
+    padding: 3px 6px;
+  }
+
+  .join-room-room-host {
+    font-size: 12px;
+  }
+
+  .join-room-room-players {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .join-room-empty {
+    font-size: 12px;
+    padding: 12px;
+  }
+
+  .join-room-error {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
 }

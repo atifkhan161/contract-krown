@@ -170,16 +170,16 @@
   color: var(--app-text-muted);
 }
 
-/* Team Slots */
+/* Team Slots - Single Column Layout */
 .team-slots-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   margin-bottom: 16px;
   flex: 1;
 }
 
-.team-slot {
+.team-section {
   background: var(--app-surface);
   border: 1px solid var(--app-surface-border);
   border-radius: 12px;
@@ -189,9 +189,16 @@
   gap: 8px;
 }
 
-.team-slot-header {
+.team-section-header {
   display: flex;
   justify-content: center;
+}
+
+.team-players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
 }
 
 .team-badge {
@@ -213,13 +220,6 @@
   background: var(--game-team-1-bg, rgba(239, 68, 68, 0.2));
   color: var(--game-team-1-text, #f87171);
   border: 1px solid var(--game-team-1-border, rgba(239, 68, 68, 0.4));
-}
-
-.team-slot-players {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
 }
 
 .player-slot {
@@ -336,7 +336,7 @@
 .join-room-code-input {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .join-room-label {
@@ -345,19 +345,8 @@
   color: var(--app-text);
 }
 
-.join-room-input-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.join-room-input-row .btn {
-  flex-shrink: 0;
-  min-height: 44px;
-}
-
 .join-room-code-field {
-  flex: 1;
+  width: 100%;
   text-transform: uppercase;
   letter-spacing: 4px;
   text-align: center;
@@ -369,7 +358,8 @@
   border: 1px solid var(--app-input-border);
   border-radius: 8px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  min-height: 44px;
+  min-height: 48px;
+  padding: 12px;
 }
 
 .join-room-code-field:focus {
@@ -377,6 +367,15 @@
   border-color: var(--app-primary);
   box-shadow: 0 0 0 3px var(--app-input-focus-ring);
   background: var(--app-input-focus-bg);
+}
+
+.join-room-join-btn {
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
 }
 
 .join-room-error {
@@ -453,9 +452,10 @@
 
 .join-room-room-card {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 12px 16px;
   background: var(--app-surface);
   border: 1px solid var(--app-surface-border);
@@ -466,6 +466,7 @@
   text-align: left;
   position: relative;
   overflow: hidden;
+  min-height: 56px;
 }
 
 .join-room-room-card::before {
@@ -495,22 +496,28 @@
 }
 
 .join-room-room-code {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
   font-family: monospace;
-  letter-spacing: 4px;
+  letter-spacing: 3px;
   color: var(--app-primary);
   line-height: 1;
+  flex-shrink: 0;
+  min-width: 56px;
+  text-align: center;
+  padding: 4px 8px;
+  background: var(--app-primary-bg, rgba(59, 130, 246, 0.1));
+  border-radius: 6px;
 }
 
 .join-room-room-host {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--app-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  flex: 1;
   line-height: 1.2;
 }
 
@@ -520,12 +527,11 @@
   color: var(--app-text-muted);
   white-space: nowrap;
   line-height: 1;
-  padding: 2px 8px;
+  padding: 4px 10px;
   background: var(--app-surface);
   border-radius: 9999px;
   border: 1px solid var(--app-surface-border);
-  align-self: flex-start;
-  margin-top: 2px;
+  flex-shrink: 0;
 }
 
 /* Reconnection Overlay */
