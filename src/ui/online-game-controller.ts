@@ -165,9 +165,8 @@ export class OnlineGameController {
     const gameState = this.mapSchemaToGameState(schema);
     this.detectStateTransitions(gameState);
     
-    // Pass rotated player names to GameView - use rotated index (always 0 after rotation)
-    // But for initial render before detection, we need to handle gracefully
-    const renderIndex = this.userServerPlayerIndex;
+    // Pass rotated player names to GameView - user is always at view position 0 after rotation
+    const renderIndex = 0; // User is at view position 0 in the rotated state
     this.gameView.render(gameState, renderIndex, this.playerNames);
 
     if (this.onStateChange) {
@@ -201,8 +200,11 @@ export class OnlineGameController {
 
     // When entering TRUMP_DECLARATION phase
     if (this.previousPhase !== 'TRUMP_DECLARATION' && currentPhase === 'TRUMP_DECLARATION') {
-      // If user is crown holder, show TrumpSelector
-      if (gameState.crownHolder === this.userServerPlayerIndex) {
+      // If user is crown holder (both are now rotated view positions, user is always 0)
+      if (gameState.crownHolder === 0) {
+        // Set user's hand on trump selector before showing (gameState has the fresh data)
+        const userHand = gameState.players[0]?.hand || [];
+        this.gameView.getTrumpSelector().setUserHand(userHand);
         this.gameView.showTrumpSelector();
       }
     }
@@ -218,9 +220,23 @@ export class OnlineGameController {
 
     if (currentTrickCount > this.previousTrickCount && currentTrickCount <= 8) {
       const lastTrick = gameState.completedTricks[currentTrickCount - 1];
-      if (lastTrick.winner === this.userServerPlayerIndex) {
+      if (lastTrick.winner === 0) {
         this.hapticController.triggerTrickWon();
       }
+      // Don't animate trick collection in online mode — the render loop handles
+      // trick display updates naturally via updateTrickDisplayBuffer
+    }
+
+    // Detect round end by phase transition (server processes ROUND_END synchronously,
+    // so client never sees it — it jumps from TRICK_PLAY to TRUMP_DECLARATION)
+    if (this.previousPhase === 'TRICK_PLAY' && currentPhase === 'TRUMP_DECLARATION') {
+      // Round just ended, new round is starting
+      this.hapticController.triggerTrumpDeclared();
+      setTimeout(() => {
+        if (this.isRunning) {
+          this.gameView.showRoundEndModal();
+        }
+      }, 1500);
     }
 
     if (this.previousPhase !== 'ROUND_END' && currentPhase === 'ROUND_END') {
@@ -248,10 +264,12 @@ export class OnlineGameController {
     if (!this.isRunning) return;
     if (!this.serverState) return;
     if (this.serverState.phase !== 'TRICK_PLAY') return;
+    // Check turn against raw server state (both are server indices)
     if (this.serverState.currentPlayer !== this.userServerPlayerIndex) return;
 
+    // Use rotated gameState for legality check — user is at view position 0
     const gameState = this.mapSchemaToGameState(this.serverState);
-    if (!canPlayCard(gameState, this.userServerPlayerIndex, card)) {
+    if (!canPlayCard(gameState, 0, card)) {
       return;
     }
 
@@ -282,6 +300,7 @@ export class OnlineGameController {
   }
 
   private handleLeave(code: number): void {
+    console.log('[OnlineGameController] handleLeave called, code:', code, 'isRunning:', this.isRunning);
     this.isRunning = false;
 
     if (code === 4001) {
@@ -296,16 +315,16 @@ export class OnlineGameController {
   }
 
   private mapSchemaToGameState(schema: any): GameState {
-    const players: GameState['players'] = [];
     const playerMap = schema.players as unknown as Map<string, any>;
     const rawPlayerNames: string[] = [];
 
-    // Extract raw player data first (before rotation)
+    // Step 1: Extract raw player data in server order
+    const rawPlayers: GameState['players'] = [];
     for (let i = 0; i < 4; i++) {
       const ps = playerMap.get(String(i));
       if (ps) {
         rawPlayerNames[i] = ps.username || `Player ${i + 1}`;
-        players.push({
+        rawPlayers.push({
           id: ps.id,
           hand: this.mapHand(ps.hand),
           team: ps.team as 0 | 1,
@@ -313,7 +332,7 @@ export class OnlineGameController {
         });
       } else {
         rawPlayerNames[i] = `Player ${i + 1}`;
-        players.push({
+        rawPlayers.push({
           id: i,
           hand: [],
           team: (i % 2 === 0 ? 0 : 1) as 0 | 1,
@@ -322,10 +341,12 @@ export class OnlineGameController {
       }
     }
 
-    // Rotate player names so user is at position 0
-    this.playerNames = rawPlayerNames.map((_, i) => rawPlayerNames[this.getServerIndex(i)]);
+    // Step 2: Rotate player names and players array so user is at view position 0
+    // View position 0 = user, 1 = left opponent, 2 = partner (top), 3 = right opponent
+    this.playerNames = rawPlayerNames.map((_, viewPos) => rawPlayerNames[this.getServerIndex(viewPos)]);
+    const players: GameState['players'] = rawPlayers.map((_, viewPos) => rawPlayers[this.getServerIndex(viewPos)]);
 
-    // Rotate current player index
+    // Step 3: Rotate scalar indices (currentPlayer, crownHolder, dealer, etc.)
     const rotatedCurrentPlayer = this.getViewPosition(schema.currentPlayer);
     const rotatedCrownHolder = this.getViewPosition(schema.crownHolder);
     const rotatedDealer = this.getViewPosition(schema.dealer);
@@ -361,7 +382,7 @@ export class OnlineGameController {
       phase: schema.phase as GameState['phase'],
       scores: [schema.scoreTeam0, schema.scoreTeam1] as [number, number],
       currentPlayer: rotatedCurrentPlayer,
-      partnerIndex: (rotatedCurrentPlayer + 2) % 4, // Partner is always 2 positions away
+      partnerIndex: 2, // Partner is always at view position 2 (top) after rotation
       isDeclaringTeam: schema.isDeclaringTeam,
       tricksWonByTeam: schema.tricksWonByTeam
     };

@@ -40,8 +40,11 @@ const app = new Elysia()
   .post('/api/rooms/resolve', ({ body }) => {
     const { code } = body;
     const upperCode = code.toUpperCase();
+    console.log('[API] /rooms/resolve: received code=', code, ', upper=', upperCode);
+    console.log('[API] /rooms/resolve: registry rooms:', roomRegistry.getAll().map(r => r.roomCode));
 
     const room = roomRegistry.getByCode(upperCode);
+    console.log('[API] /rooms/resolve: found room=', room?.roomCode, ', roomId=', room?.roomId);
 
     if (!room) {
       return new Response(

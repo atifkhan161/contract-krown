@@ -341,14 +341,21 @@ class App {
 
     if (!this.container) return;
 
-    // Always create a new controller to ensure each client has their own instance
-    // This fixes the issue where multiple clients might share state
-    console.log('[App] Creating new controller for game room:', roomId);
-    this.setupNewGameController(roomId);
+    // Reuse existing controller if already connected to this room (e.g., from waiting room)
+    if (this.onlineController && this.onlineController.getRoomId() === roomId) {
+      console.log('[App] Reusing existing controller for room:', roomId);
+      this.setupGameViewFromExisting(roomId);
+    } else {
+      console.log('[App] Creating new controller for game room:', roomId);
+      this.setupNewGameController(roomId);
+    }
   }
 
-  private setupGameViewFromExisting(): void {
+  private setupGameViewFromExisting(roomId: string): void {
     if (!this.onlineController || !this.container) return;
+
+    // Ensure controller is running (it may have been paused during waiting room)
+    this.onlineController.resume();
 
     const gameView = this.onlineController.getGameView();
     gameView.setReturnToLobbyHandler(() => {
@@ -373,6 +380,12 @@ class App {
 
   private setupNewGameController(roomId: string): void {
     if (!this.container) return;
+
+    // Stop any existing controller to prevent duplicate connections
+    if (this.onlineController) {
+      this.onlineController.stop();
+      this.onlineController = null;
+    }
 
     this.onlineController = new OnlineGameController();
 

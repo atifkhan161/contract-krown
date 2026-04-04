@@ -95,17 +95,22 @@ class RoomRegistry {
   }
 
   getByCode(code: string): RoomInfo | undefined {
-    console.log('[RoomRegistry] getByCode called, code:', code);
-    console.log('[RoomRegistry] Available rooms:', Array.from(this.rooms.values()).map(r => r.roomCode));
+    console.log('[RoomRegistry] getByCode: searching for', code);
+    console.log('[RoomRegistry] getByCode: rooms in registry:', Array.from(this.rooms.entries()).map(([id, r]) => `${id} => ${r.roomCode}`));
     for (const room of this.rooms.values()) {
-      console.log('[RoomRegistry] Checking room:', room.roomCode, '===', code, '?', room.roomCode === code);
+      console.log('[RoomRegistry] getByCode: comparing', room.roomCode, '===', code, '?', room.roomCode === code);
       if (room.roomCode === code) return room;
     }
+    console.log('[RoomRegistry] getByCode: NOT FOUND');
     return undefined;
   }
 
   getById(roomId: string): RoomInfo | undefined {
     return this.rooms.get(roomId);
+  }
+
+  getAll(): RoomInfo[] {
+    return Array.from(this.rooms.values());
   }
 }
 

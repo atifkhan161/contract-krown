@@ -116,7 +116,21 @@ export function createDeterministicRandom(seed: number): (max: number) => number
 export function dealInitial(state: GameState): void {
   // Create and shuffle deck
   state.deck = shuffle(createDeck());
-  state.players = createPlayers();
+
+  // Check if this is an initial deal (no players yet) vs a round transition (players exist)
+  // We need to check BEFORE clearing hands
+  const hasExistingPlayers = state.players.length === 4;
+
+  // Preserve existing player metadata (isBot, team) if players already exist
+  // This is critical for multiplayer: onJoin sets isBot=false for humans,
+  // and we must not reset it to the default isBot: i > 0
+  if (hasExistingPlayers) {
+    for (const player of state.players) {
+      player.hand = [];
+    }
+  } else {
+    state.players = createPlayers();
+  }
 
   // Deal 4 cards to each player
   for (let i = 0; i < 4; i++) {
@@ -125,8 +139,13 @@ export function dealInitial(state: GameState): void {
     }
   }
 
-  // Set crown holder to player left of dealer
-  state.crownHolder = (state.dealer + 1) % 4;
+  // Set crown holder to player left of dealer (only on initial game start)
+  // For round transitions, the caller should set crownHolder via updateCrown()
+  // or explicitly before calling dealInitial
+  if (!hasExistingPlayers) {
+    state.crownHolder = (state.dealer + 1) % 4;
+  }
+  // currentPlayer is always the crown holder for trump declaration
   state.currentPlayer = state.crownHolder;
   state.phase = 'TRUMP_DECLARATION';
 }

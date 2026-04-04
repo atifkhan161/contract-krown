@@ -143,7 +143,7 @@ export class CrownRoom extends Room<GameStateSchema> {
   async onJoin(client: Client, options: any) {
     console.log('[CrownRoom] onJoin, sessionId:', client.sessionId, 'options:', JSON.stringify(options));
 
-    // Check for reconnection by sessionId
+    // Check for reconnection by sessionId (disconnected player returning)
     const prevIndex = this.findReconnectingPlayer(client);
     if (prevIndex !== -1) {
       console.log('[CrownRoom] Reconnecting player, index:', prevIndex);
@@ -158,6 +158,13 @@ export class CrownRoom extends Room<GameStateSchema> {
       this.cancelReconnectTimer();
       this.syncState();
       this.maybeTriggerBotTurn();
+      return;
+    }
+
+    // Safeguard: Check if this sessionId is already an active player (duplicate connection)
+    const existingIndex = this.clientToPlayer.get(client.sessionId);
+    if (existingIndex !== undefined) {
+      console.log('[CrownRoom] Duplicate join detected, sessionId already in slot:', existingIndex, '— ignoring');
       return;
     }
 
@@ -210,6 +217,11 @@ export class CrownRoom extends Room<GameStateSchema> {
     ps.sessionId = client.sessionId;
     ps.disconnected = false;
     this.state.players.set(String(playerIndex), ps);
+
+    // Sync engine state isBot to match human player (must be before syncState)
+    if (this.gameState.players[playerIndex]) {
+        this.gameState.players[playerIndex].isBot = false;
+    }
 
     console.log('[CrownRoom] Player added, index:', playerIndex, 'username:', ps.username, 'sessionId:', client.sessionId);
     console.log('[CrownRoom] Current state.phase:', this.state.phase, 'roomCode:', this.state.roomCode);
@@ -283,16 +295,19 @@ export class CrownRoom extends Room<GameStateSchema> {
     }
 
     try {
+      console.log('[CrownRoom] handleDeclareTrump: player', playerIndex, 'declaring', message.suit);
       declareTrump(this.gameState, message.suit as Suit);
       dealFinal(this.gameState);
       setFirstTrickLeader(this.gameState);
       this.gameState.phase = 'TRICK_PLAY';
+      console.log('[CrownRoom] Phase changed: TRUMP_DECLARATION -> TRICK_PLAY, trumpSuit:', message.suit);
       this.syncState();
 
       // If next crown holder is a bot (for subsequent rounds), auto-declare
       this.maybeTriggerBotTurn();
       this.maybeTriggerBotTrumpDeclaration();
     } catch (err: any) {
+      console.log('[CrownRoom] handleDeclareTrump error:', err.message);
       client.send('error', { message: err.message });
     }
   }
@@ -326,12 +341,16 @@ export class CrownRoom extends Room<GameStateSchema> {
     }
 
     try {
+      console.log('[CrownRoom] handlePlayCard: player', playerIndex, 'playing', card.suit, card.rank);
       playCard(this.gameState, playerIndex, card);
+      console.log('[CrownRoom] Card played successfully, trick now has', this.gameState.currentTrick.cards.length, 'cards');
 
-      // Record trick result for bot memory if a trick just completed
-      if (this.gameState.currentTrick.cards.length === 0 && this.gameState.completedTricks.length > 0) {
+      // Check if trick just completed (4 cards played in previous trick)
+      if (this.gameState.completedTricks.length > 0) {
         const lastTrick = this.gameState.completedTricks[this.gameState.completedTricks.length - 1];
         if (lastTrick.winner !== null) {
+          console.log('[CrownRoom] Trick complete, winner: player', lastTrick.winner);
+          // Record trick result for bot memory
           const players = this.gameState.players.map(p => ({ id: p.id, team: p.team }));
           this.botManager.recordTrickResult(lastTrick, lastTrick.winner, players);
         }
@@ -339,16 +358,22 @@ export class CrownRoom extends Room<GameStateSchema> {
 
       // Capture phase after mutation (playCard can change it)
       const currentPhase = this.gameState.phase as string;
+      console.log('[CrownRoom] Phase after playCard:', currentPhase);
 
       // If round ended, process round end
       if (currentPhase === 'ROUND_END') {
+        console.log('[CrownRoom] Round ending, processing round end');
         this.processRoundEnd();
+        // After round end, the new round may be in TRUMP_DECLARATION phase
+        // Trigger bot trump declaration if the crown holder is a bot
+        this.maybeTriggerBotTrumpDeclaration();
       }
 
       this.syncState();
 
       // If game ended, persist and schedule disconnect
       if ((this.gameState.phase as string) === 'GAME_END') {
+        console.log('[CrownRoom] Game ended! Final scores - Team0:', this.gameState.scores[0], 'Team1:', this.gameState.scores[1]);
         this.persistGameResult();
         setTimeout(() => this.disconnect(), 5000);
         return;
@@ -357,13 +382,49 @@ export class CrownRoom extends Room<GameStateSchema> {
       // Trigger bot turn if needed
       this.maybeTriggerBotTurn();
     } catch (err: any) {
+      console.log('[CrownRoom] handlePlayCard error:', err.message);
       client.send('error', { message: err.message });
     }
   }
 
   // --- Game Flow ---
 
+  /**
+   * Ensures engine gameState.players is populated from schema before dealing.
+   * When players join via onJoin/addBotToSlot, only the schema is updated.
+   * The engine state's players array remains empty until dealInitial is called.
+   * This method syncs the engine state so that isBot values are preserved.
+   */
+  private ensureEnginePlayers(): void {
+    if (this.gameState.players.length === 0) {
+      // Initialize engine players array to match schema
+      this.gameState.players = [];
+      for (let i = 0; i < MAX_PLAYERS; i++) {
+        const ps = this.state.players.get(String(i));
+        if (ps) {
+          this.gameState.players[i] = {
+            id: ps.id,
+            hand: [],
+            team: ps.team as 0 | 1,
+            isBot: ps.isBot
+          };
+        } else {
+          this.gameState.players[i] = {
+            id: i,
+            hand: [],
+            team: (i % 2) as 0 | 1,
+            isBot: true
+          };
+        }
+      }
+      // Set crown holder to player left of dealer for initial game start
+      this.gameState.crownHolder = (this.gameState.dealer + 1) % 4;
+      console.log('[CrownRoom] ensureEnginePlayers: initialized from schema, isBot:', this.gameState.players.map(p => p.isBot));
+    }
+  }
+
   private startGame() {
+    console.log('[CrownRoom] startGame called, client count:', this.clientToPlayer.size);
     if (this.clientToPlayer.size < 2) return;
 
     // Fill empty slots with bots
@@ -373,8 +434,15 @@ export class CrownRoom extends Room<GameStateSchema> {
       }
     }
 
+    // CRITICAL: Sync engine players from schema before dealInitial
+    // Without this, dealInitial creates fresh players with default isBot: i > 0
+    this.ensureEnginePlayers();
+
+    console.log('[CrownRoom] All slots filled, dealing initial cards');
+
     dealInitial(this.gameState);
     this.state.phase = this.gameState.phase;
+    console.log('[CrownRoom] Game starting, phase:', this.state.phase, 'crownHolder:', this.gameState.crownHolder);
     this.syncState();
 
     // If crown holder is a bot, auto-declare trump
@@ -506,21 +574,25 @@ export class CrownRoom extends Room<GameStateSchema> {
   }
 
   private handleStartGame(client: Client): void {
+    console.log('[CrownRoom] handleStartGame called by sessionId:', client.sessionId);
     if (!this.isAdmin(client)) {
+      console.log('[CrownRoom] handleStartGame: not admin, rejecting');
       client.send('error', { message: 'Only the admin can start the game' });
       return;
     }
 
     // Allow starting in both waiting and dealing phases
     if (this.state.phase !== 'WAITING_FOR_PLAYERS' && this.state.phase !== 'DEALING_INITIAL') {
+      console.log('[CrownRoom] handleStartGame: wrong phase', this.state.phase);
       client.send('error', { message: 'Game already started' });
       return;
     }
 
     // Count total players (humans + bots) in state
     const totalPlayers = this.state.players.size;
-    if (totalPlayers < 1) {
-      client.send('error', { message: 'Need at least 1 player to start' });
+    console.log('[CrownRoom] handleStartGame: total players:', totalPlayers);
+    if (totalPlayers < 2) {
+      client.send('error', { message: 'Need at least 2 players to start' });
       return;
     }
 
@@ -543,7 +615,9 @@ export class CrownRoom extends Room<GameStateSchema> {
     // Broadcast game_started to all clients so they all redirect
     this.broadcast('game_started', { roomId: this.roomId, roomCode: this.roomCode });
 
-    // Update registry phase so room no longer appears in available listing
+    // Extend room expiry when game starts — active games should not expire
+    this.state.roomExpiryAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours for active games
+    console.log('[CrownRoom] Extended room expiry to 24 hours for active game');
     roomRegistry.updatePhase(this.roomId, this.state.phase);
   }
 
@@ -578,6 +652,7 @@ export class CrownRoom extends Room<GameStateSchema> {
   }
 
   private processRoundEnd() {
+    console.log('[CrownRoom] processRoundEnd called');
     calculateScore(this.gameState);
     updateCrown(this.gameState);
     rotateDeal(this.gameState);
@@ -587,8 +662,11 @@ export class CrownRoom extends Room<GameStateSchema> {
       this.state.phase = 'GAME_END';
       this.state.scoreTeam0 = this.gameState.scores[0];
       this.state.scoreTeam1 = this.gameState.scores[1];
+      console.log('[CrownRoom] GAME_END triggered! Final scores - Team0:', this.gameState.scores[0], 'Team1:', this.gameState.scores[1], 'Target: 52');
       return;
     }
+
+    console.log('[CrownRoom] Round scores - Team0:', this.gameState.scores[0], 'Team1:', this.gameState.scores[1]);
 
     // Reset bot memories for new round
     this.botManager.resetMemories();
@@ -601,6 +679,7 @@ export class CrownRoom extends Room<GameStateSchema> {
     this.state.roundNumber = (this.state.roundNumber || 0) + 1;
 
     dealInitial(this.gameState);
+    console.log('[CrownRoom] New round starting, roundNumber:', this.state.roundNumber, 'phase:', this.gameState.phase);
     this.syncState();
   }
 
@@ -619,26 +698,33 @@ export class CrownRoom extends Room<GameStateSchema> {
 
   private executeBotTurn(playerIndex: number) {
     try {
+      console.log('[CrownRoom] executeBotTurn: bot player', playerIndex, 'is playing');
       const card = this.botManager.selectCard(this.gameState, playerIndex);
+      console.log('[CrownRoom] Bot selected card:', card.suit, card.rank);
       playCard(this.gameState, playerIndex, card);
+      console.log('[CrownRoom] Bot card played successfully');
 
-      // Record trick result for bot memory if a trick just completed
-      if (this.gameState.currentTrick.cards.length === 0 && this.gameState.completedTricks.length > 0) {
+      // Check if trick just completed
+      if (this.gameState.completedTricks.length > 0) {
         const lastTrick = this.gameState.completedTricks[this.gameState.completedTricks.length - 1];
         if (lastTrick.winner !== null) {
+          console.log('[CrownRoom] Bot trick complete, winner: player', lastTrick.winner);
           const players = this.gameState.players.map(p => ({ id: p.id, team: p.team }));
           this.botManager.recordTrickResult(lastTrick, lastTrick.winner, players);
         }
       }
 
       const currentPhase = this.gameState.phase as string;
+      console.log('[CrownRoom] Bot turn complete, phase:', currentPhase);
       if (currentPhase === 'ROUND_END') {
+        console.log('[CrownRoom] Bot triggering round end');
         this.processRoundEnd();
       }
 
       this.syncState();
 
       if ((this.gameState.phase as string) === 'GAME_END') {
+        console.log('[CrownRoom] Bot turn resulted in GAME_END');
         this.persistGameResult();
         setTimeout(() => this.disconnect(), 5000);
         return;
@@ -646,6 +732,7 @@ export class CrownRoom extends Room<GameStateSchema> {
 
       this.maybeTriggerBotTurn();
     } catch (_err) {
+      console.log('[CrownRoom] executeBotTurn error:', _err);
       // Bot error — skip turn (should not happen with valid state)
     }
   }

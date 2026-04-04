@@ -300,10 +300,18 @@ export class GameView {
     if (!this.container) return;
 
     const trickCards = this.container.querySelectorAll('.trick-area .card') as NodeListOf<HTMLElement>;
-    if (trickCards.length === 0) return;
 
     // Set animation flag to prevent card plays during animation
     this.isAnimatingTrickCollection = true;
+
+    // If DOM hasn't rendered cards yet, clear buffer after a delay
+    if (trickCards.length === 0) {
+      setTimeout(() => {
+        this.clearTrickDisplayBuffer();
+        this.isAnimatingTrickCollection = false;
+      }, 800);
+      return;
+    }
 
     // Get winner's display element
     let winnerDisplay: HTMLElement | null = null;
@@ -351,6 +359,11 @@ export class GameView {
 
     // Update trick display buffer and get winner
     const trickWinner = this.updateTrickDisplayBuffer(state);
+
+    // Clear trick display buffer when round ends to prevent stale cards
+    if (state.phase === 'ROUND_END' || state.phase === 'GAME_END') {
+      this.clearTrickDisplayBuffer();
+    }
 
     // Render felt grid (now includes header info in corner cells)
     this.feltGrid.render(state, userPlayerIndex, this.uiState.playableCards, playerNames);
@@ -410,14 +423,15 @@ export class GameView {
         }
       }
       return state.currentTrick.winner;
-    } else if (state.completedTricks.length > 0) {
+    } else if (state.completedTricks.length > 0 && state.completedTricks.length < 8) {
       // Current trick is empty but we have a completed trick - use its cards
-      // This handles the case where the 4th card was just played and trick was resolved
+      // Only if the round isn't over (less than 8 tricks completed)
       const lastTrick = state.completedTricks[state.completedTricks.length - 1];
       this.trickDisplayCards = lastTrick.cards.map(pc => ({ card: pc.card, player: pc.player }));
       return lastTrick.winner;
     }
-    // If both are empty, keep buffer as-is (will be cleared after animation)
+    // If round is complete (8 tricks) or both are empty, clear buffer
+    this.trickDisplayCards = [];
     return null;
   }
 
@@ -472,13 +486,21 @@ export class GameView {
   }
 
   /**
+   * Gets the trump selector instance
+   */
+  public getTrumpSelector(): TrumpSelector {
+    return this.trumpSelector;
+  }
+
+  /**
    * Shows the trump selector modal
    * Requirement 2.2: Display 4 trump suit options to Crown Holder
+   * Note: setUserHand() should be called before this by detectStateTransitions
+   * with fresh game state data, since uiState.gameState may be stale.
    */
   public showTrumpSelector(): void {
-    // Pass the user's hand to the trump selector
-    const userHand = this.uiState.gameState.players[this.userPlayerIndex]?.hand || [];
-    this.trumpSelector.setUserHand(userHand);
+    // Don't re-read from uiState.gameState (may be stale at this point)
+    // The hand should already be set via setUserHand() by the caller
     this.trumpSelector.show();
   }
 
