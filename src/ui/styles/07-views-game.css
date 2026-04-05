@@ -176,6 +176,9 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  padding-top: 48px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, var(--app-bg-gradient-start) 0%, var(--app-bg-gradient-mid) 50%, var(--app-bg-gradient-end) 100%);
 }
 
 .offline-indicator {

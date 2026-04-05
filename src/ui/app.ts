@@ -12,15 +12,18 @@ import { ThemeManager } from './theme-manager.js';
 import { OnlineGameController } from './online-game-controller.js';
 import { WaitingRoomView } from './waiting-room-view.js';
 import { JoinRoomModal } from './join-room-modal.js';
+import { AppHeader } from './app-header.js';
 
 class App {
   private container: HTMLElement | null = null;
   private currentView: HTMLElement | null = null;
   private sessionManager: SessionManager;
   private joinRoomModal: JoinRoomModal | null = null;
+  private appHeader: AppHeader;
 
   constructor() {
     this.sessionManager = new SessionManager();
+    this.appHeader = new AppHeader();
     ThemeManager.applyTheme();
     this.container = document.getElementById('app');
     if (!this.container) {
@@ -29,9 +32,23 @@ class App {
     }
     this.setupRoutes();
     router.setSessionManager(this.sessionManager);
+    this.setupHeader();
     console.log('Routes setup complete');
     page.start();
     console.log('Page.js started, current path:', window.location.pathname);
+  }
+
+  private setupHeader(): void {
+    if (!this.container) return;
+    
+    const headerContainer = this.appHeader.getContainer();
+    if (headerContainer) {
+      this.container.appendChild(headerContainer);
+    }
+    
+    this.appHeader.setBackHandler(() => {
+      page.redirect('/lobby');
+    });
   }
 
   private setupRoutes(): void {
@@ -98,6 +115,7 @@ class App {
   private showLogin(): void {
     console.log('showLogin called');
     this.clearCurrentView();
+    this.appHeader.hide();
 
     if (!this.container) return;
 
@@ -125,6 +143,7 @@ class App {
 
   private showLobby(): void {
     this.clearCurrentView();
+    this.appHeader.show('Contract Crown');
 
     if (!this.container) return;
 
@@ -149,6 +168,7 @@ class App {
 
   private showOfflineGame(): void {
     this.clearCurrentView();
+    this.appHeader.show('Offline Game');
 
     const offlineView = new OfflineGameView();
     
@@ -173,6 +193,7 @@ class App {
 
   private showWaitingRoom(roomIdParam: string): void {
     this.clearCurrentView();
+    this.appHeader.show('Waiting Room');
 
     if (!this.container) return;
 
@@ -338,6 +359,7 @@ class App {
 
   private showGame(roomId: string): void {
     this.clearCurrentView();
+    this.appHeader.show('Game');
 
     if (!this.container) return;
 

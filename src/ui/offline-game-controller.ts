@@ -123,7 +123,9 @@ export class OfflineGameController {
         // Bot declares trump
         this.scheduleBotTrumpDeclaration();
       } else {
-        // Show trump selector for user
+        // Show trump selector for user - set hand first
+        const userHand = this.gameState.players[this.userPlayerIndex]?.hand || [];
+        this.gameView.getTrumpSelector().setUserHand(userHand);
         this.gameView.showTrumpSelector();
       }
     }, 500);

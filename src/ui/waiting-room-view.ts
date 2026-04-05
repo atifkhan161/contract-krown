@@ -50,16 +50,6 @@ export class WaitingRoomView {
     this.container.className = 'waiting-room-view';
 
     this.container.innerHTML = `
-      <div class="waiting-room-header">
-        <button class="btn btn-ghost btn-sm waiting-room-back-btn" id="wr-back-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-          </svg>
-          Back
-        </button>
-        <h1 class="waiting-room-title">Contract Crown</h1>
-      </div>
-
       <div class="waiting-room-info">
         <div class="room-code-section">
           <span class="room-code-label">Room Code</span>
@@ -190,10 +180,6 @@ export class WaitingRoomView {
 
   private setupEventListeners(): void {
     if (!this.container) return;
-
-    this.container.querySelector('#wr-back-btn')?.addEventListener('click', () => {
-      this.callbacks.onReturnToLobby();
-    });
 
     this.container.querySelector('#wr-copy-btn')?.addEventListener('click', () => {
       const code = this.state.roomCode;
