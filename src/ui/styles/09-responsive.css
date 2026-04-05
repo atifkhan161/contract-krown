@@ -101,10 +101,11 @@
   /* User hand - thumb zone optimized */
   .user-hand {
     padding: 8px 4px 12px;
+    flex-direction: column-reverse;
   }
 
   .hand-cards {
-    gap: 6px;
+    gap: 2px;
   }
 
   /* Trump selector */
@@ -136,7 +137,7 @@
 
   /* Waiting room */
   .waiting-room-view {
-    padding: 16px;
+    padding: 55px 16px 16px 16px;
   }
 
   .waiting-room-title {
@@ -406,7 +407,7 @@
 
   /* Waiting room - horizontal layout */
   .waiting-room-view {
-    padding: 10px 16px;
+    padding: 55px 16px 16px 16px;
   }
 
   .waiting-room-info {
@@ -467,7 +468,7 @@
 
   /* Login/Lobby - 2 column grid */
   .login-view, .lobby-view {
-    padding: 10px 16px;
+    padding: 55px 10px 16px 10px;
   }
 
   .login-container, .lobby-container {
@@ -721,7 +722,7 @@
   }
 
   .waiting-room-view {
-    padding: 12px 18px;
+    padding: 55px 16px 16px 16px;
   }
 
   .waiting-room-info {
@@ -781,7 +782,7 @@
   }
 
   .waiting-room-view {
-    padding: 12px;
+    padding: 55px 16px 16px 16px;
   }
 
   .waiting-room-title {
@@ -848,7 +849,7 @@
   }
 
   .waiting-room-view {
-    padding: 14px;
+    padding: 55px 16px 16px 16px;
   }
 
   .waiting-room-info {
@@ -963,7 +964,7 @@
   }
 
   .waiting-room-view {
-    padding: 8px 12px;
+   padding: 55px 16px 16px 16px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -1285,7 +1286,7 @@
 
   /* Login View Landscape */
   .login-view, .lobby-view {
-    padding: 8px 12px;
+    padding: 55px 8px 12px 8px;
   }
 
   .login-container {
@@ -1528,7 +1529,7 @@
 
   /* Waiting Room Landscape - Horizontal Layout */
   .waiting-room-view {
-    padding: 8px 12px;
+    padding: 55px 16px 16px 16px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
