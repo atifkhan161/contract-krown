@@ -324,8 +324,10 @@ test.describe('Script A: 2 Humans + 2 Bots — Full Game', () => {
         const currentTricks = await getTrickCount(player1Page);
         console.log(`  Trick ${trick}/8 (completed so far: ${currentTricks})`);
 
-        // Each trick has 4 cards played. Both humans play when it's their turn.
-        for (let cardSlot = 0; cardSlot < 4; cardSlot++) {
+        // Wait for all 4 cards to be played in this trick
+        // Both humans play when it's their turn; bots play server-side
+        let trickCardsPlayed = 0;
+        while (trickCardsPlayed < 4) {
           // Check Player 1's turn
           let p1Turn = await isUserTurn(player1Page);
           if (p1Turn) {
@@ -338,10 +340,11 @@ test.describe('Script A: 2 Humans + 2 Bots — Full Game', () => {
               if (card) {
                 await clickCard(player1Page, card);
                 console.log(`    [P1] Played: ${card.rank} of ${card.suit}`);
+                trickCardsPlayed++;
                 await player1Page.waitForTimeout(1500); // Human-like delay
+                continue;
               }
             }
-            continue;
           }
 
           // Check Player 2's turn
@@ -356,23 +359,25 @@ test.describe('Script A: 2 Humans + 2 Bots — Full Game', () => {
               if (card) {
                 await clickCard(player2Page, card);
                 console.log(`    [P2] Played: ${card.rank} of ${card.suit}`);
+                trickCardsPlayed++;
                 await player2Page.waitForTimeout(1500); // Human-like delay
+                continue;
               }
             }
-            continue;
           }
 
           // Neither human's turn — bots are playing (server-side)
-          // Wait for bot plays to complete
-          await player1Page.waitForTimeout(2000);
-
-          // Check if trick is already complete (all 4 cards played)
+          // Wait briefly and check trick card count
+          await player1Page.waitForTimeout(500);
           const trickCards = await player1Page.locator('.trick-area .trick-card-slot').count();
-          if (trickCards >= 4) {
-            console.log(`    Trick already has ${trickCards} cards — moving on`);
-            break;
+          if (trickCards > trickCardsPlayed) {
+            console.log(`    Trick cards visible: ${trickCards} (human played: ${trickCardsPlayed})`);
+            trickCardsPlayed = trickCards;
           }
+          if (trickCardsPlayed >= 4) break;
         }
+
+        console.log(`    Trick ${trick} complete — ${trickCardsPlayed} cards played`);
 
         // Wait for trick resolution (trick count increases)
         await player1Page.waitForFunction(
@@ -385,16 +390,29 @@ test.describe('Script A: 2 Humans + 2 Bots — Full Game', () => {
           { initialTricks: currentTricks },
           { timeout: 30000 }
         ).catch(() => {
-          console.log(`    Trick ${trick} resolution timed out — checking if trick has 4 cards and continuing`);
+          console.log(`    Trick ${trick} resolution timed out`);
         });
+      }
 
-        // Extra delay for visible flow between tricks
-        try {
-          await player1Page.waitForTimeout(1000);
-        } catch {
-          // Page might be closed - ignore during cleanup
-          break;
+      // ----- Round End: Wait for round-end modal and dismiss -----
+      console.log(`  Waiting for round-end modal...`);
+      try {
+        await player1Page.locator('.round-end-modal, .round-end-content').first()
+          .waitFor({ state: 'visible', timeout: 15000 });
+        console.log(`  Round-end modal appeared`);
+
+        // Delay so viewer can see the round-end modal
+        await player1Page.waitForTimeout(2000);
+
+        // Dismiss the round-end modal
+        const continueBtn = player1Page.locator('.round-end-continue-btn');
+        if (await continueBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+          await continueBtn.click();
+          console.log(`  Dismissed round-end modal`);
+          await player1Page.waitForTimeout(2000);
         }
+      } catch {
+        console.log(`  Round-end modal did not appear (may have transitioned already)`);
       }
 
       // Check if page is still available before round-end checks

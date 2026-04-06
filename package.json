@@ -14,7 +14,7 @@
     "build:js": "bun build src/ui/app.ts --outdir dist/client --target browser --sourcemap=inline",
     "build:css": "postcss src/ui/styles/main.css -o dist/client/styles.css --no-map",
     "build:copy": "cp public/index.html public/manifest.json dist/client/",
-    "start": "bun run dist/server/index.js",
+    "start": "bun run dist/server/serve.js",
     "test": "bun test",
     "test:unit": "bun test --run",
     "test:watch": "bun test --watch",

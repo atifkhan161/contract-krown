@@ -250,11 +250,12 @@ test.describe('Script B: 4 Human Players — Full Game', () => {
         const currentTricks = await getTrickCount(pages[0]);
         console.log(`  Trick ${trick}/8 (completed so far: ${currentTricks})`);
 
-        // Play 4 cards (one per player, in turn order)
-        for (let cardPlayed = 0; cardPlayed < 4; cardPlayed++) {
-          // Find whose turn it is
+        // Wait for all 4 cards to be played in this trick
+        let trickCardsPlayed = 0;
+        while (trickCardsPlayed < 4) {
+          // Find whose turn it is among the 4 players
           let activePlayer = -1;
-          for (let attempt = 0; attempt < 60; attempt++) {
+          for (let attempt = 0; attempt < 30; attempt++) {
             for (let i = 0; i < 4; i++) {
               const isTurn = await isUserTurn(pages[i]);
               if (isTurn) {
@@ -263,11 +264,25 @@ test.describe('Script B: 4 Human Players — Full Game', () => {
               }
             }
             if (activePlayer >= 0) break;
-            await Promise.all(pages.map(p => p.waitForTimeout(200)));
+            // Check if trick cards appeared on screen (bots may have played)
+            const trickCards = await pages[0].locator('.trick-area .trick-card-slot').count();
+            if (trickCards >= 4) {
+              trickCardsPlayed = trickCards;
+              break;
+            }
+            await pages[0].waitForTimeout(300);
           }
 
+          if (trickCardsPlayed >= 4) break;
+
           if (activePlayer < 0) {
-            console.log(`    Timeout waiting for active player (card ${cardPlayed + 1})`);
+            console.log(`    Timeout waiting for active player (card ${trickCardsPlayed + 1})`);
+            // Check trick cards count
+            const trickCards = await pages[0].locator('.trick-area .trick-card-slot').count();
+            if (trickCards >= 4) {
+              trickCardsPlayed = trickCards;
+              break;
+            }
             continue;
           }
 
@@ -275,7 +290,10 @@ test.describe('Script B: 4 Human Players — Full Game', () => {
           const playableCards = await readPlayableCards(activePage);
 
           if (playableCards.length === 0) {
-            console.log(`    [P${activePlayer + 1}] No playable cards — skipping`);
+            console.log(`    [P${activePlayer + 1}] No playable cards — checking trick`);
+            const trickCards = await activePage.locator('.trick-area .trick-card-slot').count();
+            if (trickCards > trickCardsPlayed) trickCardsPlayed = trickCards;
+            await activePage.waitForTimeout(500);
             continue;
           }
 
@@ -287,10 +305,13 @@ test.describe('Script B: 4 Human Players — Full Game', () => {
 
           await clickCard(activePage, card!);
           console.log(`    [P${activePlayer + 1}] Played: ${card!.rank} of ${card!.suit}`);
+          trickCardsPlayed++;
 
           // Human-like delay after playing
           await activePage.waitForTimeout(1500);
         }
+
+        console.log(`    Trick ${trick} complete — ${trickCardsPlayed} cards played`);
 
         // Wait for trick resolution (trick count increases)
         await pages[0].waitForFunction(
@@ -303,16 +324,29 @@ test.describe('Script B: 4 Human Players — Full Game', () => {
           { initialTricks: currentTricks },
           { timeout: 30000 }
         ).catch(() => {
-          console.log(`    Trick ${trick} resolution timed out — checking if trick has 4 cards and continuing`);
+          console.log(`    Trick ${trick} resolution timed out`);
         });
+      }
 
-        // Extra delay for visible flow between tricks
-        try {
-          await pages[0].waitForTimeout(1000);
-        } catch {
-          // Page might be closed - ignore during cleanup
-          break;
+      // ----- Round End: Wait for round-end modal and dismiss -----
+      console.log(`  Waiting for round-end modal...`);
+      try {
+        await pages[0].locator('.round-end-modal, .round-end-content').first()
+          .waitFor({ state: 'visible', timeout: 15000 });
+        console.log(`  Round-end modal appeared`);
+
+        // Delay so viewer can see the round-end modal
+        await pages[0].waitForTimeout(2000);
+
+        // Dismiss the round-end modal
+        const continueBtn = pages[0].locator('.round-end-continue-btn');
+        if (await continueBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+          await continueBtn.click();
+          console.log(`  Dismissed round-end modal`);
+          await pages[0].waitForTimeout(2000);
         }
+      } catch {
+        console.log(`  Round-end modal did not appear (may have transitioned already)`);
       }
 
       // Check if page is still available before round-end checks
