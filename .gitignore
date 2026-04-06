@@ -30,3 +30,6 @@ memory
 
 #.opencode
 .opencode
+
+# Playwright
+test-results/*

@@ -218,4 +218,75 @@ describe('Team Memory Property Tests', () => {
     expect(memory.ourPlays.some(p => p.player === 0)).toBe(true);
     expect(memory.ourPlays.some(p => p.player === 2)).toBe(true);
   });
+
+  // Property 50: Enhanced Player Record Tracking
+  it('Property 50: tracks player records correctly', () => {
+    const memory = new TeamMemory();
+    memory.recordOurPlay(0, createCard('HEARTS', 'A'), 1, true);
+    memory.recordOurPlay(0, createCard('HEARTS', 'K'), 2, true);
+    memory.recordOurPlay(1, createCard('SPADES', 'Q'), 1, false);
+
+    const record0 = memory.getPlayerRecord(0);
+    const record1 = memory.getPlayerRecord(1);
+
+    expect(record0?.cards.length).toBe(2);
+    expect(record0?.tricksWon).toBe(2);
+    expect(record1?.cards.length).toBe(1);
+    expect(record1?.tricksWon).toBe(0);
+  });
+
+  // Property 51: Suit Strength Detection
+  it('Property 51: calculates suit strength correctly', () => {
+    const memory = new TeamMemory();
+    memory.trumpSuit = 'HEARTS';
+    memory.recordOurPlay(0, createCard('HEARTS', 'A'), 1, true);
+    memory.recordOurPlay(0, createCard('HEARTS', 'K'), 2, true);
+    memory.recordOurPlay(0, createCard('HEARTS', 'Q'), 3, true);
+    memory.recordOurPlay(1, createCard('HEARTS', '7'), 1, false);
+
+    const strength = memory.getSuitStrength('HEARTS');
+    expect(strength.remaining).toBe(4);
+  });
+
+  // Property 52: Endgame Detection
+  it('Property 52: detects endgame correctly', () => {
+    const memory = new TeamMemory();
+    memory.trumpSuit = 'SPADES';
+    for (let i = 0; i < 20; i++) {
+      memory.recordOurPlay(0, createCard('HEARTS', '7'), i + 1, true);
+    }
+
+    expect(memory.isEndgame()).toBe(true);
+  });
+
+  // Property 53: Partner Strong Suits Detection
+  it('Property 53: identifies partner strong suits', () => {
+    const memory = new TeamMemory();
+    memory.trumpSuit = 'SPADES';
+    memory.recordTrickWeWon({
+      trickNumber: 1,
+      winner: 2,
+      allCards: [
+        { player: 0, card: createCard('HEARTS', 'A') },
+        { player: 1, card: createCard('HEARTS', '7') },
+        { player: 2, card: createCard('HEARTS', 'K') },
+        { player: 3, card: createCard('HEARTS', '8') }
+      ],
+      ledSuit: 'HEARTS'
+    });
+    memory.recordTrickWeWon({
+      trickNumber: 2,
+      winner: 2,
+      allCards: [
+        { player: 0, card: createCard('HEARTS', 'Q') },
+        { player: 1, card: createCard('HEARTS', '9') },
+        { player: 2, card: createCard('HEARTS', 'J') },
+        { player: 3, card: createCard('HEARTS', '10') }
+      ],
+      ledSuit: 'HEARTS'
+    });
+
+    const partnerSuits = memory.getPartnerStrongSuits();
+    expect(partnerSuits).toContain('HEARTS');
+  });
 });

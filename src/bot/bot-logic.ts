@@ -1,7 +1,7 @@
 // Contract Crown Smart Bot with Team Memory
 // Uses shared team memory for intelligent, human-like card play decisions
 
-import type { Suit, Card } from '../engine/types.js';
+import type { Suit, Card, Rank } from '../engine/types.js';
 import { TeamMemory } from './team-memory.js';
 
 export interface BotGameState {
@@ -14,6 +14,8 @@ export interface BotGameState {
   tricksWonByTeam: number;
   tricksRemaining: number;
 }
+
+const HONOR_RANKS: Rank[] = ['A', 'K', 'Q', 'J'];
 
 export class SmartBot {
   
@@ -63,7 +65,10 @@ export class SmartBot {
       return this.getEndgameLead(sorted, state, memory);
     }
 
-    const partnerStrongSuits = this.getPartnerStrongSuits(memory);
+    const finesseCard = this.attemptFinesse(hand, state, memory);
+    if (finesseCard) return finesseCard;
+
+    const partnerStrongSuits = memory.getPartnerStrongSuits();
     for (const suit of partnerStrongSuits) {
       const suitCards = sorted.filter(c => c.suit === suit);
       if (suitCards.length > 0) {
@@ -87,6 +92,36 @@ export class SmartBot {
     }
 
     return sorted[0];
+  }
+
+  private static attemptFinesse(hand: Card[], state: BotGameState, memory: TeamMemory): Card | null {
+    if (state.currentTrick.length > 0) return null;
+    
+    for (const suit of ['HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'] as Suit[]) {
+      const suitCards = hand.filter(c => c.suit === suit);
+      if (suitCards.length >= 2) {
+        const sorted = this.sortCardsByValue(suitCards);
+        const highest = sorted[sorted.length - 1];
+        const secondHighest = sorted[sorted.length - 2];
+        
+        if (highest.value >= 13 && secondHighest.value >= 11) {
+          if (memory.shouldFinessePartner(suit)) {
+            return secondHighest;
+          }
+        }
+        
+        const remaining = memory.getRemainingCards();
+        const unaccountedHigher = remaining.filter(c => 
+          c.suit === suit && c.value > secondHighest.value
+        );
+        
+        if (unaccountedHigher.length === 0 && highest.value >= 13) {
+          return secondHighest;
+        }
+      }
+    }
+    
+    return null;
   }
 
   private static decideWhenVoid(legalMoves: Card[], state: BotGameState, memory: TeamMemory): Card {
@@ -141,6 +176,9 @@ export class SmartBot {
   }
 
   private static getEndgameLead(sorted: Card[], state: BotGameState, memory: TeamMemory): Card {
+    const endplayCard = this.executeTrumpEndplay(sorted, state, memory);
+    if (endplayCard) return endplayCard;
+
     const remaining = memory.getRemainingCards();
     
     for (const card of sorted) {
@@ -160,19 +198,19 @@ export class SmartBot {
     return sorted[0];
   }
 
-  private static getPartnerStrongSuits(memory: TeamMemory): Suit[] {
-    const suitWins: Record<string, number> = {};
-    for (const trick of memory.tricksWeWon) {
-      for (const entry of trick.allCards) {
-        if (entry.player % 2 === 0) {
-          const key = entry.card.suit;
-          suitWins[key] = (suitWins[key] || 0) + 1;
-        }
-      }
+  private static executeTrumpEndplay(legalMoves: Card[], state: BotGameState, _memory: TeamMemory): Card | null {
+    if (state.tricksRemaining > 2) return null;
+    if (state.tricksWonByTeam < 4) return null;
+
+    const trumps = legalMoves.filter(c => c.suit === state.trumpSuit);
+    if (trumps.length === 0) return null;
+
+    const currentWinner = this.getCurrentlyWinningCard(state);
+    if (currentWinner && currentWinner.playerIndex !== state.partnerIndex) {
+      return this.sortCardsByValue(trumps)[0];
     }
-    return Object.entries(suitWins)
-      .filter(([, count]) => count >= 2)
-      .map(([suit]) => suit as Suit);
+
+    return null;
   }
 
   private static isEndgame(state: BotGameState): boolean {
@@ -199,5 +237,65 @@ export class SmartBot {
 
   private static sortCardsByValue(cards: Card[]): Card[] {
     return [...cards].sort((a, b) => a.value - b.value);
+  }
+
+  private static sortCardsByValueDesc(cards: Card[]): Card[] {
+    return [...cards].sort((a, b) => b.value - a.value);
+  }
+
+  private static isWinning(state: BotGameState): boolean {
+    const currentWinner = this.getCurrentlyWinningCard(state);
+    if (!currentWinner) return false;
+    return currentWinner.playerIndex === state.myIndex || currentWinner.playerIndex === state.partnerIndex;
+  }
+
+  public static shouldDuck(hand: Card[], state: BotGameState, _memory: TeamMemory): Card | null {
+    if (state.currentTrick.length === 0) return null;
+    if (state.tricksWonByTeam >= 3) return null;
+    
+    const currentWinner = this.getCurrentlyWinningCard(state);
+    if (!currentWinner) return null;
+    if (currentWinner.playerIndex === state.partnerIndex) {
+      if (!this.isWinning(state)) {
+        const highCards = this.sortCardsByValueDesc(hand).slice(0, 2);
+        if (highCards.length > 0) return highCards[0];
+      }
+    }
+    return null;
+  }
+
+  public static coverPartnerHonors(legalMoves: Card[], state: BotGameState): Card | null {
+    if (state.currentTrick.length === 0) return null;
+    
+    const leadEntry = state.currentTrick[0];
+    if (!leadEntry) return null;
+    
+    if (leadEntry.playerIndex !== state.partnerIndex) return null;
+    
+    const leadCard = leadEntry.card;
+    if (!HONOR_RANKS.includes(leadCard.rank)) return null;
+    
+    const coverCard = legalMoves.find(c => 
+      c.suit === leadCard.suit && c.value > leadCard.value
+    );
+    
+    if (coverCard) return coverCard;
+    
+    return null;
+  }
+
+  public static avoidSqueeze(legalMoves: Card[], state: BotGameState, memory: TeamMemory): Card | null {
+    if (state.tricksRemaining > 2) return null;
+    if (state.tricksWonByTeam >= 5) return null;
+    
+    const suitStrength = memory.getSuitStrength(state.trumpSuit);
+    if (suitStrength.opponentControl && suitStrength.highCardsRemaining <= 2) {
+      const trumps = legalMoves.filter(c => c.suit === state.trumpSuit);
+      if (trumps.length > 0) {
+        return this.sortCardsByValueDesc(trumps)[0];
+      }
+    }
+    
+    return null;
   }
 }

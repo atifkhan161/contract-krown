@@ -1,10 +1,23 @@
 // Contract Crown Bot Manager
 // Manages bot players and AI decisions using SmartBot with team-shared memory
 
-import type { Card, Suit, GameState, Trick } from '../engine/types.js';
+import type { Card, Suit, GameState, Trick, Rank } from '../engine/types.js';
 import { canPlayCard } from '../engine/index.js';
 import { SmartBot } from './bot-logic.js';
 import { TeamMemory } from './team-memory.js';
+
+const CARD_QUALITY_WEIGHTS: Record<Rank, number> = {
+  'A': 6, 'K': 5, 'Q': 4, 'J': 3, '10': 2, '9': 1, '8': 1, '7': 1
+};
+
+interface SuitScore {
+  suit: Suit;
+  totalScore: number;
+  cardCount: number;
+  qualityScore: number;
+  voidPotential: number;
+  controlScore: number;
+}
 
 export class BotManager {
   private teamMemories: Map<number, TeamMemory> = new Map();
@@ -18,37 +31,59 @@ export class BotManager {
     return this.teamMemories.get(teamId)!;
   }
 
-  selectTrumpSuit(hand: Card[]): Suit {
-    const suitCounts: Record<Suit, number> = {
-      'HEARTS': 0,
-      'DIAMONDS': 0,
-      'CLUBS': 0,
-      'SPADES': 0
-    };
+  selectTrumpSuit(hand: Card[], _gameState?: GameState): Suit {
+    const suitScores: SuitScore[] = [];
+    
+    const suits: Suit[] = ['HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'];
+    
+    for (const suit of suits) {
+      const suitCards = hand.filter(c => c.suit === suit);
+      const cardCount = suitCards.length;
+      
+      let qualityScore = 0;
+      let controlScore = 0;
+      
+      for (const card of suitCards) {
+        qualityScore += CARD_QUALITY_WEIGHTS[card.rank];
+        if (card.rank === 'A' || card.rank === 'K') {
+          controlScore += 2;
+        } else if (card.rank === 'Q' || card.rank === 'J') {
+          controlScore += 1;
+        }
+      }
 
-    const suitValues: Record<Suit, number> = {
-      'HEARTS': 0,
-      'DIAMONDS': 0,
-      'CLUBS': 0,
-      'SPADES': 0
-    };
+      let voidPotential = 0;
+      if (cardCount >= 4) {
+        voidPotential = 3;
+      } else if (cardCount === 3) {
+        voidPotential = 1;
+      }
 
-    for (const card of hand) {
-      suitCounts[card.suit]++;
-      suitValues[card.suit] += card.value;
+      const spreadPenalty = cardCount === 2 ? -2 : 0;
+      
+      const totalScore = qualityScore + voidPotential + controlScore + spreadPenalty;
+      
+      suitScores.push({
+        suit,
+        totalScore,
+        cardCount,
+        qualityScore,
+        voidPotential,
+        controlScore
+      });
     }
 
-    let maxCount = 0;
-    let bestSuit: Suit = 'HEARTS';
-    let bestValue = 0;
+    suitScores.sort((a, b) => b.totalScore - a.totalScore);
     
-    for (const [suit, count] of Object.entries(suitCounts)) {
-      const s = suit as Suit;
-      if (count > maxCount || (count === maxCount && suitValues[s] > bestValue)) {
-        maxCount = count;
-        bestValue = suitValues[s];
-        bestSuit = s;
-      }
+    const bestSuit = suitScores[0].suit;
+    const bestScore = suitScores[0];
+    const secondBest = suitScores[1];
+
+    if (secondBest && 
+        secondBest.cardCount === bestScore.cardCount && 
+        secondBest.qualityScore >= bestScore.qualityScore - 2 &&
+        bestScore.cardCount < 3) {
+      return secondBest.suit;
     }
 
     return bestSuit;

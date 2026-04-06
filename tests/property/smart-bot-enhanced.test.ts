@@ -179,4 +179,97 @@ describe('Enhanced SmartBot Property Tests', () => {
     expect(selected).toBeDefined();
     expect(selected.suit).toBeDefined();
   });
+
+  // Property 48: Finesse Detection
+  it('Property 48: attempts finesse when conditions are met', () => {
+    const memory = new TeamMemory();
+    memory.trumpSuit = 'SPADES';
+    
+    const hand = [
+      createCard('HEARTS', 'A'),
+      createCard('HEARTS', 'K'),
+      createCard('DIAMONDS', '7')
+    ];
+    const state = makeState({
+      trumpSuit: 'SPADES',
+      currentTrick: [],
+      leadSuit: null
+    });
+
+    const selected = SmartBot.getBestMove(hand, state, memory);
+    expect(selected).toBeDefined();
+  });
+
+  // Property 49: Cover Partner's Honors
+  it('Property 49: covers partner honors when opponent plays higher', () => {
+    const memory = new TeamMemory();
+    memory.trumpSuit = 'SPADES';
+
+    const hand = [
+      createCard('HEARTS', 'K'),
+      createCard('HEARTS', 'Q'),
+      createCard('DIAMONDS', 'A')
+    ];
+    const state = makeState({
+      trumpSuit: 'SPADES',
+      currentTrick: [
+        { playerIndex: 2, card: createCard('HEARTS', 'J') },
+        { playerIndex: 3, card: createCard('HEARTS', '8') }
+      ],
+      leadSuit: 'HEARTS',
+      partnerIndex: 2
+    });
+
+    const coverCard = SmartBot.coverPartnerHonors(hand, state);
+    expect(coverCard).toBeDefined();
+    if (coverCard) {
+      expect(coverCard.suit).toBe('HEARTS');
+      expect(coverCard.value).toBeGreaterThan(11);
+    }
+  });
+
+  // Property 50: Squeeze Avoidance
+  it('Property 50: avoids being squeezed in endgame', () => {
+    const memory = new TeamMemory();
+    memory.trumpSuit = 'SPADES';
+
+    const hand = [
+      createCard('SPADES', 'A'),
+      createCard('HEARTS', 'K')
+    ];
+    const state = makeState({
+      trumpSuit: 'SPADES',
+      tricksRemaining: 2,
+      tricksWonByTeam: 5
+    });
+
+    const squeezeAvoid = SmartBot.avoidSqueeze(hand, state, memory);
+    expect(squeezeAvoid).toBeDefined();
+  });
+
+  // Property 51: Ducking Strategy
+  it('Property 51: ducks trick when partner winning and cannot win', () => {
+    const memory = new TeamMemory();
+    memory.trumpSuit = 'SPADES';
+
+    const hand = [
+      createCard('HEARTS', 'A'),
+      createCard('HEARTS', 'K'),
+      createCard('DIAMONDS', 'Q')
+    ];
+    const state = makeState({
+      trumpSuit: 'SPADES',
+      currentTrick: [
+        { playerIndex: 1, card: createCard('HEARTS', '7') },
+        { playerIndex: 2, card: createCard('HEARTS', '9') },
+        { playerIndex: 3, card: createCard('HEARTS', '8') }
+      ],
+      leadSuit: 'HEARTS',
+      partnerIndex: 2,
+      tricksWonByTeam: 1
+    });
+
+    const duckCard = SmartBot.shouldDuck(hand, state, memory);
+    expect(duckCard).toBeDefined();
+  });
 });

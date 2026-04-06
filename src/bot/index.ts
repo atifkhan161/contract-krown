@@ -4,3 +4,4 @@
 export * from './bot-manager.js';
 export * from './bot-logic.js';
 export * from './team-memory.js';
+export * from './card-probability.js';

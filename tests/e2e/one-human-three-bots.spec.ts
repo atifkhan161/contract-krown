@@ -60,11 +60,11 @@ test.describe('Script A: 2 Humans + 2 Bots — Full Game', () => {
     // Create 2 isolated browser contexts with different themes
     // Player 1 gets a blue theme, Player 2 gets a green/teal theme
     context1 = await browser.newContext({
-      viewport: { width: 375, height: 812 },
+      viewport: { width: 430, height: 932 },
       colorScheme: 'dark'
     });
     context2 = await browser.newContext({
-      viewport: { width: 375, height: 812 },
+      viewport: { width: 430, height: 932 },
       colorScheme: 'light'
     });
     player1Page = await context1.newPage();
@@ -72,14 +72,16 @@ test.describe('Script A: 2 Humans + 2 Bots — Full Game', () => {
 
     // Inject different CSS themes per browser context
     await player1Page.addInitScript(() => {
+      // Set CSS custom properties on documentElement (always available)
       document.documentElement.style.setProperty('--theme-accent', '#3b82f6');
       document.documentElement.style.setProperty('--theme-label', 'P1 (Blue/Dark)');
-      document.body?.classList.add('theme-player-1');
+      // Add class to html element (always available)
+      document.documentElement.classList.add('theme-player-1');
     });
     await player2Page.addInitScript(() => {
       document.documentElement.style.setProperty('--theme-accent', '#10b981');
       document.documentElement.style.setProperty('--theme-label', 'P2 (Green/Light)');
-      document.body?.classList.add('theme-player-2');
+      document.documentElement.classList.add('theme-player-2');
     });
 
     console.log('[beforeAll] Contexts and pages created with distinct themes');

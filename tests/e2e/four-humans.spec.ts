@@ -57,7 +57,7 @@ test.describe('Script B: 4 Human Players — Full Game', () => {
 
     for (let i = 0; i < 4; i++) {
       const ctx = await browser.newContext({
-        viewport: { width: 375, height: 812 },
+        viewport: { width: 430, height: 932 },
         colorScheme: colorSchemes[i],
         userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15'
       });
@@ -70,7 +70,7 @@ test.describe('Script B: 4 Human Players — Full Game', () => {
       await page.addInitScript((accent, label, idx) => {
         document.documentElement.style.setProperty('--theme-accent', accent);
         document.documentElement.style.setProperty('--theme-label', label);
-        document.body?.classList.add(`theme-player-${idx + 1}`);
+        document.documentElement.classList.add(`theme-player-${idx + 1}`);
       }, themeAccents[i], themeLabels[i], i);
 
       // Suppress console errors from the app
