@@ -50,11 +50,15 @@ test.describe('Script B: 4 Human Players — Full Game', () => {
     resetBotMemories();
     console.log('[beforeAll] Server ready');
 
-    // Create 4 isolated browser contexts
-    // Playwright contexts are isolated by default — no shared localStorage/cookies
+    // Create 4 isolated browser contexts with different color schemes for visual distinction
+    const colorSchemes = ['dark', 'light', 'dark', 'light'] as const;
+    const themeAccents = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']; // blue, green, amber, red
+    const themeLabels = ['P1 (Blue/Dark)', 'P2 (Green/Light)', 'P3 (Amber/Dark)', 'P4 (Red/Light)'];
+
     for (let i = 0; i < 4; i++) {
       const ctx = await browser.newContext({
-        viewport: { width: 375, height: 812 }, // Mobile portrait
+        viewport: { width: 375, height: 812 },
+        colorScheme: colorSchemes[i],
         userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15'
       });
       contexts.push(ctx);
@@ -62,14 +66,21 @@ test.describe('Script B: 4 Human Players — Full Game', () => {
       const page = await ctx.newPage();
       pages.push(page);
 
-      // Suppress console errors from the app (Colyseus disconnections during setup)
+      // Inject unique theme per browser context
+      await page.addInitScript((accent, label, idx) => {
+        document.documentElement.style.setProperty('--theme-accent', accent);
+        document.documentElement.style.setProperty('--theme-label', label);
+        document.body?.classList.add(`theme-player-${idx + 1}`);
+      }, themeAccents[i], themeLabels[i], i);
+
+      // Suppress console errors from the app
       page.on('pageerror', (err) => {
         if (!err.message.includes('disconnect')) {
           console.log(`[P${i + 1}] Page error:`, err.message);
         }
       });
     }
-    console.log('[beforeAll] 4 contexts and pages created');
+    console.log('[beforeAll] 4 contexts created with distinct themes');
   });
 
   test.afterAll(async () => {
@@ -227,23 +238,58 @@ test.describe('Script B: 4 Human Players — Full Game', () => {
       console.log(`\n=== Round ${roundNumber} ===`);
 
       // ----- Trump Declaration Phase -----
-      // Check if any player needs to declare trump
-      for (let i = 0; i < 4; i++) {
-        const trumpVisible = await pages[i].locator('.trump-suit-btn').first()
-          .isVisible({ timeout: 3000 }).catch(() => false);
-
-        if (trumpVisible) {
-          const hand = await readUserHand(pages[i]);
-          const trumpSuit = pickBestTrumpSuit(hand);
-          console.log(`  [P${i + 1}] Declaring trump: ${trumpSuit}`);
-          await clickTrumpSuit(pages[i], trumpSuit);
-          await pages[i].waitForTimeout(1500);
+      // Poll until trump selector appears for one of the players, or trump is already declared
+      console.log(`  Waiting for trump declaration...`);
+      let trumpDeclared = false;
+      for (let attempt = 0; attempt < 60; attempt++) {
+        // Check if trump is already declared
+        const trumpAlreadyDeclared = await pages[0].evaluate(() => {
+          const trumpCell = document.querySelector('.trump-cell-value');
+          return trumpCell && trumpCell.textContent?.trim() !== '--';
+        });
+        if (trumpAlreadyDeclared) {
+          const currentTrump = await readTrumpSuit(pages[0]);
+          console.log(`  Trump already declared: ${currentTrump}`);
+          trumpDeclared = true;
           break;
         }
+
+        // Check if any player has the trump selector
+        for (let i = 0; i < 4; i++) {
+          const trumpVisible = await pages[i].locator('.trump-suit-btn').first()
+            .isVisible({ timeout: 1000 }).catch(() => false);
+
+          if (trumpVisible) {
+            const hand = await readUserHand(pages[i]);
+            const trumpSuit = pickBestTrumpSuit(hand);
+            console.log(`  [P${i + 1}] Declaring trump: ${trumpSuit}`);
+            await clickTrumpSuit(pages[i], trumpSuit);
+            trumpDeclared = true;
+            break;
+          }
+        }
+        if (trumpDeclared) break;
+
+        // Check if round-end modal is still showing
+        const roundEndVisible = await pages[0].locator('.round-end-modal, .round-end-content')
+          .first().isVisible({ timeout: 500 }).catch(() => false);
+        if (roundEndVisible) {
+          console.log(`  Round-end modal still visible, waiting...`);
+          await pages[0].waitForTimeout(1000);
+          continue;
+        }
+
+        await pages[0].waitForTimeout(500);
       }
 
-      // Wait for trump declaration to process
-      await Promise.all(pages.map(p => p.waitForTimeout(1500)));
+      if (!trumpDeclared) {
+        console.log(`  WARNING: Trump was not declared after 30s — proceeding anyway`);
+      }
+
+      // Wait for trump declaration to fully process
+      await Promise.all(pages.map(p => p.waitForTimeout(2000)));
+      const trumpSuit = await readTrumpSuit(pages[0]);
+      console.log(`  Trump suit confirmed: ${trumpSuit || 'none'}`);
 
       // ----- Trick Play Phase (8 tricks) -----
       for (let trick = 1; trick <= 8; trick++) {

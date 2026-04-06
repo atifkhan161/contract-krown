@@ -57,13 +57,32 @@ test.describe('Script A: 2 Humans + 2 Bots — Full Game', () => {
     resetBotMemories();
     console.log('[beforeAll] Server ready, creating contexts...');
 
-    // Create 2 isolated browser contexts with completely separate storage
-    // Playwright contexts are isolated by default - no shared localStorage/cookies
-    context1 = await browser.newContext({ viewport: { width: 375, height: 812 } });
-    context2 = await browser.newContext({ viewport: { width: 375, height: 812 } });
+    // Create 2 isolated browser contexts with different themes
+    // Player 1 gets a blue theme, Player 2 gets a green/teal theme
+    context1 = await browser.newContext({
+      viewport: { width: 375, height: 812 },
+      colorScheme: 'dark'
+    });
+    context2 = await browser.newContext({
+      viewport: { width: 375, height: 812 },
+      colorScheme: 'light'
+    });
     player1Page = await context1.newPage();
     player2Page = await context2.newPage();
-    console.log('[beforeAll] Contexts and pages created');
+
+    // Inject different CSS themes per browser context
+    await player1Page.addInitScript(() => {
+      document.documentElement.style.setProperty('--theme-accent', '#3b82f6');
+      document.documentElement.style.setProperty('--theme-label', 'P1 (Blue/Dark)');
+      document.body?.classList.add('theme-player-1');
+    });
+    await player2Page.addInitScript(() => {
+      document.documentElement.style.setProperty('--theme-accent', '#10b981');
+      document.documentElement.style.setProperty('--theme-label', 'P2 (Green/Light)');
+      document.body?.classList.add('theme-player-2');
+    });
+
+    console.log('[beforeAll] Contexts and pages created with distinct themes');
 
     // Suppress non-critical errors
     player1Page.on('pageerror', (err) => {
@@ -301,23 +320,59 @@ test.describe('Script A: 2 Humans + 2 Bots — Full Game', () => {
       console.log(`\n=== Round ${roundNumber} ===`);
 
       // ----- Trump Declaration Phase -----
-      // Check if either player needs to declare trump
-      for (const [label, page] of [['P1', player1Page], ['P2', player2Page]] as const) {
-        const trumpVisible = await page.locator('.trump-suit-btn').first()
-          .isVisible({ timeout: 3000 }).catch(() => false);
-
-        if (trumpVisible) {
-          const hand = await readUserHand(page);
-          const trumpSuit = pickBestTrumpSuit(hand);
-          console.log(`  [${label}] Declaring trump: ${trumpSuit}`);
-          await clickTrumpSuit(page, trumpSuit);
-          await page.waitForTimeout(1500);
-          break; // Only one player declares
+      // Poll until trump selector appears for one of the human players,
+      // or trump is already declared (bot declared, or carry-over from previous round)
+      console.log(`  Waiting for trump declaration...`);
+      let trumpDeclared = false;
+      for (let attempt = 0; attempt < 60; attempt++) {
+        // Check if trump is already declared (skip selector)
+        const trumpAlreadyDeclared = await player1Page.evaluate(() => {
+          const trumpCell = document.querySelector('.trump-cell-value');
+          return trumpCell && trumpCell.textContent?.trim() !== '--';
+        });
+        if (trumpAlreadyDeclared) {
+          const currentTrump = await readTrumpSuit(player1Page);
+          console.log(`  Trump already declared: ${currentTrump}`);
+          trumpDeclared = true;
+          break;
         }
+
+        // Check if either human player has the trump selector
+        for (const [label, page] of [['P1', player1Page], ['P2', player2Page]] as const) {
+          const trumpVisible = await page.locator('.trump-suit-btn').first()
+            .isVisible({ timeout: 1000 }).catch(() => false);
+
+          if (trumpVisible) {
+            const hand = await readUserHand(page);
+            const trumpSuit = pickBestTrumpSuit(hand);
+            console.log(`  [${label}] Declaring trump: ${trumpSuit}`);
+            await clickTrumpSuit(page, trumpSuit);
+            trumpDeclared = true;
+            break;
+          }
+        }
+        if (trumpDeclared) break;
+
+        // Check if round-end modal is still showing (wait for it to dismiss)
+        const roundEndVisible = await player1Page.locator('.round-end-modal, .round-end-content')
+          .first().isVisible({ timeout: 500 }).catch(() => false);
+        if (roundEndVisible) {
+          console.log(`  Round-end modal still visible, waiting...`);
+          await player1Page.waitForTimeout(1000);
+          continue;
+        }
+
+        await player1Page.waitForTimeout(500);
       }
 
-      // Wait for trump declaration to process
-      await player1Page.waitForTimeout(1500);
+      if (!trumpDeclared) {
+        console.log(`  WARNING: Trump was not declared after 30s — proceeding anyway`);
+      }
+
+      // Wait for trump declaration to fully process
+      await player1Page.waitForTimeout(2000);
+      const trumpSuit = await readTrumpSuit(player1Page);
+      console.log(`  Trump suit confirmed: ${trumpSuit || 'none'}`);
 
       // ----- Trick Play Phase (8 tricks) -----
       for (let trick = 1; trick <= 8; trick++) {
