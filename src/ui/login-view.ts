@@ -12,14 +12,62 @@ export interface LoginViewConfig {
   onRegister?: () => void;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export class LoginView {
   private container: HTMLElement | null = null;
   private sessionManager: SessionManager;
   private config: LoginViewConfig;
+  private deferredPrompt: BeforeInstallPromptEvent | null = null;
 
   constructor(sessionManager: SessionManager, config: LoginViewConfig = {}) {
     this.sessionManager = sessionManager;
     this.config = config;
+    this.setupPwaInstall();
+  }
+
+  private setupPwaInstall(): void {
+    window.addEventListener('beforeinstallprompt', (e: Event) => {
+      e.preventDefault();
+      this.deferredPrompt = e as BeforeInstallPromptEvent;
+      this.showInstallButton();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      this.hideInstallButton();
+      this.deferredPrompt = null;
+    });
+  }
+
+  private showInstallButton(): void {
+    if (!this.container) return;
+    const installBtn = this.container.querySelector('#pwa-install-btn') as HTMLButtonElement;
+    if (installBtn) {
+      installBtn.classList.remove('hidden');
+    }
+  }
+
+  private hideInstallButton(): void {
+    if (!this.container) return;
+    const installBtn = this.container.querySelector('#pwa-install-btn') as HTMLButtonElement;
+    if (installBtn) {
+      installBtn.classList.add('hidden');
+    }
+  }
+
+  private async handleInstall(): Promise<void> {
+    if (!this.deferredPrompt) return;
+    
+    this.deferredPrompt.prompt();
+    const { outcome } = await this.deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      this.hideInstallButton();
+    }
+    this.deferredPrompt = null;
   }
 
   render(): HTMLElement {
@@ -37,6 +85,7 @@ export class LoginView {
         </div>
         <button class="btn btn-primary w-full" id="login-btn">Login</button>
         <button class="btn btn-outline w-full mt-2" id="play-offline-btn">Play Offline (No Login)</button>
+        <button class="btn btn-secondary w-full mt-2 hidden" id="pwa-install-btn">Install App</button>
         <div class="register-link mt-4">
           <span>Don't have an account? </span>
           <a href="#" id="register-link">Register</a>
@@ -56,6 +105,7 @@ export class LoginView {
     const passwordInput = this.container.querySelector('#login-password') as HTMLInputElement;
     const loginBtn = this.container.querySelector('#login-btn') as HTMLButtonElement;
     const playOfflineBtn = this.container.querySelector('#play-offline-btn') as HTMLButtonElement;
+    const installBtn = this.container.querySelector('#pwa-install-btn') as HTMLButtonElement;
     const registerLink = this.container.querySelector('#register-link') as HTMLAnchorElement;
 
     loginBtn?.addEventListener('click', () => this.handleLogin(emailInput.value, passwordInput.value));
@@ -65,6 +115,8 @@ export class LoginView {
         this.handleLogin(emailInput.value, passwordInput.value);
       }
     });
+
+    installBtn?.addEventListener('click', () => this.handleInstall());
 
     playOfflineBtn?.addEventListener('click', () => {
       if (this.config.onPlayOffline) {

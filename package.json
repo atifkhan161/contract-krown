@@ -13,7 +13,7 @@
     "build:client": "bun run build:js && bun run build:css && bun run build:copy",
     "build:js": "bun build src/ui/app.ts --outdir dist/client --target browser --sourcemap=inline",
     "build:css": "postcss src/ui/styles/main.css -o dist/client/styles.css --no-map",
-    "build:copy": "cp public/index.html public/manifest.json dist/client/",
+    "build:copy": "cp public/index.html public/manifest.json dist/client/ && cp -r public/icons public/assets dist/client/",
     "start": "bun run dist/server/serve.js",
     "test": "bun test",
     "test:unit": "bun test --run",
@@ -30,9 +30,9 @@
     "postinstall": "node scripts/patch-colyseus.mjs"
   },
   "dependencies": {
+    "@colyseus/sdk": "^0.17.0",
     "@supabase/supabase-js": "^2.47.0",
     "colyseus": "^0.17.0",
-    "@colyseus/sdk": "^0.17.0",
     "daisyui": "^4.12.14",
     "elysia": "^1.1.16",
     "page": "^1.8.7",
@@ -51,6 +51,7 @@
     "postcss": "^8.5.8",
     "postcss-cli": "^11.0.1",
     "postcss-import": "^16.1.1",
+    "sharp": "^0.34.5",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },

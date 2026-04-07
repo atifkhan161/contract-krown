@@ -45,7 +45,7 @@ export const AVAILABLE_THEMES: ThemeInfo[] = [
 ];
 
 const THEME_STORAGE_KEY = 'contract-crown-theme';
-const DEFAULT_THEME = 'golden-ascent';
+const DEFAULT_THEME = 'midnight-sapphire';
 
 export class ThemeManager {
   static getTheme(): string {
