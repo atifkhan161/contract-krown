@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Mobile-first PWA for Contract Crown trick-taking card game",
   "type": "module",
-  "main": "src/server/index.ts",
+  "main": "src/server/serve.ts",
   "scripts": {
     "dev": "lsof -ti:3000 | xargs kill -9 2>/dev/null; lsof -ti:2567 | xargs kill -9 2>/dev/null; sleep 1; bun run build:copy && concurrently -n \"CSS,JS,SERVER\" -c \"blue,green,yellow\" \"bun run dev:css\" \"bun run dev:js\" \"bun run --watch src/server/serve.ts\" --kill-others-on-fail",
     "dev:css": "postcss src/ui/styles/main.css -o dist/client/styles.css --watch",
@@ -44,7 +44,6 @@
     "@types/page": "^1.8.3",
     "autoprefixer": "^10.4.27",
     "concurrently": "^9.2.1",
-    "daisyui": "^4.12.14",
     "eslint": "^8.57.1",
     "eslint-config-standard-with-typescript": "^43.0.1",
     "fast-check": "^3.18.0",
@@ -52,7 +51,6 @@
     "postcss": "^8.5.8",
     "postcss-cli": "^11.0.1",
     "postcss-import": "^16.1.1",
-    "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
