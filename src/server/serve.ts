@@ -3,13 +3,12 @@
 
 import { Elysia, t } from 'elysia';
 import { join } from 'path';
-import { database, hashPassword } from './database.js';
 import { roomRegistry } from './room-registry.js';
+import { supabaseService } from './supabase.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const WS_PORT = Number(process.env.WS_PORT) || 2567;
 const STATIC_DIR = join(import.meta.dir, '../../dist/client');
-const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // --- Colyseus WebSocket Server ---
 import { Server } from 'colyseus';
@@ -61,9 +60,23 @@ const app = new Elysia()
   })
   .post('/api/games', () => ({ created: true }))
 
-  // Registration endpoint
-  .post('/api/register', async ({ body }) => {
-    const { username, password } = body;
+  // Auth endpoints (Supabase)
+  .post('/api/auth/register', async ({ body }) => {
+    const { email, password, username } = body;
+
+    if (!email || !email.trim()) {
+      return new Response(
+        JSON.stringify({ message: 'Email is required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!password || password.length < 6) {
+      return new Response(
+        JSON.stringify({ message: 'Password must be at least 6 characters' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!username || !username.trim()) {
       return new Response(
@@ -72,43 +85,110 @@ const app = new Elysia()
       );
     }
 
-    if (!password || password.length < 4) {
+    const result = await supabaseService.signUp(email.trim(), password, username.trim());
+
+    if (result.error) {
       return new Response(
-        JSON.stringify({ message: 'Password must be at least 4 characters' }),
+        JSON.stringify({ message: result.error }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    try {
-      const passwordHash = hashPassword(password);
-      const user = database.registerUser(username.trim(), passwordHash);
+    return {
+      success: true,
+      message: 'Check your email for confirmation link'
+    };
+  }, {
+    body: t.Object({
+      email: t.String(),
+      password: t.String(),
+      username: t.String()
+    })
+  })
 
-      const token = generateToken();
-      const expiresAt = Date.now() + SESSION_DURATION;
+  .post('/api/auth/login', async ({ body }) => {
+    const { email, password } = body;
 
-      return {
-        userId: user.userId,
-        username: user.username,
-        token,
-        expiresAt
-      };
-    } catch (error: any) {
-      if (error.message === 'USERNAME_EXISTS') {
-        return new Response(
-          JSON.stringify({ message: 'Username is already taken' }),
-          { status: 409, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
+    if (!email || !email.trim()) {
       return new Response(
-        JSON.stringify({ message: 'Registration failed' }),
+        JSON.stringify({ message: 'Email is required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!password) {
+      return new Response(
+        JSON.stringify({ message: 'Password is required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const result = await supabaseService.signIn(email.trim(), password);
+
+    if (result.error) {
+      return new Response(
+        JSON.stringify({ message: result.error }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!result.data?.session) {
+      return new Response(
+        JSON.stringify({ message: 'No session created' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
+
+    const session = result.data.session;
+    const profile = await supabaseService.getProfile(session.user.id);
+
+    return {
+      userId: session.user.id,
+      email: session.user.email,
+      username: profile?.username || session.user.user_metadata?.username || 'Player',
+      accessToken: session.access_token,
+      refreshToken: session.refresh_token,
+      expiresAt: session.expires_at
+    };
   }, {
     body: t.Object({
-      username: t.String(),
+      email: t.String(),
       password: t.String()
     })
+  })
+
+  .post('/api/auth/signout', async () => {
+    await supabaseService.signOut();
+
+    return { success: true };
+  })
+
+  .get('/api/auth/me', async ({ headers }) => {
+    const authHeader = headers['authorization'];
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ message: 'No token provided' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const accessToken = authHeader.substring(7);
+    const result = await supabaseService.getUser(accessToken);
+
+    if (result.error || !result.user) {
+      return new Response(
+        JSON.stringify({ message: 'Invalid token' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const profile = await supabaseService.getProfile(result.user.id);
+
+    return {
+      userId: result.user.id,
+      email: result.user.email,
+      username: profile?.username || result.user.user_metadata?.username || 'Player'
+    };
   })
 
   // Serve static files from dist/client
@@ -128,18 +208,6 @@ function generateRoomId(): string {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
-}
-
-function generateToken(): string {
-  const array = new Uint8Array(32);
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    crypto.getRandomValues(array);
-  } else {
-    for (let i = 0; i < array.length; i++) {
-      array[i] = Math.floor(Math.random() * 256);
-    }
-  }
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
 // Start WebSocket server

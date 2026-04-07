@@ -44,7 +44,7 @@ Contract Crown is a trick-taking card game where two partnerships compete to rea
 | Runtime | Bun | Ultra-fast execution and native TypeScript support |
 | Game Server | Colyseus | Authoritative state-sync for real-time multiplayer |
 | Backend | ElysiaJS | High-performance API routing for Bun |
-| Database | LokiJS | In-memory document DB with JSON file persistence |
+| Auth/Database | Supabase | User authentication and profile storage |
 | Routing | Page.js | Client-side SPA routing |
 | UI Framework | Tailwind + DaisyUI | Mobile-first utility classes and luxury themes |
 | PWA | Service Workers | Offline caching and standalone mode |
@@ -203,6 +203,51 @@ The layout automatically maps server player indices to your client view position
 
 ## Deployment
 
+### Prerequisites
+
+1. **Supabase Project**: Create a project at [supabase.com](https://supabase.com)
+2. **Supabase SQL**: Run the following in your Supabase SQL Editor:
+
+```sql
+-- Create profiles table
+CREATE TABLE public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- Policies
+CREATE POLICY "Anyone can read profiles" ON profiles FOR SELECT USING (true);
+CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Auto-create profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, username)
+  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'username', 'Player'));
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+SUPABASE_URL=your-project-url
+SUPABASE_ANON_KEY=your-anon-key
+```
+
 ### Render (Free Tier)
 
 ```bash
@@ -211,9 +256,10 @@ bun run build
 
 # Deploy to Render
 # The server uses Bun runtime with Colyseus WebSocket support
+# Supabase handles authentication - no local database needed
 ```
 
-The app is designed to run on Render's free tier with ephemeral filesystem. LokiJS persists data periodically to handle container restarts.
+The app is designed to run on Render's free tier. Supabase provides authentication and user data storage.
 
 ---
 
@@ -249,6 +295,7 @@ Built with:
 - [Bun](https://bun.sh) - The fast JavaScript runtime
 - [Colyseus](https://colyseus.io/) - Real-time multiplayer framework
 - [Elysia](https://elysiajs.com/) - Fast web framework for Bun
+- [Supabase](https://supabase.com/) - Open source Firebase alternative
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
 - [DaisyUI](https://daisyui.com/) - Component library for Tailwind
 - [Vitest](https://vitest.dev/) - Next generation testing framework

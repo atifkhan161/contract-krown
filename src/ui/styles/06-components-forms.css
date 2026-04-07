@@ -1,5 +1,5 @@
 /* ===== Login / Lobby Views ===== */
-.login-view, .lobby-view {
+.login-view, .lobby-view, .registration-view {
   width: 100%;
   height: 100%;
   display: flex;
@@ -14,13 +14,14 @@
     linear-gradient(135deg, var(--app-bg-gradient-start) 0%, var(--app-bg-gradient-mid) 50%, var(--app-bg-gradient-end) 100%);
 }
 
-.login-container, .lobby-container {
+.login-container, .lobby-container, .registration-container {
   width: 100%;
   max-width: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 32px 24px;
+  padding-bottom: 40px;
   background: var(--app-surface);
   border: 1px solid var(--app-surface-border);
   border-radius: 16px;
@@ -90,6 +91,23 @@
 }
 
 .error-message.hidden {
+  display: none;
+}
+
+.success-message {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 14px;
+  background: var(--app-success-bg);
+  border: 1px solid var(--app-success-border);
+  border-radius: 8px;
+  color: var(--app-success-text);
+  font-size: 14px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.success-message.hidden {
   display: none;
 }
 
@@ -224,6 +242,24 @@
 }
 
 .register-link a:hover {
+  color: var(--app-primary-hover);
+  text-decoration: underline;
+}
+
+.register-back-link {
+  font-size: 14px;
+  color: var(--app-text-muted);
+  text-align: center;
+}
+
+.register-back-link a {
+  color: var(--app-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.register-back-link a:hover {
   color: var(--app-primary-hover);
   text-decoration: underline;
 }

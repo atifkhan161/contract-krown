@@ -4,6 +4,8 @@
 import type { SessionManager } from '../session/index.js';
 import { router } from './router.js';
 
+const API_BASE = '';
+
 export interface LoginViewConfig {
   onLoginSuccess?: () => void;
   onPlayOffline?: () => void;
@@ -28,7 +30,7 @@ export class LoginView {
         <div class="app-title">Contract Crown</div>
         <div class="app-subtitle">A 4-player trick-taking card game</div>
         <div class="form-group">
-          <input class="form-input" type="text" placeholder="Username" id="login-username" />
+          <input class="form-input" type="email" placeholder="Email" id="login-email" />
         </div>
         <div class="form-group">
           <input class="form-input" type="password" placeholder="Password" id="login-password" />
@@ -50,17 +52,17 @@ export class LoginView {
   private attachEventListeners(): void {
     if (!this.container) return;
 
-    const usernameInput = this.container.querySelector('#login-username') as HTMLInputElement;
+    const emailInput = this.container.querySelector('#login-email') as HTMLInputElement;
     const passwordInput = this.container.querySelector('#login-password') as HTMLInputElement;
     const loginBtn = this.container.querySelector('#login-btn') as HTMLButtonElement;
     const playOfflineBtn = this.container.querySelector('#play-offline-btn') as HTMLButtonElement;
     const registerLink = this.container.querySelector('#register-link') as HTMLAnchorElement;
 
-    loginBtn?.addEventListener('click', () => this.handleLogin(usernameInput.value, passwordInput.value));
+    loginBtn?.addEventListener('click', () => this.handleLogin(emailInput.value, passwordInput.value));
     
     passwordInput?.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
-        this.handleLogin(usernameInput.value, passwordInput.value);
+        this.handleLogin(emailInput.value, passwordInput.value);
       }
     });
 
@@ -80,26 +82,50 @@ export class LoginView {
     });
   }
 
-  private handleLogin(username: string, password: string): void {
+  private async handleLogin(email: string, password: string): Promise<void> {
     this.hideError();
     
-    if (!username.trim()) {
-      this.showError('Please enter a username');
+    if (!email.trim()) {
+      this.showError('Please enter your email');
       return;
     }
 
     if (!password.trim()) {
-      this.showError('Please enter a password');
+      this.showError('Please enter your password');
       return;
     }
 
-    // Create session (simplified - no server validation in this implementation)
-    this.sessionManager.login(username, username);
-    
-    if (this.config.onLoginSuccess) {
-      this.config.onLoginSuccess();
-    } else {
-      router.handleLoginRedirect();
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: email.trim(), password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        this.showError(data.message || 'Login failed');
+        return;
+      }
+
+      this.sessionManager.loginWithSupabase(
+        data.userId,
+        data.username,
+        data.accessToken,
+        data.refreshToken,
+        data.expiresAt * 1000
+      );
+      
+      if (this.config.onLoginSuccess) {
+        this.config.onLoginSuccess();
+      } else {
+        router.handleLoginRedirect();
+      }
+    } catch (error) {
+      this.showError('Network error. Please try again.');
     }
   }
 
@@ -109,10 +135,12 @@ export class LoginView {
     let errorEl = this.container.querySelector('.error-message');
     if (!errorEl) {
       errorEl = document.createElement('div');
-      errorEl.className = 'error-message alert alert-error mt-2';
-      const formGroup = this.container.querySelector('.form-group');
-      if (formGroup && formGroup.nextSibling) {
-        this.container.insertBefore(errorEl, formGroup.nextSibling);
+      errorEl.className = 'error-message';
+      const loginContainer = this.container.querySelector('.login-container');
+      if (loginContainer && loginContainer.firstChild) {
+        loginContainer.insertBefore(errorEl, loginContainer.firstChild);
+      } else if (this.container.firstChild) {
+        this.container.insertBefore(errorEl, this.container.firstChild);
       }
     }
     if (errorEl) {

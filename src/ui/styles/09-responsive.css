@@ -196,8 +196,8 @@
     font-size: 12px;
   }
 
-  /* Login/Lobby */
-  .login-container, .lobby-container {
+  /* Login/Lobby/Registration */
+  .login-container, .lobby-container, .registration-container {
     padding: 36px 28px;
     max-width: 420px;
   }
@@ -467,11 +467,11 @@
   }
 
   /* Login/Lobby - 2 column grid */
-  .login-view, .lobby-view {
+  .login-view, .lobby-view, .registration-view {
     padding: 55px 10px 16px 10px;
   }
 
-  .login-container, .lobby-container {
+  .login-container, .lobby-container, .registration-container {
     display: grid;
     grid-template-columns: 160px 1fr;
     grid-template-rows: auto auto auto auto auto;
@@ -481,7 +481,7 @@
     align-items: center;
   }
 
-  .login-container > .app-title {
+  .login-container > .app-title, .registration-container > .app-title {
     grid-column: 1;
     grid-row: 1 / span 5;
     font-size: 24px;
@@ -494,26 +494,26 @@
     margin-bottom: 0;
   }
 
-  .login-container > .app-subtitle {
+  .login-container > .app-subtitle, .registration-container > .app-subtitle {
     display: none;
   }
 
-  .login-container > .form-group {
+  .login-container > .form-group, .registration-container > .form-group {
     grid-column: 2;
     max-width: 100%;
     margin-bottom: 0;
     gap: 10px;
   }
 
-  .login-container > .form-group:nth-of-type(1) {
+  .login-container > .form-group:nth-of-type(1), .registration-container > .form-group:nth-of-type(1) {
     grid-row: 1;
   }
 
-  .login-container > .form-group:nth-of-type(2) {
+  .login-container > .form-group:nth-of-type(2), .registration-container > .form-group:nth-of-type(2) {
     grid-row: 2;
   }
 
-  .login-container > .btn-primary {
+  .login-container > .btn-primary, .registration-container > .btn-primary {
     grid-column: 2;
     grid-row: 3;
     max-width: 100%;
@@ -525,7 +525,7 @@
     max-width: 100%;
   }
 
-  .login-container > .register-link {
+  .login-container > .register-link, .registration-container > .register-back-link {
     grid-column: 2;
     grid-row: 5;
     margin-top: 0;

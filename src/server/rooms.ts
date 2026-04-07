@@ -371,10 +371,9 @@ export class CrownRoom extends Room<GameStateSchema> {
 
       this.syncState();
 
-      // If game ended, persist and schedule disconnect
+      // If game ended, schedule disconnect
       if ((this.gameState.phase as string) === 'GAME_END') {
         console.log('[CrownRoom] Game ended! Final scores - Team0:', this.gameState.scores[0], 'Team1:', this.gameState.scores[1]);
-        this.persistGameResult();
         setTimeout(() => this.disconnect(), 5000);
         return;
       }
@@ -725,7 +724,6 @@ export class CrownRoom extends Room<GameStateSchema> {
 
       if ((this.gameState.phase as string) === 'GAME_END') {
         console.log('[CrownRoom] Bot turn resulted in GAME_END');
-        this.persistGameResult();
         setTimeout(() => this.disconnect(), 5000);
         return;
       }
@@ -851,29 +849,6 @@ export class CrownRoom extends Room<GameStateSchema> {
     cs.rank = card.rank;
     cs.value = card.value;
     return cs;
-  }
-
-  // --- Persistence ---
-
-  private persistGameResult() {
-    import('./database.js').then(({ database }) => {
-      const gameId = `game-${Date.now()}`;
-      const playerIds: string[] = [];
-      for (let i = 0; i < MAX_PLAYERS; i++) {
-        const ps = this.state.players.get(String(i));
-        if (ps) playerIds.push(ps.sessionId);
-      }
-      database.saveGame({
-        gameId,
-        players: playerIds,
-        winner: (this.gameState.scores[0] >= this.gameState.scores[1] ? 0 : 1) as 0 | 1,
-        finalScores: [this.gameState.scores[0], this.gameState.scores[1]],
-        rounds: this.gameState.completedTricks.length / 8,
-        completedAt: Date.now()
-      });
-    }).catch(() => {
-      // Ignore persistence errors
-    });
   }
 
   private cancelBotTurnTimer() {

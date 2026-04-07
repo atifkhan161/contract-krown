@@ -2,7 +2,8 @@
 // User registration form with validation and API integration
 
 import { router } from './router.js';
-import { sessionManager } from '../session/index.js';
+
+const API_BASE = '';
 
 export class RegistrationView {
   private container: HTMLElement | null = null;
@@ -11,21 +12,22 @@ export class RegistrationView {
     const container = document.createElement('div');
     container.className = 'registration-view';
     container.innerHTML = `
-      <div class="login-container">
+      <div class="registration-container">
         <div class="app-title">Contract Crown</div>
         <div class="app-subtitle">Create your account</div>
         <div class="form-group">
-          <input class="form-input" type="text" placeholder="Username" id="register-username" />
+          <input class="form-input" type="text" placeholder="Username" id="register-username" autocomplete="username" />
         </div>
         <div class="form-group">
-          <input class="form-input" type="password" placeholder="Password (min 4 characters)" id="register-password" />
+          <input class="form-input" type="email" placeholder="Email" id="register-email" autocomplete="email" />
         </div>
-        <button class="btn btn-primary w-full" id="register-btn">Register</button>
-        <div class="error-message alert alert-error mt-2 hidden" id="register-error"></div>
-        <div class="success-message alert alert-success mt-2 hidden" id="register-success"></div>
-        <div class="login-link mt-4">
+        <div class="form-group">
+          <input class="form-input" type="password" placeholder="Password (6+ characters)" id="register-password" autocomplete="new-password" />
+        </div>
+        <button class="btn btn-primary w-full" id="register-btn">Create Account</button>
+        <div class="register-back-link mt-4">
           <span>Already have an account? </span>
-          <a href="#" id="back-to-login-link">Back to Login</a>
+          <a href="#" id="back-to-login-link">Login</a>
         </div>
       </div>
     `;
@@ -39,18 +41,34 @@ export class RegistrationView {
     if (!this.container) return;
 
     const usernameInput = this.container.querySelector('#register-username') as HTMLInputElement;
+    const emailInput = this.container.querySelector('#register-email') as HTMLInputElement;
     const passwordInput = this.container.querySelector('#register-password') as HTMLInputElement;
     const registerBtn = this.container.querySelector('#register-btn') as HTMLButtonElement;
     const backToLoginLink = this.container.querySelector('#back-to-login-link') as HTMLAnchorElement;
 
-    registerBtn?.addEventListener('click', () => {
-      this.handleRegistration(usernameInput.value, passwordInput.value);
+    usernameInput?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        emailInput?.focus();
+      }
+    });
+
+    emailInput?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        passwordInput?.focus();
+      }
     });
 
     passwordInput?.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
-        this.handleRegistration(usernameInput.value, passwordInput.value);
+        e.preventDefault();
+        this.handleRegistration(usernameInput.value, emailInput.value, passwordInput.value);
       }
+    });
+
+    registerBtn?.addEventListener('click', () => {
+      this.handleRegistration(usernameInput.value, emailInput.value, passwordInput.value);
     });
 
     backToLoginLink?.addEventListener('click', (e) => {
@@ -59,62 +77,91 @@ export class RegistrationView {
     });
   }
 
-  private async handleRegistration(username: string, password: string): Promise<void> {
+  private async handleRegistration(username: string, email: string, password: string): Promise<void> {
     this.hideError();
-    this.hideSuccess();
-
-    if (!username.trim()) {
-      this.showError('Username is required');
-      return;
-    }
-
-    if (password.length < 4) {
-      this.showError('Password must be at least 4 characters');
-      return;
-    }
-
+    
     const registerBtn = this.container?.querySelector('#register-btn') as HTMLButtonElement;
+    
+    if (!username.trim()) {
+      this.showError('Please enter a username');
+      return;
+    }
+
+    if (username.trim().length < 2) {
+      this.showError('Username must be at least 2 characters');
+      return;
+    }
+
+    if (!email.trim()) {
+      this.showError('Please enter your email');
+      return;
+    }
+
+    if (!this.isValidEmail(email.trim())) {
+      this.showError('Please enter a valid email address');
+      return;
+    }
+
+    if (password.length < 6) {
+      this.showError('Password must be at least 6 characters');
+      return;
+    }
+
     registerBtn.disabled = true;
-    registerBtn.textContent = 'Registering...';
+    registerBtn.textContent = 'Creating account...';
 
     try {
-      const response = await fetch('/api/register', {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password })
+        body: JSON.stringify({ 
+          username: username.trim(), 
+          email: email.trim(),
+          password 
+        })
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        if (response.status === 409) {
-          this.showError('Username is already taken');
-        } else if (response.status === 400) {
-          this.showError(data.message || 'Invalid input');
-        } else {
-          this.showError('Registration failed. Please try again.');
-        }
+        this.showError(data.message || 'Registration failed. Please try again.');
         return;
       }
 
-      this.showSuccess('Registration successful! Logging you in...');
-
-      sessionManager.login(data.userId, data.username, data.token, data.expiresAt);
+      registerBtn.textContent = 'Account created!';
+      registerBtn.classList.add('btn-success');
       
+      this.showSuccess('Success! Check your email to confirm, then login.');
+
       setTimeout(() => {
-        router.handleLoginRedirect();
-      }, 500);
+        router.navigate('/login');
+      }, 2500);
     } catch {
-      this.showError('Network error. Please check your connection.');
+      this.showError('Network error. Please check your connection and try again.');
     } finally {
       registerBtn.disabled = false;
-      registerBtn.textContent = 'Register';
+      registerBtn.textContent = 'Create Account';
+      registerBtn.classList.remove('btn-success');
     }
+  }
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 
   private showError(message: string): void {
     if (!this.container) return;
-    const errorEl = this.container.querySelector('#register-error') as HTMLElement;
+
+    let errorEl = this.container.querySelector('.error-message');
+    if (!errorEl) {
+      errorEl = document.createElement('div');
+      errorEl.className = 'error-message';
+      const firstFormGroup = this.container.querySelector('.form-group');
+      if (firstFormGroup?.parentNode) {
+        firstFormGroup.parentNode.insertBefore(errorEl, firstFormGroup);
+      }
+    }
     if (errorEl) {
       errorEl.textContent = message;
       errorEl.classList.remove('hidden');
@@ -123,7 +170,7 @@ export class RegistrationView {
 
   hideError(): void {
     if (!this.container) return;
-    const errorEl = this.container.querySelector('#register-error') as HTMLElement;
+    const errorEl = this.container.querySelector('.error-message');
     if (errorEl) {
       errorEl.classList.add('hidden');
     }
@@ -131,7 +178,16 @@ export class RegistrationView {
 
   private showSuccess(message: string): void {
     if (!this.container) return;
-    const successEl = this.container.querySelector('#register-success') as HTMLElement;
+
+    let successEl = this.container.querySelector('.success-message');
+    if (!successEl) {
+      successEl = document.createElement('div');
+      successEl.className = 'success-message';
+      const btn = this.container.querySelector('.btn-primary');
+      if (btn?.parentNode) {
+        btn.parentNode.insertBefore(successEl, btn.nextSibling);
+      }
+    }
     if (successEl) {
       successEl.textContent = message;
       successEl.classList.remove('hidden');
@@ -140,7 +196,7 @@ export class RegistrationView {
 
   hideSuccess(): void {
     if (!this.container) return;
-    const successEl = this.container.querySelector('#register-success') as HTMLElement;
+    const successEl = this.container.querySelector('.success-message');
     if (successEl) {
       successEl.classList.add('hidden');
     }

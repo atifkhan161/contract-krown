@@ -22,14 +22,13 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Lokijs
-memory
-
 # Qwen
 .qwen
 
 #.opencode
 .opencode
 
-# Playwright
-test-results/*
+# Environment
+.env
+.env.local
+.env.*.local

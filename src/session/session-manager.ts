@@ -5,6 +5,7 @@ export interface SessionData {
   userId: string;
   username: string;
   token: string;
+  refreshToken?: string;
   expiresAt: number;
 }
 
@@ -65,7 +66,15 @@ export class SessionManager {
   }
 
   /**
-   * Logs in a user and creates a session token
+   * Gets the current access token
+   */
+  public getToken(): string | null {
+    const session = this.getSession();
+    return session?.token || null;
+  }
+
+  /**
+   * Logs in a user and creates a session token (offline mode)
    */
   public login(userId: string, username: string, token?: string, expiresAt?: number): SessionData {
     const sessionToken = token || this.generateToken();
@@ -73,6 +82,22 @@ export class SessionManager {
       userId,
       username,
       token: sessionToken,
+      expiresAt: expiresAt || Date.now() + this.SESSION_DURATION
+    };
+    
+    localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+    return session;
+  }
+
+  /**
+   * Logs in a user with Supabase credentials
+   */
+  public loginWithSupabase(userId: string, username: string, accessToken: string, refreshToken?: string, expiresAt?: number): SessionData {
+    const session: SessionData = {
+      userId,
+      username,
+      token: accessToken,
+      refreshToken,
       expiresAt: expiresAt || Date.now() + this.SESSION_DURATION
     };
     
