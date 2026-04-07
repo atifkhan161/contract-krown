@@ -32,3 +32,6 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# E2e test
+test-results

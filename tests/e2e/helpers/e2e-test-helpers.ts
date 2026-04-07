@@ -7,24 +7,47 @@ import { expect } from '@playwright/test';
 // ---------- Authentication ----------
 
 /**
- * Logs in a user on the login page.
- * The app uses client-side sessions (localStorage), so this is straightforward.
+ * Logs in a user by setting mock session in localStorage.
+ * Bypasses Supabase auth for E2E test independence.
  */
 export async function loginUser(page: Page, username: string): Promise<void> {
-  await page.goto('/login');
+  // Navigate to root first to let app initialize
+  await page.goto('/');
+  
+  // Wait for app to initialize
+  await page.waitForTimeout(500);
 
-  // Wait for the login form to be visible
-  await page.locator('#login-username').waitFor({ state: 'visible', timeout: 10000 });
+  // Generate mock session (bypasses Supabase auth)
+  const mockSession = {
+    userId: generateMockUserId(),
+    username: username,
+    token: 'mock-token-' + Date.now(),
+    refreshToken: 'mock-refresh-' + Date.now(),
+    expiresAt: Date.now() + (30 * 24 * 60 * 60 * 1000) // 30 days
+  };
 
-  // Fill in credentials
-  await page.locator('#login-username').fill(username);
-  await page.locator('#login-password').fill('testpass123');
+  // Set session in localStorage
+  await page.evaluate((session) => {
+    localStorage.setItem('contract_crown_session', JSON.stringify(session));
+  }, mockSession);
 
-  // Click login
-  await page.locator('#login-btn').click();
+  // Navigate to lobby - router will check auth and allow since session is set
+  await page.goto('/lobby');
 
-  // Wait for redirect to lobby (indicates successful login)
-  await page.waitForURL(/\/lobby/, { timeout: 10000 });
+  // Wait for lobby to be visible - try multiple selectors
+  try {
+    await page.locator('.lobby-view').waitFor({ state: 'visible', timeout: 10000 });
+  } catch {
+    // Try alternate - wait for any lobby element
+    await page.locator('#create-game-btn, .lobby-header, [class*="lobby"]').first().waitFor({ state: 'visible', timeout: 10000 });
+  }
+}
+
+/**
+ * Generates a mock UUID for test user
+ */
+function generateMockUserId(): string {
+  return 'test-' + Math.random().toString(36).substring(2, 15) + '-' + Date.now();
 }
 
 /**
