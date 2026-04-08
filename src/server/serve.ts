@@ -7,7 +7,7 @@ import { roomRegistry } from './room-registry.js';
 import { supabaseService } from './supabase.js';
 
 const PORT = Number(process.env.PORT) || 3000;
-const WS_PORT = Number(process.env.WS_PORT) || 2567;
+const WS_PORT = Number(process.env.WS_PORT) || (process.env.RENDER ? 10000 : 2567);
 const STATIC_DIR = join(import.meta.dir, '../../dist/client');
 
 // --- Colyseus WebSocket Server ---
@@ -211,6 +211,8 @@ function generateRoomId(): string {
 }
 
 // Start WebSocket server
+// Use WS_PORT which defaults to 2567 locally, but 10000 on Render (via RENDER env var)
+// This allows both HTTP and WebSocket to share same port in production
 await gameServer.listen(WS_PORT);
 
 console.log(`Contract Crown HTTP server running at http://localhost:${PORT}`);

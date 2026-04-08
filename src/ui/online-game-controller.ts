@@ -15,7 +15,9 @@ export interface OnlineGameConfig {
   userPlayerIndex?: number;
 }
 
-const DEFAULT_SERVER_URL = 'ws://localhost:2567';
+const DEFAULT_SERVER_URL = typeof window !== 'undefined' && (window as any).WS_URL 
+  ? (window as any).WS_URL 
+  : 'ws://localhost:2567';
 
 export class OnlineGameController {
   private clientWrapper: ColyseusClientWrapper;
