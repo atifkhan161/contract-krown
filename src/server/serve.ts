@@ -114,7 +114,7 @@ const gameServer = new Server({
     });
 
     // Resolve room by code
-    app.post('/api/rooms/resolve', (req, res) => {
+    app.post('/api/rooms/resolve', async (req, res) => {
       const { code } = req.body || {};
       
       if (!code) {
@@ -129,7 +129,8 @@ const gameServer = new Server({
       console.log('[API] /rooms/resolve: active rooms count=' + allRooms.length);
       console.log('[API] /rooms/resolve: active room codes: ' + JSON.stringify(allRooms.map(r => r.roomCode)));
 
-      const room = roomRegistry.getByCode(upperCode);
+      // Use async version to check database if not in cache
+      const room = await roomRegistry.getByCodeAsync(upperCode);
       console.log('[API] /rooms/resolve: found room=' + (room ? room.roomCode : 'NOT FOUND') + ', roomId=' + (room ? room.roomId : 'N/A'));
 
       if (!room) {
@@ -289,6 +290,13 @@ console.log(`Contract Crown server running at http://0.0.0.0:${PORT}`);
 console.log(`WebSocket server at ws://0.0.0.0:${PORT}`);
 console.log(`Accessible at HTTP: ${getHttpUrl()}`);
 console.log(`Accessible at WS: ${getWsUrl()}`);
+
+// Initialize room registry with database sync
+console.log('[SERVER] Initializing room registry...');
+await roomRegistry.initialize();
+await roomRegistry.cleanupOnStartup();
+console.log('[SERVER] Room registry initialized');
+
 console.log('Server ready for connections...');
 
 // Graceful shutdown
