@@ -27,7 +27,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'bun run start',
+    command: 'bunx tsx src/server/serve.ts',
     url: 'http://localhost:3000',
     reuseExistingServer: true,
     timeout: 30_000,

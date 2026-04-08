@@ -48,7 +48,12 @@ export class ColyseusClientWrapper {
     if (this.connectionState === 'connected') return;
 
     this.connectionState = 'connecting';
+    console.log('[ColyseusClient] Creating Client with URL:', serverUrl);
+    
     this.client = new Client(serverUrl);
+    
+    // Simple - Colyseus SDK handles connection internally
+    console.log('[ColyseusClient] Client created');
     this.connectionState = 'connected';
   }
 

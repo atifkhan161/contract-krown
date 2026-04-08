@@ -495,9 +495,17 @@ export class OnlineGameController {
   async createWaitingRoom(serverUrl: string = DEFAULT_SERVER_URL): Promise<{ roomId: string; roomCode: string }> {
     await this.clientWrapper.connect(serverUrl);
     console.log('Creating room with username:', this.currentUsername || 'Player');
-    const roomId = await this.clientWrapper.createRoom('crown', {
-      username: this.currentUsername || 'Player'
-    });
+    
+    let roomId: string;
+    try {
+      roomId = await this.clientWrapper.createRoom('crown', {
+        username: this.currentUsername || 'Player'
+      });
+    } catch (err) {
+      console.error('[createWaitingRoom] createRoom failed:', err);
+      throw err;
+    }
+    
     console.log('createRoom returned, roomId:', roomId);
     this.isRunning = true;
 
@@ -505,7 +513,7 @@ export class OnlineGameController {
       const timeout = setTimeout(() => {
         console.log('Timeout waiting for room state, serverState:', this.serverState);
         reject(new Error('Timed out waiting for room state'));
-      }, 10000);
+      }, 30000);
 
       const checkState = () => {
         const code = this.serverState?.roomCode;

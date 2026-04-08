@@ -36,10 +36,10 @@
   <script>
     // Auto-detect WebSocket URL based on current environment
     // Production (HTTPS/Render): Use wss://hostname (port handled by load balancer)
-    // Development (HTTP): Use ws://hostname:2567 (Colyseus default port)
+    // Development (HTTP): Use ws://hostname:3000 (same port as HTTP server)
     const isProduction = location.protocol === 'https:';
     const wsProtocol = isProduction ? 'wss:' : 'ws:';
-    const wsPort = isProduction ? '' : ':2567';
+    const wsPort = isProduction ? '' : ':3000';
     window.WS_URL = `${wsProtocol}//${location.hostname}${wsPort}`;
     console.log('[Config] WebSocket URL:', window.WS_URL);
   </script>

@@ -10,11 +10,13 @@
     "dev:js": "bun build src/ui/app.ts --outdir dist/client --target browser --sourcemap=inline --watch",
     "build": "bun run build:server && bun run build:client",
     "build:server": "bun build src/server/serve.ts --outdir dist/server --target bun",
+    "build:server:node": "bun build src/server/serve.ts --outdir dist/server --target node --format cjs",
     "build:client": "bun run build:js && bun run build:css && bun run build:copy",
     "build:js": "bun build src/ui/app.ts --outdir dist/client --target browser --sourcemap=inline",
     "build:css": "postcss src/ui/styles/main.css -o dist/client/styles.css --no-map",
     "build:copy": "cp public/index.html public/manifest.json dist/client/ && cp -r public/icons public/assets dist/client/",
-    "start": "bun run dist/server/serve.js",
+    "start": "bunx tsx src/server/serve.ts",
+    "start:prod": "bun run dist/server/serve.js",
     "test": "bun test",
     "test:unit": "bun test --run",
     "test:watch": "bun test --watch",
@@ -30,13 +32,17 @@
     "postinstall": "node scripts/patch-colyseus.mjs"
   },
   "dependencies": {
-    "@colyseus/sdk": "^0.17.0",
+    "@colyseus/bun-websockets": "^0.17.12",
+    "@colyseus/sdk": "^0.17.39",
+    "@colyseus/uwebsockets-transport": "^0.17.19",
+    "@colyseus/ws-transport": "^0.17.11",
     "@supabase/supabase-js": "^2.47.0",
-    "colyseus": "^0.17.0",
+    "colyseus": "^0.17.8",
     "daisyui": "^4.12.14",
     "elysia": "^1.1.16",
     "page": "^1.8.7",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "uwebsockets-express": "^1.4.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
