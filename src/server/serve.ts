@@ -12,6 +12,40 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const STATIC_DIR = join(__dirname, '../../dist/client');
 
+// --- Environment Detection ---
+const isProduction = !!process.env.RENDER;
+const isRender = !!process.env.RENDER;
+const externalUrl = process.env.RENDER_EXTERNAL_URL || (isProduction ? `https://${process.env.HOST}` : null);
+
+// --- Utility Functions ---
+
+function getHttpUrl(): string {
+  if (externalUrl) return externalUrl;
+  return `http://localhost:${PORT}`;
+}
+
+function getWsUrl(): string {
+  if (externalUrl) {
+    return externalUrl.replace('https://', 'wss://').replace('http://', 'ws://');
+  }
+  return `ws://localhost:${PORT}`;
+}
+
+// --- Startup Logging ---
+console.log('========================================');
+console.log('Contract Crown Server Starting...');
+console.log('========================================');
+console.log('Server Configuration:');
+console.log(`  PORT: ${PORT}`);
+console.log(`  Environment: ${isProduction ? 'PRODUCTION (Render)' : 'LOCAL'}`);
+console.log(`  RENDER_EXTERNAL_URL: ${externalUrl || 'not set'}`);
+console.log(`  RENDER: ${isRender}`);
+console.log(`  Node version: ${process.version}`);
+console.log(`  Platform: ${process.platform}`);
+console.log(`  Calculated HTTP URL: ${getHttpUrl()}`);
+console.log(`  Calculated WS URL: ${getWsUrl()}`);
+console.log('========================================');
+
 // --- Colyseus Server with Express for custom routes ---
 import { Server } from 'colyseus';
 import { WebSocketTransport } from '@colyseus/ws-transport';
@@ -24,33 +58,58 @@ const transport = new WebSocketTransport({});
 const gameServer = new Server({
   transport: transport,
   express: (app) => {
+    // Add request logging middleware
+    app.use((req, res, next) => {
+      const start = Date.now();
+      res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`[REQUEST] ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
+      });
+      next();
+    });
+
     // Add body parsing
     app.use(express.json({ limit: '10mb' }));
 
     // --- API Routes ---
 
     // Health check
-    app.get('/health', (req, res) => {
-      res.json({ status: 'ok' });
+    app.get('/health', (_req, res) => {
+      const rooms = roomRegistry.getAll();
+      res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        activeRooms: rooms.length,
+        environment: isProduction ? 'production' : 'local'
+      });
     });
 
     // Games list
-    app.get('/api/games', (req, res) => {
+    app.get('/api/games', (_req, res) => {
       res.json({ games: [] });
     });
 
     // Rooms list
-    app.get('/api/rooms', (req, res) => {
+    app.get('/api/rooms', (_req, res) => {
       res.json(roomRegistry.listAvailable());
     });
 
     // Create room
-    app.post('/api/rooms', (req, res) => {
+    app.post('/api/rooms', (_req, res) => {
       const roomId = generateRoomId();
+      const wsUrl = getWsUrl();
+      const httpUrl = getHttpUrl();
+      
+      console.log(`[API] /api/rooms: Creating room`);
+      console.log(`[API] /api/rooms: roomId=${roomId}`);
+      console.log(`[API] /api/rooms: wsUrl=${wsUrl}`);
+      console.log(`[API] /api/rooms: httpUrl=${httpUrl}`);
+      console.log(`[API] /api/rooms: isProduction=${isProduction}`);
+      
       res.json({
         roomId,
-        wsUrl: `ws://localhost:${PORT}`,
-        httpUrl: `http://localhost:${PORT}`
+        wsUrl,
+        httpUrl
       });
     });
 
@@ -59,20 +118,25 @@ const gameServer = new Server({
       const { code } = req.body || {};
       
       if (!code) {
+        console.log('[API] /rooms/resolve: ERROR - Code is required');
         return res.status(400).json({ message: 'Code is required' });
       }
       
       const upperCode = code.toUpperCase();
-      console.log('[API] /rooms/resolve: received code=', code, ', upper=', upperCode);
-      console.log('[API] /rooms/resolve: registry rooms:', roomRegistry.getAll().map(r => r.roomCode));
+      const allRooms = roomRegistry.getAll();
+      
+      console.log('[API] /rooms/resolve: received code=' + code + ', upper=' + upperCode);
+      console.log('[API] /rooms/resolve: active rooms count=' + allRooms.length);
+      console.log('[API] /rooms/resolve: active room codes: ' + JSON.stringify(allRooms.map(r => r.roomCode)));
 
       const room = roomRegistry.getByCode(upperCode);
-      console.log('[API] /rooms/resolve: found room=', room?.roomCode, ', roomId=', room?.roomId);
+      console.log('[API] /rooms/resolve: found room=' + (room ? room.roomCode : 'NOT FOUND') + ', roomId=' + (room ? room.roomId : 'N/A'));
 
       if (!room) {
         return res.status(404).json({ 
           message: 'Room not found', 
-          searchedCode: upperCode 
+          searchedCode: upperCode,
+          availableCodes: allRooms.map(r => r.roomCode)
         });
       }
 
@@ -80,7 +144,7 @@ const gameServer = new Server({
     });
 
     // Create game
-    app.post('/api/games', (req, res) => {
+    app.post('/api/games', (_req, res) => {
       res.json({ created: true });
     });
 
@@ -148,7 +212,7 @@ const gameServer = new Server({
     });
 
     // Auth: Signout
-    app.post('/api/auth/signout', async (req, res) => {
+    app.post('/api/auth/signout', async (_req, res) => {
       await supabaseService.signOut();
       res.json({ success: true });
     });
@@ -179,24 +243,26 @@ const gameServer = new Server({
     // --- Static Files ---
 
     // Explicit root route for SPA
-    app.get('/', (req, res) => {
+    app.get('/', (_req, res) => {
+      console.log('[STATIC] Serving index.html');
       res.sendFile(join(STATIC_DIR, 'index.html'));
     });
 
-    app.get('/styles.css', (req, res) => {
+    app.get('/styles.css', (_req, res) => {
       res.sendFile(join(STATIC_DIR, 'styles.css'));
     });
 
-    app.get('/app.js', (req, res) => {
+    app.get('/app.js', (_req, res) => {
       res.sendFile(join(STATIC_DIR, 'app.js'));
     });
 
-    app.get('/manifest.json', (req, res) => {
+    app.get('/manifest.json', (_req, res) => {
       res.sendFile(join(STATIC_DIR, 'manifest.json'));
     });
 
     // SPA fallback - serve index.html for all other routes (must be LAST)
     app.use((req, res) => {
+      console.log(`[STATIC] SPA fallback: ${req.path} -> index.html`);
       res.sendFile(join(STATIC_DIR, 'index.html'));
     });
   }
@@ -215,20 +281,30 @@ function generateRoomId(): string {
   return result;
 }
 
-// Start Colyseus - this creates HTTP server with both API and WebSocket
-await gameServer.listen(PORT);
+// Start Colyseus - bind to 0.0.0.0 for external connections
+console.log(`[SERVER] Starting on port ${PORT}, binding to 0.0.0.0...`);
+await gameServer.listen(PORT, '0.0.0.0');
 
-console.log(`Contract Crown server running at http://localhost:${PORT}`);
-console.log(`WebSocket server at ws://localhost:${PORT}`);
+console.log(`Contract Crown server running at http://0.0.0.0:${PORT}`);
+console.log(`WebSocket server at ws://0.0.0.0:${PORT}`);
+console.log(`Accessible at HTTP: ${getHttpUrl()}`);
+console.log(`Accessible at WS: ${getWsUrl()}`);
 console.log('Server ready for connections...');
 
 // Graceful shutdown
+let isShuttingDown = false;
 const shutdown = async () => {
-  console.log('Shutting down gracefully...');
+  if (isShuttingDown) {
+    console.log('[SHUTDOWN] Already shutting down, ignoring signal');
+    return;
+  }
+  isShuttingDown = true;
+  console.log('[SHUTDOWN] Shutting down gracefully...');
   try {
     await gameServer.gracefullyShutdown();
+    console.log('[SHUTDOWN] Server shutdown complete');
   } catch (e) {
-    // Ignore shutdown errors
+    console.error('[SHUTDOWN] Error during shutdown:', e);
   }
   process.exit(0);
 };
