@@ -100,11 +100,14 @@ const gameServer = new Server({
       const wsUrl = getWsUrl();
       const httpUrl = getHttpUrl();
       
+      console.log(`[API] =========================================`);
       console.log(`[API] /api/rooms: Creating room`);
-      console.log(`[API] /api/rooms: roomId=${roomId}`);
-      console.log(`[API] /api/rooms: wsUrl=${wsUrl}`);
-      console.log(`[API] /api/rooms: httpUrl=${httpUrl}`);
-      console.log(`[API] /api/rooms: isProduction=${isProduction}`);
+      console.log(`[API] roomId=${roomId}`);
+      console.log(`[API] wsUrl=${wsUrl}`);
+      console.log(`[API] httpUrl=${httpUrl}`);
+      console.log(`[API] isProduction=${isProduction}`);
+      console.log(`[API] externalUrl=${externalUrl || 'null'}`);
+      console.log(`[API] =========================================`);
       
       res.json({
         roomId,
@@ -282,32 +285,86 @@ function generateRoomId(): string {
 }
 
 // Start Colyseus - bind to 0.0.0.0 for external connections
-console.log(`[SERVER] Starting on port ${PORT}, binding to 0.0.0.0...`);
+console.log(`[SERVER] ========================================`);
+console.log(`[SERVER] Starting server...`);
+console.log(`[SERVER] ========================================`);
+console.log(`[SERVER] PID: ${process.pid}`);
+console.log(`[SERVER] PORT: ${PORT}`);
+console.log(`[SERVER] Node: ${process.version}`);
+console.log(`[SERVER] Platform: ${process.platform}`);
+console.log(`[SERVER] Environment: ${isProduction ? 'PRODUCTION' : 'LOCAL'}`);
+console.log(`[SERVER] RENDER: ${isRender}`);
+console.log(`[SERVER] External URL: ${externalUrl || 'none'}`);
+console.log(`[SERVER] Start time: ${new Date().toISOString()}`);
+console.log(`[SERVER] ========================================`);
+
 await gameServer.listen(PORT, '0.0.0.0');
 
-console.log(`Contract Crown server running at http://0.0.0.0:${PORT}`);
-console.log(`WebSocket server at ws://0.0.0.0:${PORT}`);
-console.log(`Accessible at HTTP: ${getHttpUrl()}`);
-console.log(`Accessible at WS: ${getWsUrl()}`);
-console.log('Server ready for connections...');
+console.log(`[SERVER] Contract Crown server running at http://0.0.0.0:${PORT}`);
+console.log(`[SERVER] WebSocket server at ws://0.0.0.0:${PORT}`);
+console.log(`[SERVER] Accessible at HTTP: ${getHttpUrl()}`);
+console.log(`[SERVER] Accessible at WS: ${getWsUrl()}`);
+console.log(`[SERVER] Server ready for connections...`);
 
-// Graceful shutdown
+console.log(`[SERVER] ========================================`);
+
+// ============================================================
+// GRACEFUL SHUTDOWN - Critical for debugging room destruction
+// ============================================================
 let isShuttingDown = false;
-const shutdown = async () => {
+let serverStartTime = Date.now();
+
+const shutdown = async (signal: string) => {
+  const uptimeSeconds = Math.floor((Date.now() - serverStartTime) / 1000);
+  const activeRooms = roomRegistry.getAll();
+  
+  console.log(`[SHUTDOWN] ========================================`);
+  console.log(`[SHUTDOWN] Signal received: ${signal}`);
+  console.log(`[SHUTDOWN] isShuttingDown: ${isShuttingDown}`);
+  console.log(`[SHUTDOWN] Server uptime: ${uptimeSeconds} seconds`);
+  console.log(`[SHUTDOWN] Active rooms count: ${activeRooms.length}`);
+  console.log(`[SHUTDOWN] Room IDs: [${activeRooms.map(r => r.roomId).join(', ')}]`);
+  console.log(`[SHUTDOWN] Room codes: [${activeRooms.map(r => r.roomCode).join(', ')}]`);
+  console.log(`[SHUTDOWN] ========================================`);
+  
   if (isShuttingDown) {
-    console.log('[SHUTDOWN] Already shutting down, ignoring signal');
+    console.log('[SHUTDOWN] Already shutting down, ignoring');
     return;
   }
+  
   isShuttingDown = true;
-  console.log('[SHUTDOWN] Shutting down gracefully...');
+  console.log('[SHUTDOWN] Starting graceful shutdown...');
+  
   try {
+    console.log('[SHUTDOWN] Calling gameServer.gracefullyShutdown()...');
     await gameServer.gracefullyShutdown();
     console.log('[SHUTDOWN] Server shutdown complete');
-  } catch (e) {
-    console.error('[SHUTDOWN] Error during shutdown:', e);
+  } catch (e: any) {
+    console.error('[SHUTDOWN] Error during shutdown:', e.message || e);
   }
+  
+  console.log(`[SHUTDOWN] Exiting process (code 0)`);
   process.exit(0);
 };
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on('SIGINT', () => {
+  console.log('[SIGNAL] Received SIGINT');
+  shutdown('SIGINT');
+});
+
+process.on('SIGTERM', () => {
+  console.log('[SIGNAL] Received SIGTERM');
+  shutdown('SIGTERM');
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('[EXCEPTION] Uncaught exception:', err.message);
+  console.error('[EXCEPTION] Stack:', err.stack);
+  shutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[REJECTION] Unhandled rejection at:', promise);
+  console.error('[REJECTION] Reason:', reason);
+});

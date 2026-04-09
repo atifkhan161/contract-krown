@@ -48,39 +48,103 @@ export class ColyseusClientWrapper {
     if (this.connectionState === 'connected') return;
 
     this.connectionState = 'connecting';
-    console.log('[ColyseusClient] Creating Client with URL:', serverUrl);
+    console.log('[ColyseusClient] =========================================');
+    console.log('[ColyseusClient] connect() START');
+    console.log('[ColyseusClient] serverUrl:', serverUrl);
+    console.log('[ColyseusClient] serverUrl includes port:', serverUrl.includes(':') && !serverUrl.startsWith('wss:'));
+    console.log('[ColyseusClient] =========================================');
     
     this.client = new Client(serverUrl);
     
     // Simple - Colyseus SDK handles connection internally
-    console.log('[ColyseusClient] Client created');
+    console.log('[ColyseusClient] Client created with URL:', serverUrl);
     this.connectionState = 'connected';
+    console.log('[ColyseusClient] connect() END - connectionState:', this.connectionState);
   }
 
   async createRoom(roomName: string = 'crown', options: any = {}): Promise<string> {
-    if (!this.client) throw new Error('Not connected. Call connect() first.');
+    if (!this.client) {
+      console.error('[ColyseusClient] createRoom FAILED: Not connected');
+      throw new Error('Not connected. Call connect() first.');
+    }
 
-    console.log('[ColyseusClient] Creating room:', roomName, 'options:', JSON.stringify(options));
+    console.log('[ColyseusClient] =========================================');
+    console.log('[ColyseusClient] createRoom START');
+    console.log('[ColyseusClient] roomName:', roomName);
+    console.log('[ColyseusClient] options:', JSON.stringify(options));
+    console.log('[ColyseusClient] connectionState:', this.connectionState);
+    console.log('[ColyseusClient] serverUrl:', (this.client as any).url || 'unknown');
+    console.log('[ColyseusClient] =========================================');
     
-    this.room = await this.client.create(roomName, options);
-    this.reconnectionToken = this.room.reconnectionToken;
-    console.log('[ColyseusClient] Room created, roomId:', this.room.roomId, 'sessionId:', this.room.sessionId);
+    try {
+      console.log('[ColyseusClient] Calling client.create()...');
+      this.room = await this.client.create(roomName, options);
+      
+      if (!this.room) {
+        console.error('[ColyseusClient] createRoom: room is null after creation!');
+        throw new Error('Room creation returned null');
+      }
+      
+      console.log('[ColyseusClient] =========================================');
+      console.log('[ColyseusClient] createRoom SUCCESS');
+      console.log('[ColyseusClient] roomId:', this.room.roomId);
+      console.log('[ColyseusClient] sessionId:', this.room.sessionId);
+      console.log('[ColyseusClient] reconnectionToken:', this.room.reconnectionToken ? 'present' : 'null');
+      console.log('[ColyseusClient] =========================================');
+      
+      this.reconnectionToken = this.room.reconnectionToken;
+      this.setupRoomListeners();
+      console.log('[ColyseusClient] Room listeners set up');
+      console.log('[ColyseusClient] createRoom END - returning roomId:', this.room.roomId);
 
-    this.setupRoomListeners();
-
-    return this.room.roomId;
+      return this.room.roomId;
+    } catch (err: any) {
+      console.error('[ColyseusClient] =========================================');
+      console.error('[ColyseusClient] createRoom FAILED');
+      console.error('[ColyseusClient] Error:', err.message || err);
+      console.error('[ColyseusClient] Error code:', err.code || 'unknown');
+      console.error('[ColyseusClient] Error name:', err.name || 'unknown');
+      console.error('[ColyseusClient] Stack:', err.stack || 'no stack');
+      console.error('[ColyseusClient] =========================================');
+      throw err;
+    }
   }
 
   async joinRoom(roomId: string, _roomName: string = 'crown', options: any = {}): Promise<void> {
-    if (!this.client) throw new Error('Not connected. Call connect() first.');
+    if (!this.client) {
+      console.error('[ColyseusClient] joinRoom FAILED: Not connected');
+      throw new Error('Not connected. Call connect() first.');
+    }
 
-    console.log('[ColyseusClient] Joining room:', roomId, 'options:', JSON.stringify(options));
+    console.log('[ColyseusClient] =========================================');
+    console.log('[ColyseusClient] joinRoom START');
+    console.log('[ColyseusClient] roomId:', roomId);
+    console.log('[ColyseusClient] options:', JSON.stringify(options));
+    console.log('[ColyseusClient] connectionState:', this.connectionState);
+    console.log('[ColyseusClient] =========================================');
     
-    this.room = await this.client.joinById(roomId, options);
-    this.reconnectionToken = this.room.reconnectionToken;
-    console.log('[ColyseusClient] Joined room, sessionId:', this.room.sessionId);
-
-    this.setupRoomListeners();
+    try {
+      console.log('[ColyseusClient] Calling client.joinById()...');
+      this.room = await this.client.joinById(roomId, options);
+      
+      console.log('[ColyseusClient] =========================================');
+      console.log('[ColyseusClient] joinRoom SUCCESS');
+      console.log('[ColyseusClient] roomId:', this.room.roomId);
+      console.log('[ColyseusClient] sessionId:', this.room.sessionId);
+      console.log('[ColyseusClient] =========================================');
+      
+      this.reconnectionToken = this.room.reconnectionToken;
+      this.setupRoomListeners();
+      console.log('[ColyseusClient] Room listeners set up');
+      console.log('[ColyseusClient] joinRoom END');
+    } catch (err: any) {
+      console.error('[ColyseusClient] =========================================');
+      console.error('[ColyseusClient] joinRoom FAILED');
+      console.error('[ColyseusClient] Error:', err.message || err);
+      console.error('[ColyseusClient] Error code:', err.code || 'unknown');
+      console.error('[ColyseusClient] =========================================');
+      throw err;
+    }
   }
 
   async joinOrCreate(roomName: string = 'crown', options: any = {}): Promise<string> {
@@ -157,33 +221,51 @@ export class ColyseusClientWrapper {
   }
 
   private setupRoomListeners(): void {
-    if (!this.room) return;
+    if (!this.room) {
+      console.error('[ColyseusClient] setupRoomListeners: room is null!');
+      return;
+    }
 
-    console.log('[ColyseusClient] setupRoomListeners called, roomId:', this.room.roomId);
+    console.log('[ColyseusClient] =========================================');
+    console.log('[ColyseusClient] setupRoomListeners START, roomId:', this.room.roomId);
+    console.log('[ColyseusClient] =========================================');
 
+    // State change listener
     this.room.onStateChange((state) => {
-      console.log('[ColyseusClient] onStateChange fired');
-      console.log('[ColyseusClient] state.roomCode:', state.roomCode);
-      console.log('[ColyseusClient] state.phase:', state.phase);
+      console.log('[ColyseusClient] onStateChange fired, roomCode:', state?.roomCode, 'phase:', state?.phase);
       this.callbacks.onStateChange(state);
     });
 
+    // Message listener
     this.room.onMessage('game_started', (data) => {
-      console.log('[ColyseusClient] game_started message received:', data);
+      console.log('[ColyseusClient] onMessage(game_started):', JSON.stringify(data));
       if (this.callbacks.onGameStarted) {
         this.callbacks.onGameStarted(data);
       }
     });
 
+    // Error listener
     this.room.onError((code, message) => {
-      console.error('[ColyseusClient] onError:', code, message);
+      console.error('[ColyseusClient] =========================================');
+      console.error('[ColyseusClient] onError fired');
+      console.error('[ColyseusClient] Error code:', code);
+      console.error('[ColyseusClient] Error message:', message);
+      console.error('[ColyseusClient] =========================================');
       this.callbacks.onError(code ?? 0, message ?? 'Unknown error');
     });
 
-    this.room.onLeave((code, _reason) => {
-      console.log('[ColyseusClient] onLeave, code:', code);
+    // Leave listener
+    this.room.onLeave((code, reason) => {
+      console.log('[ColyseusClient] =========================================');
+      console.log('[ColyseusClient] onLeave fired');
+      console.log('[ColyseusClient] Leave code:', code);
+      console.log('[ColyseusClient] Leave reason:', reason);
+      console.log('[ColyseusClient] connectionState set to: disconnected');
+      console.log('[ColyseusClient] =========================================');
       this.connectionState = 'disconnected';
       this.callbacks.onLeave(code);
     });
+
+    console.log('[ColyseusClient] setupRoomListeners END - all listeners registered');
   }
 }

@@ -36,51 +36,74 @@ export class CrownRoom extends Room<GameStateSchema> {
   // --- Lifecycle ---
 
   onCreate(options: any) {
-    console.log('[CrownRoom] onCreate called, roomId:', this.roomId, 'options:', JSON.stringify(options));
+    console.log('[CrownRoom] =========================================');
+    console.log('[CrownRoom] onCreate START, roomId:', this.roomId);
+    console.log('[CrownRoom] options:', JSON.stringify(options));
+    console.log('[CrownRoom] =========================================');
+    
+    // Step 1: Create initial state
+    console.log('[CrownRoom] Step 1: Creating initial game state...');
     this.gameState = createInitialState();
     this.gameState.dealer = options.dealer ?? 0;
     this.botManager = new BotManager();
+    console.log('[CrownRoom] Step 1: Done, dealer:', this.gameState.dealer);
 
-    // Generate room code
+    // Step 2: Generate room code
+    console.log('[CrownRoom] Step 2: Generating room code...');
     this.roomCode = roomCodeGenerator.generate(new Set());
     roomCodeGenerator.register(this.roomCode, this.roomId);
+    console.log('[CrownRoom] Step 2: Done, roomCode:', this.roomCode);
 
+    // Step 3: Create game state schema
     const now = Date.now();
+    console.log('[CrownRoom] Step 3: Creating game state schema...');
     const schema = new GameStateSchema();
     schema.phase = 'WAITING_FOR_PLAYERS';
     schema.dealer = this.gameState.dealer;
     schema.roomCode = this.roomCode;
     schema.roomCreatedAt = now;
     schema.roomExpiryAt = now + ROOM_EXPIRY_MS;
-    schema.adminSessionId = ''; // Set when first player joins
-    
-    this.setState(schema);
-    console.log('[CrownRoom] setState called, roomCode:', this.roomCode, 'phase:', schema.phase);
+    schema.adminSessionId = '';
+    console.log('[CrownRoom] Step 3: Done, expiry at:', new Date(schema.roomExpiryAt).toISOString());
 
-    // Set room metadata for matchMaker query
+    // Step 4: Set state
+    console.log('[CrownRoom] Step 4: Setting room state...');
+    this.setState(schema);
+    console.log('[CrownRoom] Step 4: Done, setState complete');
+
+    // Step 5: Set metadata
+    console.log('[CrownRoom] Step 5: Setting room metadata...');
     this.setMetadata({
       roomCode: this.roomCode,
       phase: 'WAITING_FOR_PLAYERS'
     });
+    console.log('[CrownRoom] Step 5: Done');
 
-    // Register in room registry for listing API
+    // Step 6: Register in room registry
+    console.log('[CrownRoom] Step 6: Registering in room registry...');
     roomRegistry.register({
       roomId: this.roomId,
       roomCode: this.roomCode,
-      adminUsername: '', // Set when first player joins
+      adminUsername: '',
       playerCount: 0,
       maxPlayers: MAX_PLAYERS,
       adminSessionId: '',
       phase: 'WAITING_FOR_PLAYERS',
       createdAt: now
     });
-    console.log('[CrownRoom] Registered room in registry, roomCode:', this.roomCode, 'roomId:', this.roomId);
+    console.log('[CrownRoom] Step 6: Done, room registered in registry');
+    console.log('[CrownRoom] =========================================');
+    console.log('[CrownRoom] Room CREATED successfully, roomCode:', this.roomCode, 'roomId:', this.roomId);
+    console.log('[CrownRoom] =========================================');
 
-    // Start expiry check timer
+    // Step 7: Start expiry check timer
+    console.log('[CrownRoom] Step 7: Starting expiry check timer...');
     this.expiryCheckTimer = setInterval(() => {
       this.checkRoomExpiry();
     }, EXPIRY_CHECK_INTERVAL_MS);
+    console.log('[CrownRoom] Step 7: Done, will check every', EXPIRY_CHECK_INTERVAL_MS, 'ms');
 
+    // Register message handlers
     this.onMessage('declare_trump', (client: Client, message: any) => {
       this.handleDeclareTrump(client, message);
     });
@@ -90,7 +113,7 @@ export class CrownRoom extends Room<GameStateSchema> {
     });
 
     this.onMessage('ready', (_client: Client, _message: any) => {
-      // Client acknowledges state sync — no action needed
+      // Client acknowledges state sync
     });
 
     this.onMessage('shuffle_teams', (client: Client, _message: any) => {
@@ -104,44 +127,87 @@ export class CrownRoom extends Room<GameStateSchema> {
     this.onMessage('start_game', (client: Client, _message: any) => {
       this.handleStartGame(client);
     });
+    
+    console.log('[CrownRoom] onCreate END');
   }
 
   onDispose() {
+    const playerCount = this.clientToPlayer.size;
+    const playerIndices = Array.from(this.clientToPlayer.values());
+    const phase = this.state?.phase || 'unknown';
+    const roomCreatedAt = this.state?.roomCreatedAt || 0;
+    const roomAge = roomCreatedAt ? Math.floor((Date.now() - roomCreatedAt) / 1000) : 0;
+    
+    console.log('[CrownRoom] =========================================');
+    console.log('[CrownRoom] onDispose START, roomId:', this.roomId, 'roomCode:', this.roomCode);
+    console.log('[CrownRoom] Disposal reason:');
+    console.log('[CrownRoom]   - Current phase:', phase);
+    console.log('[CrownRoom]   - Connected players:', playerCount);
+    console.log('[CrownRoom]   - Player indices:', JSON.stringify(playerIndices));
+    console.log('[CrownRoom]   - Room age:', roomAge, 'seconds');
+    console.log('[CrownRoom] =========================================');
+    
+    // Cancel timers
+    console.log('[CrownRoom] Cancelling timers...');
     this.cancelReconnectTimer();
     this.cancelBotTurnTimer();
     if (this.expiryCheckTimer) {
       clearInterval(this.expiryCheckTimer);
       this.expiryCheckTimer = null;
+      console.log('[CrownRoom] Expiry timer cancelled');
     }
+
+    // Cleanup
+    console.log('[CrownRoom] Cleaning up...');
     roomCodeGenerator.removeCode(this.roomCode);
     roomRegistry.remove(this.roomId);
+    
+    console.log('[CrownRoom] Removed from code generator and registry');
+    console.log('[CrownRoom] onDispose END');
+    console.log('[CrownRoom] Room DISPOSED, roomCode:', this.roomCode, 'roomId:', this.roomId);
+    console.log('[CrownRoom] =========================================');
   }
 
   // --- Expiry Check ---
 
   private checkRoomExpiry(): void {
-    if (this.state.phase !== 'WAITING_FOR_PLAYERS') return;
+    if (this.state.phase !== 'WAITING_FOR_PLAYERS') {
+      console.log('[CrownRoom] checkRoomExpiry: Skipping, not in WAITING_FOR_PLAYERS phase, current:', this.state.phase);
+      return;
+    }
 
     const now = Date.now();
     const remaining = this.state.roomExpiryAt - now;
+    const roomAge = Math.floor((now - (this.state.roomCreatedAt || now)) / 1000);
+
+    console.log('[CrownRoom] checkRoomExpiry: roomCode:', this.roomCode, 'remaining:', remaining, 'ms (age:', roomAge, 's)');
 
     if (remaining <= 0) {
+      console.log('[CrownRoom] checkRoomExpiry: ROOM EXPIRED, disconnecting... roomCode:', this.roomCode);
       this.disconnect();
       return;
     }
 
     // Broadcast warnings
     if (remaining <= 10000 && remaining > 9000) {
+      console.log('[CrownRoom] checkRoomExpiry: 10 second warning');
       this.broadcast('room_expiry_warning', { remaining: 10 });
     } else if (remaining <= 30000 && remaining > 29000) {
+      console.log('[CrownRoom] checkRoomExpiry: 30 second warning');
       this.broadcast('room_expiry_warning', { remaining: 30 });
     } else if (remaining <= 60000 && remaining > 59000) {
+      console.log('[CrownRoom] checkRoomExpiry: 60 second warning');
       this.broadcast('room_expiry_warning', { remaining: 60 });
     }
   }
 
   async onJoin(client: Client, options: any) {
-    console.log('[CrownRoom] onJoin, sessionId:', client.sessionId, 'options:', JSON.stringify(options));
+    console.log('[CrownRoom] =========================================');
+    console.log('[CrownRoom] onJoin START, sessionId:', client.sessionId);
+    console.log('[CrownRoom] options:', JSON.stringify(options));
+    console.log('[CrownRoom] roomCode:', this.roomCode, 'roomId:', this.roomId);
+    console.log('[CrownRoom] Current players:', this.clientToPlayer.size);
+    console.log('[CrownRoom] =========================================');
 
     // Check for reconnection by sessionId (disconnected player returning)
     const prevIndex = this.findReconnectingPlayer(client);
