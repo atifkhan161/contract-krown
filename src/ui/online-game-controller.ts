@@ -1,8 +1,8 @@
 // Contract Crown Online Game Controller
-// Manages online multiplayer game flow via Colyseus server
+// Manages online multiplayer game flow via PartyKit server
 
 import type { GameState, Card, Suit } from '../engine/types.js';
-import { ColyseusClientWrapper, ConnectionState } from './colyseus-client-wrapper.js';
+import { PartyKitClientWrapper, ConnectionState } from './partykit-client-wrapper.js';
 import { GameView } from './game-view.js';
 import { HapticController } from './haptic-controller.js';
 import { canPlayCard } from '../engine/index.js';
@@ -17,10 +17,10 @@ export interface OnlineGameConfig {
 
 const DEFAULT_SERVER_URL = typeof window !== 'undefined' && (window as any).WS_URL 
   ? (window as any).WS_URL 
-  : 'ws://localhost:2567';
+  : 'localhost:1999';
 
 export class OnlineGameController {
-  private clientWrapper: ColyseusClientWrapper;
+  private clientWrapper: PartyKitClientWrapper;
   private gameView: GameView;
   private hapticController: HapticController;
   private userServerPlayerIndex: number = 0;
@@ -40,7 +40,7 @@ export class OnlineGameController {
     this.gameView = new GameView();
     this.hapticController = new HapticController();
 
-    this.clientWrapper = new ColyseusClientWrapper({
+    this.clientWrapper = new PartyKitClientWrapper({
       onStateChange: (state) => this.handleStateChange(state),
       onError: (code, message) => this.handleError(code, message),
       onLeave: (code) => this.handleLeave(code),

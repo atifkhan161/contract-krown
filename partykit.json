@@ -1,0 +1,5 @@
+{
+  "name": "contract-crown",
+  "main": "party/main.ts",
+  "compatibilityDate": "2025-04-10"
+}
