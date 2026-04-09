@@ -16,6 +16,8 @@ const STATIC_DIR = join(__dirname, '../../dist/client');
 const isProduction = !!process.env.RENDER;
 const isRender = !!process.env.RENDER;
 const externalUrl = process.env.RENDER_EXTERNAL_URL || (isProduction ? `https://${process.env.HOST}` : null);
+const COLYSEUS_PUBLIC_ADDRESS = process.env.COLYSEUS_PUBLIC_ADDRESS 
+  || (isProduction ? 'contract-krown.onrender.com' : undefined);
 
 // --- Utility Functions ---
 
@@ -39,6 +41,7 @@ console.log('Server Configuration:');
 console.log(`  PORT: ${PORT}`);
 console.log(`  Environment: ${isProduction ? 'PRODUCTION (Render)' : 'LOCAL'}`);
 console.log(`  RENDER_EXTERNAL_URL: ${externalUrl || 'not set'}`);
+console.log(`  COLYSEUS_PUBLIC_ADDRESS: ${COLYSEUS_PUBLIC_ADDRESS || 'not set'}`);
 console.log(`  RENDER: ${isRender}`);
 console.log(`  Node version: ${process.version}`);
 console.log(`  Platform: ${process.platform}`);
@@ -57,6 +60,7 @@ const transport = new WebSocketTransport({});
 
 const gameServer = new Server({
   transport: transport,
+  publicAddress: COLYSEUS_PUBLIC_ADDRESS,
   express: (app) => {
     // Add request logging middleware
     app.use((req, res, next) => {

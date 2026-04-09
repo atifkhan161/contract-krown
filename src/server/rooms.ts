@@ -79,6 +79,12 @@ export class CrownRoom extends Room<GameStateSchema> {
     });
     console.log('[CrownRoom] Step 5: Done');
 
+    // Step 6: Increase seat reservation time to handle Render latency
+    // Default is 15 seconds, increase to 90 seconds for slow connections
+    console.log('[CrownRoom] Step 6: Setting seat reservation time to 90 seconds...');
+    this.setSeatReservationTime(90);
+    console.log('[CrownRoom] Step 6: Done');
+
     // Step 6: Register in room registry
     console.log('[CrownRoom] Step 6: Registering in room registry...');
     roomRegistry.register({
