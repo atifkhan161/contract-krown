@@ -1,15 +1,15 @@
 // Contract Crown Online Multiplayer Tests
-// Tests for Task 24: Online multiplayer client integration
+// Tests for Online multiplayer client integration
 
 import { describe, it, expect } from 'vitest';
-import { ColyseusClientWrapper } from '@src/ui/colyseus-client-wrapper.js';
+import { PartyKitClientWrapper } from '@src/ui/partykit-client-wrapper.js';
 import { OnlineGameController } from '@src/ui/online-game-controller.js';
 import { ReconnectionOverlay } from '@src/ui/reconnection-overlay.js';
 
-describe('Colyseus Client Wrapper', () => {
+describe('PartyKit Client Wrapper', () => {
   describe('initial state', () => {
     it('should start in disconnected state', () => {
-      const wrapper = new ColyseusClientWrapper({
+      const wrapper = new PartyKitClientWrapper({
         onStateChange: () => {},
         onError: () => {},
         onLeave: () => {}
@@ -22,7 +22,7 @@ describe('Colyseus Client Wrapper', () => {
 
   describe('connection', () => {
     it('should throw when joining room without connecting first', async () => {
-      const wrapper = new ColyseusClientWrapper({
+      const wrapper = new PartyKitClientWrapper({
         onStateChange: () => {},
         onError: () => {},
         onLeave: () => {}
@@ -31,7 +31,7 @@ describe('Colyseus Client Wrapper', () => {
     });
 
     it('should throw when creating room without connecting first', async () => {
-      const wrapper = new ColyseusClientWrapper({
+      const wrapper = new PartyKitClientWrapper({
         onStateChange: () => {},
         onError: () => {},
         onLeave: () => {}
@@ -42,7 +42,7 @@ describe('Colyseus Client Wrapper', () => {
 
   describe('disconnect', () => {
     it('should transition to disconnected state after disconnect', () => {
-      const wrapper = new ColyseusClientWrapper({
+      const wrapper = new PartyKitClientWrapper({
         onStateChange: () => {},
         onError: () => {},
         onLeave: () => {}
@@ -66,7 +66,7 @@ describe('Online Game Controller', () => {
     it('should create controller with custom config', () => {
       const controller = new OnlineGameController({
         userPlayerIndex: 2,
-        serverUrl: 'ws://localhost:2567'
+        serverUrl: 'ws://localhost:1999'
       });
       expect(controller.getUserPlayerIndex()).toBe(2);
       controller.stop();

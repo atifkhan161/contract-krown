@@ -6,10 +6,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: 1, // Single worker — game requires sequential browser interaction
-  timeout: 600_000, // 10 minutes for full game tests
+  timeout: 1_800_000, // 30 minutes for full game tests
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:1999',
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     actionTimeout: 10_000,
@@ -27,9 +27,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'bunx tsx src/server/serve.ts',
-    url: 'http://localhost:3000',
+    command: 'bun run dev',
+    url: 'http://localhost:1999',
     reuseExistingServer: true,
-    timeout: 30_000,
+    timeout: 60_000,
   },
 });

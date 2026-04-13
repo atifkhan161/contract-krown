@@ -1,5 +1,5 @@
 // Contract Crown Room Registry
-// Simple in-memory registry for room listing — avoids Colyseus matchMaker singleton issues
+// Simple in-memory registry for room listing
 
 interface RoomInfo {
   roomId: string;

@@ -1,0 +1,9 @@
+{
+  "name": "contract-crown",
+  "main": "src/server/party-server.ts",
+  "compatibilityDate": "2024-09-26",
+  "serve": "dist/client",
+  "parties": {
+    "crown": "src/server/crown-room.ts"
+  }
+}
