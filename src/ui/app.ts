@@ -384,6 +384,12 @@ class App {
     this.onlineController.resume();
 
     const gameView = this.onlineController.getGameView();
+
+    // Force re-render with current game state to ensure fresh display
+    const gameState = this.onlineController.getGameState();
+    if (gameState) {
+      gameView.render(gameState, this.onlineController.getUserPlayerIndex());
+    }
     gameView.setReturnToLobbyHandler(() => {
       this.onlineController?.stop();
       this.onlineController = null;

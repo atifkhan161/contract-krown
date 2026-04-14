@@ -203,10 +203,12 @@ export default class CrownRoom implements Party.Server {
 
     switch (parsed.type) {
       case 'declare_trump':
-        this.handleDeclareTrump(sender, connState, parsed.data);
+        // Client sends {"type":"declare_trump","suit":"hearts"}
+        this.handleDeclareTrump(sender, connState, { suit: parsed.suit });
         break;
       case 'play_card':
-        this.handlePlayCard(sender, connState, parsed.data);
+        // Client sends {"type":"play_card","card":{...}}
+        this.handlePlayCard(sender, connState, { card: parsed.card });
         break;
       case 'ready':
         break;

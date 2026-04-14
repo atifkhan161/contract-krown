@@ -64,13 +64,14 @@ export class PartyKitClientWrapper {
     this._socket = new PartySocket({
       host: this._serverUrl,
       room: roomId,
+      party: 'crown',
       query: {
         username: options.username || 'Player'
       }
     });
 
     this.setupSocketListeners();
-    
+
     console.log('[PartyKitClient] createRoom END, roomId:', roomId);
     return roomId;
   }
@@ -83,6 +84,7 @@ export class PartyKitClientWrapper {
     this._socket = new PartySocket({
       host: this._serverUrl,
       room: roomId,
+      party: 'crown',
       query: {
         username: options.username || 'Player'
       }
@@ -110,7 +112,8 @@ export class PartyKitClientWrapper {
 
     this._socket = new PartySocket({
       host: this._serverUrl,
-      room: this._roomId
+      room: this._roomId,
+      party: 'crown'
     });
 
     this.setupSocketListeners();
@@ -197,20 +200,20 @@ export class PartyKitClientWrapper {
         console.log('[PartyKitClient] Received message type:', data.type);
 
         switch (data.type) {
-          case 'welcome':
-            this._sessionId = data.sessionId;
-            console.log('[PartyKitClient] Received welcome, sessionId:', this._sessionId);
+          case 'connected':
+            this._sessionId = data.data?.sessionId;
+            console.log('[PartyKitClient] Received connected, sessionId:', this._sessionId);
             break;
 
-          case 'state_update':
-            console.log('[PartyKitClient] state_update, phase:', data.state?.phase);
-            this._callbacks.onStateChange(data.state);
+          case 'state':
+            console.log('[PartyKitClient] state, phase:', data.data?.phase, 'roomCode:', data.data?.roomCode);
+            this._callbacks.onStateChange(data.data);
             break;
 
           case 'game_started':
-            console.log('[PartyKitClient] game_started:', data);
+            console.log('[PartyKitClient] game_started:', data.data);
             if (this._callbacks.onGameStarted) {
-              this._callbacks.onGameStarted(data);
+              this._callbacks.onGameStarted(data.data);
             }
             break;
 
@@ -227,8 +230,8 @@ export class PartyKitClientWrapper {
             break;
 
           case 'error':
-            console.log('[PartyKitClient] error:', data.message);
-            this._callbacks.onError(0, data.message);
+            console.log('[PartyKitClient] error:', data.data?.message);
+            this._callbacks.onError(0, data.data?.message || 'Unknown error');
             break;
         }
       } catch (err) {
@@ -256,9 +259,10 @@ export class PartyKitClientWrapper {
   }
 
   private generateRoomId(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    // 4-char code to match join-room-modal validation
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let result = '';
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 4; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;

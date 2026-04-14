@@ -40,6 +40,7 @@ export class OnlineGameController {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private waitingRoomCallbacks: Array<(state: any) => void> = [];
   private currentUsername: string = '';
+  private isSendingCard = false;
 
   constructor(config: OnlineGameConfig = {}) {
     this.userServerPlayerIndex = config.userPlayerIndex ?? 0;
@@ -222,6 +223,13 @@ export class OnlineGameController {
       }
     }
 
+    // Handle case where we're already in TRUMP_DECLARATION (e.g., after redirect from waiting room)
+    if (currentPhase === 'TRUMP_DECLARATION' && gameState.crownHolder === 0 && !this.gameView.getTrumpSelector().isVisible()) {
+      const userHand = gameState.players[0]?.hand || [];
+      this.gameView.getTrumpSelector().setUserHand(userHand);
+      this.gameView.showTrumpSelector();
+    }
+
     // When leaving TRUMP_DECLARATION phase (trump was declared)
     if (this.previousPhase === 'TRUMP_DECLARATION' && currentPhase !== 'TRUMP_DECLARATION') {
       this.gameView.hideTrumpSelector();
@@ -277,6 +285,8 @@ export class OnlineGameController {
     if (!this.isRunning) return;
     if (!this.serverState) return;
     if (this.serverState.phase !== 'TRICK_PLAY') return;
+    if (this.isSendingCard) return;
+
     // Check turn against raw server state (both are server indices)
     if (this.serverState.currentPlayer !== this.userServerPlayerIndex) return;
 
@@ -286,11 +296,16 @@ export class OnlineGameController {
       return;
     }
 
+    // Prevent rapid-fire card plays (race condition fix)
+    this.isSendingCard = true;
+    setTimeout(() => { this.isSendingCard = false; }, 1500);
+
     try {
       this.clientWrapper.sendPlayCard(card);
       this.hapticController.triggerYourTurn();
     } catch (error) {
       console.error('Failed to send card play:', error);
+      this.isSendingCard = false;
     }
   }
 
@@ -309,11 +324,26 @@ export class OnlineGameController {
   }
 
   private handleError(code: number, message: string): void {
+    // Suppress harmless validation errors - the server correctly rejects invalid plays
+    // and the UI already visually disables unplayable cards
+    if (message === 'Not your turn' || message === 'Card not in hand' || message === 'Card cannot be played') {
+      return;
+    }
     console.error(`Server error (${code}): ${message}`);
   }
 
   private handleLeave(code: number): void {
     console.log('[OnlineGameController] handleLeave called, code:', code, 'isRunning:', this.isRunning);
+
+    // Code 1006 = abnormal closure (network drop) - attempt to reconnect silently
+    if (code === 1006) {
+      console.log('[OnlineGameController] Connection dropped, attempting reconnect...');
+      this.clientWrapper.reconnect().catch(() => {
+        console.log('[OnlineGameController] Reconnect failed');
+      });
+      return;
+    }
+
     this.isRunning = false;
 
     if (code === 4001) {

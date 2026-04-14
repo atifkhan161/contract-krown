@@ -183,7 +183,24 @@ export class WaitingRoomView {
 
     this.container.querySelector('#wr-copy-btn')?.addEventListener('click', () => {
       const code = this.state.roomCode;
-      navigator.clipboard.writeText(code).then(() => {
+      // Use fallback for non-HTTPS contexts where navigator.clipboard is unavailable
+      const copyText = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          return navigator.clipboard.writeText(code);
+        }
+        // Fallback for HTTP/localhost
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return Promise.resolve();
+      };
+
+      copyText().then(() => {
         const btn = this.container?.querySelector('#wr-copy-btn');
         if (btn) {
           const originalHTML = btn.innerHTML;

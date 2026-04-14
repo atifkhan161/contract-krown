@@ -1,5 +1,9 @@
 {
   "name": "contract-crown",
-  "main": "party/main.ts",
-  "compatibilityDate": "2025-04-10"
+  "main": "src/server/party-server.ts",
+  "compatibilityDate": "2025-04-10",
+  "serve": "dist/client",
+  "parties": {
+    "crown": "src/server/crown-room.ts"
+  }
 }
