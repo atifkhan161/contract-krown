@@ -22,11 +22,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 6px;
-  border-radius: 10px;
+  gap: var(--player-info-gap);
+  padding: var(--player-info-padding);
+  border-radius: var(--player-info-radius);
   background: var(--game-player-bg);
-  min-width: 68px;
+  min-width: var(--player-info-min-width);
 }
 
 .player-info.active {
@@ -35,48 +35,48 @@
 }
 
 .player-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  border-radius: var(--avatar-radius);
   background: var(--game-avatar-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  font-size: 18px;
+  font-size: var(--avatar-font-size);
 }
 
 .active-ring {
   position: absolute;
-  inset: -4px;
+  inset: var(--active-ring-inset);
   border-radius: 50%;
-  border: 2px solid var(--game-accent-ring);
+  border: var(--active-ring-width) solid var(--game-accent-ring);
   animation: pulse-ring 1.5s ease-in-out infinite;
 }
 
 .crown-icon {
   position: absolute;
-  top: -10px;
-  font-size: 14px;
+  top: var(--crown-icon-top);
+  font-size: var(--crown-icon-size);
 }
 
 .player-name {
-  font-size: 11px;
+  font-size: var(--player-name-size);
   font-weight: 600;
   color: var(--game-text);
 }
 
 .card-count {
-  font-size: 10px;
+  font-size: var(--card-count-size);
   color: var(--game-text-muted);
 }
 
 /* Team Labels */
 .team-label {
-  font-size: 9px;
+  font-size: var(--team-label-size);
   font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: var(--team-label-padding);
+  border-radius: var(--team-label-radius);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -99,21 +99,21 @@
 }
 
 .user-display .player-info {
-  min-width: 60px;
-  padding: 4px 6px;
+  min-width: var(--user-display-player-min-width);
+  padding: var(--user-display-player-padding);
 }
 
 .user-display .player-name {
-  font-size: 10px;
+  font-size: var(--user-display-name-size);
 }
 
 .user-display .team-label {
-  font-size: 8px;
-  padding: 1px 4px;
+  font-size: var(--user-display-team-label-size);
+  padding: var(--user-display-team-label-padding);
 }
 
 .user-display .card-count {
-  font-size: 9px;
+  font-size: var(--user-display-card-count-size);
 }
 
 /* ===== Trick Area (Center) ===== */
@@ -123,14 +123,14 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  border-radius: 14px;
+  border-radius: var(--trick-area-radius);
   background: var(--game-trick-area-bg);
   border: 1px solid var(--game-trick-area-border);
 }
 
 .trick-placeholder {
   color: var(--game-text-dim);
-  font-size: 13px;
+  font-size: var(--trick-placeholder-size);
   font-style: italic;
 }
 
@@ -153,14 +153,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 3px 10px;
+  padding: var(--hand-padding);
   background: linear-gradient(180deg, transparent 0%, var(--game-hand-gradient) 100%);
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--hand-radius);
 }
 
 .hand-cards {
   display: flex;
-  gap: 4px;
+  gap: var(--hand-gap);
   justify-content: center;
   flex-wrap: wrap;
   align-content: center;
@@ -183,33 +183,33 @@
 
 .offline-indicator {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: var(--offline-indicator-top);
+  right: var(--offline-indicator-right);
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
+  padding: var(--offline-indicator-padding);
   background: var(--game-offline-bg);
-  border-radius: 8px;
-  font-size: 11px;
+  border-radius: var(--offline-indicator-radius);
+  font-size: var(--offline-indicator-size);
   color: var(--game-offline-text);
   z-index: 20;
 }
 
 .offline-icon {
-  font-size: 14px;
+  font-size: var(--offline-icon-size);
 }
 
 .return-to-lobby-btn {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  padding: 8px 16px;
+  bottom: var(--return-btn-bottom);
+  right: var(--return-btn-right);
+  padding: var(--return-btn-padding);
   background: var(--game-lobby-btn-bg);
   color: var(--game-text);
   border: 1px solid var(--game-lobby-btn-border);
-  border-radius: 8px;
-  font-size: 13px;
+  border-radius: var(--return-btn-radius);
+  font-size: var(--return-btn-size);
   font-weight: 500;
   cursor: pointer;
   z-index: 20;
@@ -236,22 +236,22 @@
 
 .game-room {
   text-align: center;
-  padding: 32px;
+  padding: var(--game-room-padding);
   background: var(--app-surface);
   border: 1px solid var(--app-surface-border);
-  border-radius: 16px;
-  max-width: 320px;
+  border-radius: var(--game-room-radius);
+  max-width: var(--game-room-max-width);
 }
 
 .game-room h2 {
-  font-size: 20px;
+  font-size: var(--game-room-title-size);
   font-weight: 700;
   color: var(--app-primary);
   margin: 0 0 8px 0;
 }
 
 .game-room p {
-  font-size: 14px;
+  font-size: var(--game-room-desc-size);
   color: var(--app-text-muted);
   margin: 0 0 24px 0;
 }

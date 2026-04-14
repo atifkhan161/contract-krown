@@ -1,8 +1,8 @@
 /* ===== Cards ===== */
 .card {
-  width: 48px;
-  height: 66px;
-  border-radius: 6px;
+  width: var(--card-width);
+  height: var(--card-height);
+  border-radius: var(--card-radius);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,14 +64,14 @@
 }
 
 .card-rank {
-  font-size: 14px;
+  font-size: var(--card-rank-size);
   font-weight: 700;
   color: var(--game-card-text);
   line-height: 1;
 }
 
 .card-suit {
-  font-size: 18px;
+  font-size: var(--card-suit-size);
   line-height: 1;
 }
 
@@ -97,47 +97,47 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--trick-card-slot-gap);
   transition: all 0.3s ease;
 }
 
 /* Card positions based on player relative to user (bottom) */
 /* User (bottom) */
 .trick-card-slot.position-bottom {
-  bottom: 8%;
+  bottom: var(--trick-position-offset);
   left: 50%;
   transform: translateX(-50%);
 }
 
 /* Partner (top) */
 .trick-card-slot.position-top {
-  top: 8%;
+  top: var(--trick-position-offset);
   left: 50%;
   transform: translateX(-50%);
 }
 
 /* Left opponent */
 .trick-card-slot.position-left {
-  left: 8%;
+  left: var(--trick-position-offset);
   top: 50%;
   transform: translateY(-50%);
 }
 
 /* Right opponent */
 .trick-card-slot.position-right {
-  right: 8%;
+  right: var(--trick-position-offset);
   top: 50%;
   transform: translateY(-50%);
 }
 
 /* Player label under card */
 .card-player-label {
-  font-size: 9px;
+  font-size: var(--card-player-label-size);
   font-weight: 600;
   color: var(--game-card-label-text);
   background: var(--game-card-label-bg);
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: var(--card-player-label-padding);
+  border-radius: var(--card-player-label-radius);
   white-space: nowrap;
 }
 
@@ -170,7 +170,7 @@
 
 .re-dealing-message {
   color: var(--game-redeal-text);
-  font-size: 16px;
+  font-size: var(--redeal-size);
   font-weight: 600;
   animation: redeal-pulse 1s ease-in-out infinite;
 }

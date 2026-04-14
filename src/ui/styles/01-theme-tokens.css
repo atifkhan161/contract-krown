@@ -97,6 +97,707 @@
   --game-redeal-text: #d4af37;
   --game-winner-text: #d4af37;
   --game-winner-bg: rgba(212, 175, 55, 0.2);
+
+  /* ===== Responsive Size Tokens (Portrait Default) ===== */
+  /* Felt Grid */
+  --felt-gap: 3px;
+  --felt-padding: 3px;
+  --felt-rows: 12% 45% 43%;
+  --felt-cols: 1fr 2.5fr 1fr;
+
+  /* Cards */
+  --card-width: 65px;
+  --card-height: 80px;
+  --card-radius: 6px;
+  --card-rank-size: 22px;
+  --card-suit-size: 22px;
+  --card-player-label-size: 9px;
+  --card-player-label-padding: 2px 6px;
+  --card-player-label-radius: 4px;
+  --hand-gap: 4px;
+  --hand-padding: 6px 3px 10px;
+  --hand-radius: 12px 12px 0 0;
+
+  /* Player Info */
+  --player-info-min-width: 68px;
+  --player-info-padding: 6px;
+  --player-info-radius: 10px;
+  --player-info-gap: 3px;
+  --avatar-size: 36px;
+  --avatar-font-size: 18px;
+  --avatar-radius: 50%;
+  --active-ring-inset: -4px;
+  --active-ring-width: 2px;
+  --crown-icon-top: -10px;
+  --crown-icon-size: 14px;
+  --player-name-size: 11px;
+  --card-count-size: 10px;
+
+  /* Team Labels */
+  --team-label-size: 9px;
+  --team-label-padding: 1px 6px;
+  --team-label-radius: 4px;
+
+  /* User Display (in hand corner) */
+  --user-display-player-min-width: 60px;
+  --user-display-player-padding: 4px 6px;
+  --user-display-name-size: 10px;
+  --user-display-team-label-size: 8px;
+  --user-display-team-label-padding: 1px 4px;
+  --user-display-card-count-size: 9px;
+
+  /* Corner Cells (Trump, Scores, Tricks) */
+  --trump-cell-min-width: 44px;
+  --trump-cell-padding: 4px;
+  --trump-cell-radius: 8px;
+  --trump-cell-label-size: 9px;
+  --trump-cell-label-spacing: 0.5px;
+  --trump-cell-value-size: 22px;
+  --scores-cell-min-width: 52px;
+  --scores-cell-padding: 4px;
+  --scores-cell-radius: 8px;
+  --scores-cell-label-size: 9px;
+  --scores-cell-label-spacing: 0.5px;
+  --team-score-size: 16px;
+  --crown-cell-name-size: 10px;
+  --trump-declarer-cell-size: 10px;
+  --trick-cell-min-width: 40px;
+  --trick-cell-padding: 4px;
+  --trick-cell-radius: 8px;
+  --trick-value-size: 16px;
+  --trick-label-size: 9px;
+  --round-score-size: 12px;
+
+  /* Trick Area */
+  --trick-area-radius: 14px;
+  --trick-placeholder-size: 13px;
+  --trick-card-slot-gap: 4px;
+  --trick-position-offset: 8%;
+
+  /* Menu Button */
+  --menu-icon-size: 20px;
+  --menu-toggle-padding: 4px 8px;
+  --menu-toggle-btn-icon-size: 24px;
+
+  /* Trump Selector */
+  --trump-card-width: 56px;
+  --trump-card-height: 76px;
+  --trump-card-radius: 6px;
+  --trump-card-suit-size: 20px;
+  --trump-card-rank-size: 14px;
+  --trump-suit-grid-gap: 12px;
+  --trump-suit-btn-height: 80px;
+  --trump-suit-btn-padding: 16px;
+  --trump-suit-btn-radius: 12px;
+  --trump-suit-symbol-size: 28px;
+  --trump-suit-name-size: 13px;
+  --trump-selector-gap: 16px;
+  --trump-selector-title-size: 20px;
+  --trump-selector-desc-size: 14px;
+  --trump-cancel-btn-padding: 10px 24px;
+  --trump-cancel-btn-radius: 8px;
+  --trump-cancel-btn-size: 14px;
+
+  /* Modal Bottom Sheet */
+  --modal-max-width: min(90vw, 600px);
+  --modal-max-height: max(85vh, 85dvh);
+  --modal-radius: 16px 16px 0 0;
+  --modal-content-padding: 24px 16px;
+  --modal-close-size: 20px;
+
+  /* Context Menu */
+  --context-menu-item-padding: 16px;
+  --context-menu-item-gap: 12px;
+  --context-menu-item-radius: 8px;
+  --context-menu-icon-size: 20px;
+  --context-menu-label-size: 16px;
+
+  /* Round End Modal */
+  --round-end-gap: 16px;
+  --round-end-title-size: 20px;
+  --round-end-result-size: 18px;
+  --round-end-points-size: 24px;
+  --round-end-trick-gap: 12px;
+  --round-end-trick-padding: 12px;
+  --round-end-trick-label-size: 12px;
+  --round-end-trick-value-size: 16px;
+  --round-end-trick-radius: 8px;
+  --round-end-score-padding: 12px;
+  --round-end-score-gap: 4px;
+  --round-end-score-label-size: 12px;
+  --round-end-score-value-size: 18px;
+  --round-end-score-radius: 8px;
+  --round-end-continue-btn-padding: 12px 32px;
+  --round-end-continue-btn-radius: 10px;
+  --round-end-continue-btn-size: 16px;
+
+  /* Victory Modal */
+  --victory-gap: 16px;
+  --victory-icon-size: 56px;
+  --victory-title-size: 24px;
+  --victory-winner-size: 18px;
+  --victory-scores-title-size: 16px;
+  --victory-score-padding: 16px;
+  --victory-score-gap: 4px;
+  --victory-score-label-size: 13px;
+  --victory-score-value-size: 28px;
+  --victory-score-unit-size: 12px;
+  --victory-score-radius: 10px;
+  --victory-new-game-btn-padding: 14px 24px;
+  --victory-new-game-btn-radius: 10px;
+  --victory-new-game-btn-size: 16px;
+  --victory-lobby-btn-padding: 12px 24px;
+  --victory-lobby-btn-radius: 10px;
+  --victory-lobby-btn-size: 15px;
+
+  /* Played Cards Modal */
+  --played-cards-gap: 16px;
+  --played-cards-title-size: 20px;
+  --played-cards-trick-padding: 12px;
+  --played-cards-trick-radius: 8px;
+  --trick-label-size: 14px;
+  --trick-status-size: 11px;
+  --trick-status-padding: 2px 8px;
+  --trick-status-radius: 4px;
+  --cards-grid-gap: 8px;
+  --played-card-padding: 8px;
+  --played-card-radius: 6px;
+  --played-card-min-height: 60px;
+  --played-card-value-size: 16px;
+  --played-card-player-size: 11px;
+  --empty-state-min-height: 150px;
+  --empty-state-text-size: 16px;
+  --empty-state-hint-size: 13px;
+
+  /* Theme Selector */
+  --theme-selector-panel-max-width: 360px;
+  --theme-selector-panel-padding: 24px;
+  --theme-selector-panel-radius: 16px;
+  --theme-selector-title-size: 18px;
+  --theme-selector-close-size: 20px;
+  --theme-selector-grid-gap: 12px;
+  --theme-option-padding: 16px 12px;
+  --theme-option-radius: 12px;
+  --theme-option-preview-size: 40px;
+  --theme-option-preview-text-size: 18px;
+  --theme-option-name-size: 14px;
+  --theme-option-desc-size: 12px;
+  --theme-option-badge-size: 11px;
+
+  /* Room Code Modal */
+  --room-code-modal-padding: 24px;
+  --room-code-modal-radius: 16px;
+  --room-code-modal-max-width: 340px;
+  --room-code-modal-header-size: 16px;
+  --room-code-display-size: 36px;
+  --room-code-display-spacing: 8px;
+  --room-code-display-padding: 16px 24px;
+  --room-code-display-radius: 12px;
+  --room-code-waiting-size: 14px;
+
+  /* App Header */
+  --app-header-height: 48px;
+  --app-header-padding: 0 8px;
+  --app-header-back-size: 40px;
+  --app-header-back-icon-size: 24px;
+  --app-header-title-size: 16px;
+
+  /* Login / Lobby / Registration */
+  --view-padding: 24px;
+  --container-max-width: 400px;
+  --container-padding: 32px 24px;
+  --container-padding-bottom: 40px;
+  --container-radius: 16px;
+  --app-title-size: 32px;
+  --app-title-spacing: 1px;
+  --app-subtitle-size: 14px;
+  --form-group-max-width: 320px;
+  --form-group-gap: 12px;
+  --form-group-margin-bottom: 16px;
+  --form-input-padding: 14px 16px;
+  --form-input-radius: 10px;
+  --form-input-size: 16px;
+  --form-input-focus-ring: 3px;
+  --error-max-width: 320px;
+  --error-padding: 10px 14px;
+  --error-radius: 8px;
+  --error-size: 14px;
+  --error-margin-bottom: 12px;
+  --success-max-width: 320px;
+  --success-padding: 10px 14px;
+  --success-radius: 8px;
+  --success-size: 14px;
+  --success-margin-top: 12px;
+  --btn-max-width: 320px;
+  --btn-padding: 14px 24px;
+  --btn-radius: 10px;
+  --btn-size: 16px;
+  --btn-secondary-size: 15px;
+  --btn-outline-size: 15px;
+  --btn-lg-padding: 16px 28px;
+  --btn-lg-size: 16px;
+  --btn-sm-padding: 6px 12px;
+  --btn-sm-size: 13px;
+  --btn-ghost-padding: 8px 16px;
+  --btn-ghost-radius: 8px;
+  --btn-ghost-size: 14px;
+  --link-size: 14px;
+
+  /* Lobby Specific */
+  --lobby-header-margin-bottom: 24px;
+  --lobby-title-size: 28px;
+  --lobby-subtitle-size: 14px;
+  --user-section-max-width: 320px;
+  --user-section-padding: 16px;
+  --user-section-radius: 12px;
+  --user-section-margin-bottom: 24px;
+  --user-info-margin-bottom: 12px;
+  --user-info-padding-bottom: 12px;
+  --username-size: 18px;
+  --stats-gap: 12px;
+  --stat-label-size: 11px;
+  --stat-label-spacing: 0.5px;
+  --stat-value-size: 20px;
+  --lobby-actions-max-width: 320px;
+  --lobby-actions-gap: 12px;
+  --lobby-footer-max-width: 320px;
+  --lobby-footer-margin-top: 24px;
+  --lobby-footer-padding-top: 16px;
+
+  /* Theme Badge */
+  --theme-badge-padding: 8px 16px;
+  --theme-badge-radius: 20px;
+  --theme-badge-gap: 8px;
+  --theme-dot-size: 12px;
+  --theme-name-size: 13px;
+
+  /* Waiting Room */
+  --waiting-room-padding: 16px;
+  --waiting-room-padding-top: calc(16px + 48px);
+  --waiting-room-header-gap: 12px;
+  --waiting-room-header-margin-bottom: 16px;
+  --waiting-room-title-size: 18px;
+  --waiting-room-info-padding: 16px;
+  --waiting-room-info-gap: 8px;
+  --waiting-room-info-margin-bottom: 16px;
+  --waiting-room-info-radius: 12px;
+  --room-code-label-size: 12px;
+  --room-code-label-spacing: 1px;
+  --room-code-gap: 8px;
+  --room-code-size: 32px;
+  --room-code-spacing: 6px;
+  --room-timer-size: 16px;
+  --room-timer-gap: 6px;
+  --room-timer-icon-size: 16px; /* corrected from 1px */
+  --room-player-count-size: 14px;
+  --team-slots-gap: 12px;
+  --team-slots-margin-bottom: 16px;
+  --team-section-padding: 12px;
+  --team-section-gap: 8px;
+  --team-section-radius: 12px;
+  --team-badge-size: 12px;
+  --team-badge-padding: 4px 12px;
+  --team-badge-radius: 9999px;
+  --team-badge-spacing: 0.5px;
+  --player-slot-padding: 8px;
+  --player-slot-gap: 8px;
+  --player-slot-radius: 8px;
+  --slot-avatar-size: 36px;
+  --slot-avatar-font-size: 16px;
+  --admin-crown-top: -4px;
+  --admin-crown-right: -4px;
+  --admin-crown-size: 12px;
+  --slot-player-name-size: 13px;
+  --slot-player-name-empty-size: 12px;
+  --admin-badge-size: 10px;
+  --controls-gap: 8px;
+  --controls-padding-top: 8px;
+  --controls-border-top: 1px solid var(--app-surface-border);
+
+  /* Trump Declarer */
+  --trump-declarer-padding: 8px 16px;
+  --trump-declarer-radius: 20px;
+  --trump-declarer-size: 0.9rem;
+  --trump-declarer-label-size: 1rem;
+  --trump-declarer-badge-top: -4px;
+  --trump-declarer-badge-right: -4px;
+  --trump-declarer-badge-size: 0.8rem;
+  --trump-declarer-text-size: 0.7rem;
+
+  /* Join Room */
+  --join-room-gap: 10px;
+  --join-room-title-size: 18px;
+  --join-room-code-input-gap: 8px;
+  --join-room-label-size: 13px;
+  --join-room-code-field-size: 18px;
+  --join-room-code-field-spacing: 4px;
+  --join-room-code-field-min-height: 48px;
+  --join-room-code-field-padding: 12px;
+  --join-room-code-field-radius: 8px;
+  --join-room-btn-min-height: 48px;
+  --join-room-btn-size: 16px;
+  --join-room-btn-radius: 8px;
+  --join-room-error-size: 12px;
+  --join-room-error-padding: 8px 12px;
+  --join-room-error-radius: 6px;
+  --join-room-divider-gap: 12px;
+  --join-room-divider-size: 13px;
+  --join-room-rooms-gap: 8px;
+  --join-room-rooms-title-size: 14px;
+  --join-room-empty-size: 14px;
+  --join-room-empty-padding: 16px;
+  --join-room-empty-radius: 8px;
+  --join-room-room-card-gap: 12px;
+  --join-room-room-card-padding: 12px 16px;
+  --join-room-room-card-radius: 10px;
+  --join-room-room-card-min-height: 56px;
+  --join-room-room-card-bar-width: 3px;
+  --join-room-room-code-size: 16px;
+  --join-room-room-code-spacing: 3px;
+  --join-room-room-code-padding: 4px 8px;
+  --join-room-room-code-radius: 6px;
+  --join-room-room-code-min-width: 56px;
+  --join-room-room-host-size: 14px;
+  --join-room-room-players-size: 12px;
+  --join-room-room-players-padding: 4px 10px;
+  --join-room-room-players-radius: 9999px;
+
+  /* Offline Game */
+  --offline-indicator-top: 8px;
+  --offline-indicator-right: 8px;
+  --offline-indicator-padding: 4px 8px;
+  --offline-indicator-radius: 8px;
+  --offline-indicator-size: 11px;
+  --offline-icon-size: 14px;
+  --return-btn-bottom: 8px;
+  --return-btn-right: 8px;
+  --return-btn-padding: 8px 16px;
+  --return-btn-radius: 8px;
+  --return-btn-size: 13px;
+
+  /* Game Room (legacy) */
+  --game-room-padding: 32px;
+  --game-room-radius: 16px;
+  --game-room-max-width: 320px;
+  --game-room-title-size: 20px;
+  --game-room-desc-size: 14px;
+
+  /* Re-dealing */
+  --redeal-size: 16px;
+
+  /* Reconnection */
+  --reconnection-padding: 32px;
+  --reconnection-radius: 16px;
+  --reconnection-max-width: 320px;
+  --reconnection-title-size: 18px;
+  --reconnection-countdown-size: 24px;
+  --reconnection-hint-size: 14px;
+  --reconnection-spinner-size: 48px;
+  --reconnection-spinner-border: 4px;
+  --reconnection-check-size: 48px;
+  --reconnection-check-icon-size: 24px;
+
+  /* ===== Landscape Size Overrides ===== */
+  @media (orientation: landscape) and (max-height: 500px) {
+    /* Felt Grid */
+    --felt-gap: 2px;
+    --felt-padding: 2px;
+    --felt-rows: 18% 52% 30%;
+    --felt-cols: 1fr 3fr 1fr;
+
+    /* Cards */
+    --card-width: 50px;
+    --card-height: 70px;
+    --card-rank-size: 20px;
+    --card-suit-size: 20px;
+    --card-player-label-size: 6px;
+    --card-player-label-padding: 1px 2px;
+    --hand-gap: 1px;
+    --hand-padding: 2px 3px 4px;
+
+    /* Player Info */
+    --player-info-min-width: 44px;
+    --player-info-padding: 2px 3px;
+    --player-info-gap: 1px;
+    --avatar-size: 20px;
+    --avatar-font-size: 10px;
+    --active-ring-inset: -2px;
+    --active-ring-width: 1px;
+    --crown-icon-top: -6px;
+    --crown-icon-size: 8px;
+    --player-name-size: 7px;
+    --card-count-size: 6px;
+
+    /* Team Labels */
+    --team-label-size: 6px;
+    --team-label-padding: 1px 2px;
+
+    /* User Display */
+    --user-display-player-min-width: 44px;
+    --user-display-player-padding: 2px 3px;
+    --user-display-name-size: 7px;
+    --user-display-team-label-size: 6px;
+    --user-display-team-label-padding: 1px 2px;
+    --user-display-card-count-size: 6px;
+
+    /* Corner Cells */
+    --trump-cell-min-width: 28px;
+    --trump-cell-padding: 2px;
+    --trump-cell-label-size: 6px;
+    --trump-cell-label-spacing: 0;
+    --trump-cell-value-size: 14px;
+    --scores-cell-min-width: 36px;
+    --scores-cell-padding: 2px;
+    --scores-cell-gap: 1px;
+    --scores-cell-label-size: 6px;
+    --scores-cell-label-spacing: 0;
+    --team-score-size: 11px;
+    --crown-cell-name-size: 7px;
+    --trump-declarer-cell-size: 7px;
+    --trick-cell-min-width: 28px;
+    --trick-cell-padding: 2px;
+    --trick-value-size: 11px;
+    --trick-label-size: 6px;
+    --round-score-size: 9px;
+
+    /* Trick Area */
+    --trick-area-radius: 6px;
+    --trick-placeholder-size: 9px;
+    --trick-card-slot-gap: 2px;
+    --trick-position-offset: 8%;
+
+    /* Menu */
+    --menu-icon-size: 18px;
+    --menu-toggle-btn-icon-size: 18px;
+
+    /* Trump Selector */
+    --trump-card-width: 48px;
+    --trump-card-height: 64px;
+    --trump-card-suit-size: 18px;
+    --trump-card-rank-size: 12px;
+    --trump-suit-grid-gap: 4px;
+    --trump-suit-btn-height: 64px;
+    --trump-suit-btn-padding: 12px;
+    --trump-suit-symbol-size: 24px;
+    --trump-suit-name-size: 11px;
+    --trump-selector-gap: 8px;
+
+    /* Modal */
+    --modal-max-width: min(95vw, 700px);
+    --modal-max-height: 95vh;
+    --modal-radius: 12px;
+    --modal-content-padding: 12px;
+
+    /* Context Menu */
+    --context-menu-item-padding: 12px;
+    --context-menu-icon-size: 16px;
+    --context-menu-label-size: 14px;
+
+    /* Round End */
+    --round-end-gap: 12px;
+    --round-end-title-size: 16px;
+    --round-end-result-size: 14px;
+    --round-end-points-size: 18px;
+    --round-end-trick-gap: 8px;
+    --round-end-trick-padding: 8px;
+    --round-end-trick-label-size: 10px;
+    --round-end-trick-value-size: 13px;
+    --round-end-score-padding: 8px;
+    --round-end-score-label-size: 10px;
+    --round-end-score-value-size: 14px;
+    --round-end-continue-btn-padding: 10px 24px;
+    --round-end-continue-btn-size: 14px;
+
+    /* Victory */
+    --victory-gap: 12px;
+    --victory-icon-size: 40px;
+    --victory-title-size: 20px;
+    --victory-winner-size: 14px;
+    --victory-scores-title-size: 14px;
+    --victory-score-padding: 10px;
+    --victory-score-label-size: 11px;
+    --victory-score-value-size: 22px;
+    --victory-score-unit-size: 10px;
+    --victory-new-game-btn-padding: 10px 20px;
+    --victory-new-game-btn-size: 14px;
+    --victory-lobby-btn-padding: 10px 20px;
+    --victory-lobby-btn-size: 13px;
+
+    /* Played Cards */
+    --played-cards-gap: 12px;
+    --played-cards-title-size: 16px;
+    --played-cards-trick-padding: 8px;
+    --trick-label-size: 12px;
+    --trick-status-size: 10px;
+    --cards-grid-gap: 6px;
+    --played-card-padding: 6px;
+    --played-card-min-height: 48px;
+    --played-card-value-size: 13px;
+    --played-card-player-size: 9px;
+    --empty-state-min-height: 100px;
+    --empty-state-text-size: 13px;
+    --empty-state-hint-size: 11px;
+
+    /* Theme Selector */
+    --theme-selector-panel-max-width: min(90vw, 500px);
+    --theme-selector-panel-padding: 16px;
+    --theme-selector-title-size: 15px;
+    --theme-selector-grid-gap: 8px;
+    --theme-option-padding: 10px 8px;
+    --theme-option-preview-size: 32px;
+    --theme-option-preview-text-size: 14px;
+    --theme-option-name-size: 12px;
+    --theme-option-desc-size: 10px;
+    --theme-option-badge-size: 9px;
+
+    /* Room Code Modal */
+    --room-code-modal-padding: 16px;
+    --room-code-modal-max-width: 300px;
+    --room-code-display-size: 28px;
+    --room-code-display-spacing: 5px;
+    --room-code-display-padding: 12px 16px;
+    --room-code-waiting-size: 12px;
+
+    /* App Header */
+    --app-header-height: 40px;
+    --app-header-back-size: 32px;
+    --app-header-back-icon-size: 20px;
+    --app-header-title-size: 14px;
+
+    /* Login / Lobby */
+    --view-padding: 55px 10px 16px 10px;
+    --container-max-width: min(85vw, 650px);
+    --container-padding: 16px 20px;
+    --container-padding-bottom: 16px;
+    --app-title-size: 22px;
+    --app-subtitle-size: 12px;
+    --form-group-gap: 8px;
+    --form-input-padding: 10px 12px;
+    --form-input-size: 14px;
+    --error-padding: 8px 12px;
+    --error-size: 12px;
+    --success-padding: 8px 12px;
+    --success-size: 12px;
+    --btn-padding: 10px 16px;
+    --btn-size: 14px;
+    --btn-secondary-size: 13px;
+    --btn-outline-size: 13px;
+    --btn-lg-padding: 12px 20px;
+    --btn-lg-size: 14px;
+    --link-size: 12px;
+
+    /* Lobby */
+    --lobby-header-margin-bottom: 0;
+    --lobby-title-size: 22px;
+    --lobby-subtitle-size: 11px;
+    --user-section-padding: 12px;
+    --user-section-margin-bottom: 0;
+    --user-info-margin-bottom: 8px;
+    --user-info-padding-bottom: 8px;
+    --username-size: 15px;
+    --stats-gap: 8px;
+    --stat-label-size: 9px;
+    --stat-value-size: 16px;
+    --lobby-footer-margin-top: 8px;
+    --lobby-footer-padding-top: 8px;
+
+    /* Theme Badge */
+    --theme-badge-padding: 6px 12px;
+    --theme-dot-size: 10px;
+    --theme-name-size: 11px;
+
+    /* Waiting Room */
+    --waiting-room-padding: 55px 16px 16px 16px;
+    --waiting-room-header-gap: 8px;
+    --waiting-room-title-size: 14px;
+    --waiting-room-info-padding: 8px 12px;
+    --waiting-room-info-gap: 6px;
+    --waiting-room-info-margin-bottom: 8px;
+    --room-code-label-size: 9px;
+    --room-code-size: 20px;
+    --room-code-spacing: 3px;
+    --room-timer-size: 13px;
+    --room-timer-gap: 4px;
+    --room-timer-icon-size: 14px;
+    --room-player-count-size: 12px;
+    --team-slots-gap: 8px;
+    --team-slots-margin-bottom: 8px;
+    --team-section-padding: 8px;
+    --team-section-gap: 6px;
+    --team-badge-size: 9px;
+    --team-badge-padding: 2px 8px;
+    --player-slot-padding: 6px;
+    --player-slot-gap: 6px;
+    --slot-avatar-size: 28px;
+    --slot-avatar-font-size: 12px;
+    --slot-player-name-size: 10px;
+    --slot-player-name-empty-size: 10px;
+    --admin-badge-size: 9px;
+    --admin-crown-size: 10px;
+    --controls-gap: 6px;
+    --controls-padding-top: 6px;
+
+    /* Trump Declarer */
+    --trump-declarer-padding: 4px 10px;
+    --trump-declarer-size: 0.75rem;
+    --trump-declarer-label-size: 0.8rem;
+    --trump-declarer-badge-size: 0.8rem;
+    --trump-declarer-text-size: 0.7rem;
+
+    /* Join Room */
+    --join-room-gap: 8px;
+    --join-room-title-size: 15px;
+    --join-room-label-size: 12px;
+    --join-room-code-field-size: 15px;
+    --join-room-code-field-spacing: 3px;
+    --join-room-code-field-min-height: 40px;
+    --join-room-code-field-padding: 8px;
+    --join-room-btn-min-height: 40px;
+    --join-room-btn-size: 14px;
+    --join-room-error-size: 11px;
+    --join-room-error-padding: 6px 10px;
+    --join-room-divider-gap: 8px;
+    --join-room-divider-size: 11px;
+    --join-room-rooms-gap: 6px;
+    --join-room-rooms-title-size: 12px;
+    --join-room-empty-size: 12px;
+    --join-room-empty-padding: 12px;
+    --join-room-room-card-gap: 8px;
+    --join-room-room-card-padding: 8px 12px;
+    --join-room-room-card-radius: 8px;
+    --join-room-room-card-min-height: 48px;
+    --join-room-room-code-size: 14px;
+    --join-room-room-code-spacing: 2px;
+    --join-room-room-code-padding: 3px 6px;
+    --join-room-room-code-min-width: 48px;
+    --join-room-room-host-size: 12px;
+    --join-room-room-players-size: 11px;
+    --join-room-room-players-padding: 3px 8px;
+
+    /* Offline */
+    --offline-indicator-size: 10px;
+    --offline-icon-size: 12px;
+    --return-btn-padding: 6px 12px;
+    --return-btn-size: 11px;
+
+    /* Game Room */
+    --game-room-padding: 20px;
+    --game-room-title-size: 16px;
+    --game-room-desc-size: 12px;
+
+    /* Re-dealing */
+    --redeal-size: 12px;
+
+    /* Reconnection */
+    --reconnection-padding: 20px;
+    --reconnection-title-size: 15px;
+    --reconnection-countdown-size: 20px;
+    --reconnection-hint-size: 12px;
+    --reconnection-spinner-size: 36px;
+    --reconnection-spinner-border: 3px;
+    --reconnection-check-size: 36px;
+    --reconnection-check-icon-size: 18px;
+  }
 }
 
 /* Theme: Royal Emerald */

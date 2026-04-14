@@ -25,13 +25,13 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: min(90vw, 600px);
-  max-height: max(85vh, 85dvh);
+  max-width: var(--modal-max-width);
+  max-height: var(--modal-max-height);
   height: auto;
   overflow-y: auto;
   background: var(--app-surface);
   border: 1px solid var(--app-surface-border);
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--modal-radius);
   color: var(--app-text);
   transform: translateY(100%);
   transition: transform 0.3s ease;
@@ -45,7 +45,7 @@
 }
 
 .modal-bottom-sheet-content {
-  padding: 24px 16px;
+  padding: var(--modal-content-padding);
 }
 
 /* ===== Context Menu ===== */
@@ -66,11 +66,11 @@
 .context-menu-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: var(--context-menu-item-gap);
+  padding: var(--context-menu-item-padding);
   color: var(--app-text);
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--context-menu-item-radius);
   transition: background 0.2s ease;
 }
 
@@ -83,12 +83,12 @@
 }
 
 .context-menu-icon {
-  font-size: 20px;
+  font-size: var(--context-menu-icon-size);
   flex-shrink: 0;
 }
 
 .context-menu-label {
-  font-size: 16px;
+  font-size: var(--context-menu-label-size);
   font-weight: 500;
 }
 
@@ -96,18 +96,18 @@
 .trump-selector-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--trump-selector-gap);
 }
 
 .trump-selector-title {
-  font-size: 20px;
+  font-size: var(--trump-selector-title-size);
   font-weight: 700;
   color: var(--app-primary);
   margin: 0;
 }
 
 .trump-selector-description {
-  font-size: 14px;
+  font-size: var(--trump-selector-desc-size);
   color: var(--app-text-muted);
   margin: 0;
 }
@@ -125,21 +125,21 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 76px;
+  width: var(--trump-card-width);
+  height: var(--trump-card-height);
   background: var(--game-card-bg);
   border: 1px solid var(--game-card-border);
-  border-radius: 6px;
+  border-radius: var(--trump-card-radius);
   box-shadow: 0 2px 4px var(--game-card-shadow);
 }
 
 .trump-card-suit {
-  font-size: 20px;
+  font-size: var(--trump-card-suit-size);
   line-height: 1;
 }
 
 .trump-card-rank {
-  font-size: 14px;
+  font-size: var(--trump-card-rank-size);
   font-weight: 700;
   color: var(--game-card-text);
 }
@@ -147,7 +147,7 @@
 .trump-suit-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: var(--trump-suit-grid-gap);
 }
 
 .trump-suit-btn {
@@ -156,11 +156,11 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 16px;
-  height: 80px;
+  padding: var(--trump-suit-btn-padding);
+  height: var(--trump-suit-btn-height);
   background: var(--app-surface);
   border: 2px solid var(--app-secondary-border);
-  border-radius: 12px;
+  border-radius: var(--trump-suit-btn-radius);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -175,12 +175,12 @@
 }
 
 .trump-suit-symbol {
-  font-size: 28px;
+  font-size: var(--trump-suit-symbol-size);
   line-height: 1;
 }
 
 .trump-suit-name {
-  font-size: 13px;
+  font-size: var(--trump-suit-name-size);
   font-weight: 600;
   color: var(--app-text);
 }
@@ -193,12 +193,12 @@
 }
 
 .trump-selector-cancel-btn {
-  padding: 10px 24px;
+  padding: var(--trump-cancel-btn-padding);
   background: transparent;
   color: var(--app-text-muted);
   border: 1px solid var(--app-secondary-border);
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--trump-cancel-btn-radius);
+  font-size: var(--trump-cancel-btn-size);
   cursor: pointer;
   transition: all 0.2s ease;
 }

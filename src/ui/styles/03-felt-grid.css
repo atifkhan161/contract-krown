@@ -16,10 +16,10 @@
     "top-left partner top-right"
     "left-opponent trick-area right-opponent"
     "bottom-left user-hand bottom-right";
-  grid-template-rows: 12% 58% 30%;
-  grid-template-columns: 1fr 2.5fr 1fr;
-  gap: 3px;
-  padding: 3px;
+  grid-template-rows: var(--felt-rows);
+  grid-template-columns: var(--felt-cols);
+  gap: var(--felt-gap);
+  padding: var(--felt-padding);
   background-color: var(--felt-bg);
   background-image:
     radial-gradient(ellipse at center, var(--felt-bg-gradient) 0%, var(--felt-bg) 70%);
@@ -59,22 +59,22 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 4px;
+  padding: var(--trump-cell-padding);
   background: var(--game-surface);
-  border-radius: 8px;
-  min-width: 44px;
+  border-radius: var(--trump-cell-radius);
+  min-width: var(--trump-cell-min-width);
 }
 
 .trump-cell-label {
-  font-size: 9px;
+  font-size: var(--trump-cell-label-size);
   font-weight: 600;
   color: var(--game-text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: var(--trump-cell-label-spacing);
 }
 
 .trump-cell-value {
-  font-size: 22px;
+  font-size: var(--trump-cell-value-size);
   line-height: 1;
 }
 
@@ -93,18 +93,18 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 4px;
+  padding: var(--scores-cell-padding);
   background: var(--game-surface);
-  border-radius: 8px;
-  min-width: 52px;
+  border-radius: var(--scores-cell-radius);
+  min-width: var(--scores-cell-min-width);
 }
 
 .scores-cell-label {
-  font-size: 9px;
+  font-size: var(--scores-cell-label-size);
   font-weight: 600;
   color: var(--game-text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: var(--scores-cell-label-spacing);
 }
 
 .scores-cell-row {
@@ -114,7 +114,7 @@
 }
 
 .team-score-mini {
-  font-size: 16px;
+  font-size: var(--team-score-size);
   font-weight: 700;
 }
 
@@ -132,12 +132,12 @@
 }
 
 .crown-cell-name {
-  font-size: 10px;
+  font-size: var(--crown-cell-name-size);
   color: var(--game-text-muted);
 }
 
 .trump-declarer-cell {
-  font-size: 10px;
+  font-size: var(--trump-declarer-cell-size);
   color: var(--game-text);
   font-weight: 600;
 }
@@ -149,20 +149,20 @@
   align-items: center;
   justify-content: center;
   gap: 1px;
-  padding: 4px;
+  padding: var(--trick-cell-padding);
   background: var(--game-surface);
-  border-radius: 8px;
-  min-width: 40px;
+  border-radius: var(--trick-cell-radius);
+  min-width: var(--trick-cell-min-width);
 }
 
 .trick-count-value {
-  font-size: 16px;
+  font-size: var(--trick-value-size);
   font-weight: 700;
   color: var(--game-text-muted);
 }
 
 .trick-count-label {
-  font-size: 9px;
+  font-size: var(--trick-label-size);
   color: var(--game-text-dim);
   text-transform: uppercase;
 }
@@ -176,7 +176,7 @@
 }
 
 .round-score {
-  font-size: 12px;
+  font-size: var(--round-score-size);
   font-weight: 700;
 }
 
@@ -202,19 +202,19 @@
 }
 
 .menu-icon {
-  font-size: 20px;
+  font-size: var(--menu-icon-size);
   color: var(--game-text-dim);
   cursor: pointer;
 }
 
 .menu-toggle-btn {
-  padding: 4px 8px;
+  padding: var(--menu-toggle-padding);
   min-height: auto;
   line-height: 1;
 }
 
 .menu-toggle-btn .menu-icon {
-  font-size: 24px;
+  font-size: var(--menu-toggle-btn-icon-size);
   color: var(--game-text-muted);
 }
 

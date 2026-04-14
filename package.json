@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "lsof -ti:1999 | xargs kill -9 2>/dev/null; bun run build:copy && concurrently -n \"CSS,JS,PARTY\" -c \"blue,green,cyan\" \"bun run dev:css\" \"bun run dev:js\" \"bun run dev:party\" --kill-others-on-fail",
     "dev:party": "partykit dev",
-    "dev:css": "postcss src/ui/styles/main.css -o dist/client/styles.css --watch",
+    "dev:css": "postcss src/ui/styles/main.css -o dist/client/styles.css --watch --map",
     "dev:js": "bun build src/ui/app.ts --outdir dist/client --target browser --sourcemap=inline --watch",
     "build": "bun run build:client",
     "build:client": "bun run build:js && bun run build:css && bun run build:copy",
