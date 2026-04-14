@@ -229,18 +229,18 @@ class App {
         const waitingView = new WaitingRoomView({
           roomId,
           roomCode,
-          adminSessionId: session?.token ?? '',
+          adminSessionId: '', // Will be updated from server state
           players: [{
             playerIndex: 0,
             username,
-            sessionId: session?.token ?? '',
+            sessionId: '',
             isBot: false,
             isAdmin: true,
             team: 0
           }],
           timeRemaining: 180,
           isFull: false,
-          isAdmin: true,
+          isAdmin: true, // Admin by default, will be updated from server
           playerCount: 1
         }, {
           onShuffleTeams: () => {
@@ -264,8 +264,10 @@ class App {
         });
 
         this.onlineController?.setOnGameStarted((data) => {
-          console.log('[App] game_started received, redirecting to:', `/game/${data.roomId}`);
-          page.redirect(`/game/${data.roomId}`);
+          // Use roomCode as roomId since they're the same in PartyKit
+          const gameRoomId = data.roomId || data.roomCode;
+          console.log('[App] game_started received, redirecting to:', `/game/${gameRoomId}`);
+          page.redirect(`/game/${gameRoomId}`);
         });
       }).catch((err: any) => {
         console.error('Failed to create waiting room:', err);
@@ -318,8 +320,10 @@ class App {
         });
 
         this.onlineController?.setOnGameStarted((data) => {
-          console.log('[App] game_started received (join), redirecting to:', `/game/${data.roomId}`);
-          page.redirect(`/game/${data.roomId}`);
+          // Use roomCode as roomId since they're the same in PartyKit
+          const gameRoomId = data.roomId || data.roomCode;
+          console.log('[App] game_started received (join), redirecting to:', `/game/${gameRoomId}`);
+          page.redirect(`/game/${gameRoomId}`);
         });
       }).catch((err: any) => {
         console.error('Failed to join waiting room:', err);

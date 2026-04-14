@@ -191,7 +191,7 @@ export class PartyKitClientWrapper {
 
     console.log('[PartyKitClient] setupSocketListeners START');
 
-    this._socket.addEventListener('message', (event) => {
+    this._socket.addEventListener('message', (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
         console.log('[PartyKitClient] Received message type:', data.type);
@@ -241,13 +241,13 @@ export class PartyKitClientWrapper {
       this._connectionState = 'connected';
     });
 
-    this._socket.addEventListener('close', (event) => {
+    this._socket.addEventListener('close', (event: CloseEvent) => {
       console.log('[PartyKitClient] Socket closed, code:', event.code);
       this._connectionState = 'disconnected';
       this._callbacks.onLeave(event.code);
     });
 
-    this._socket.addEventListener('error', (event) => {
+    this._socket.addEventListener('error', (event: Event) => {
       console.error('[PartyKitClient] Socket error:', event);
       this._callbacks.onError(0, 'Connection error');
     });

@@ -15,9 +15,15 @@ export interface OnlineGameConfig {
   userPlayerIndex?: number;
 }
 
-const DEFAULT_SERVER_URL = typeof window !== 'undefined' && (window as any).WS_URL 
-  ? (window as any).WS_URL 
-  : 'localhost:1999';
+function getServerUrl(): string {
+  if (typeof window !== 'undefined' && (window as any).WS_URL) {
+    return (window as any).WS_URL;
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin.replace('http', 'ws');
+  }
+  return 'ws://localhost:1999';
+}
 
 export class OnlineGameController {
   private clientWrapper: PartyKitClientWrapper;
@@ -99,7 +105,7 @@ export class OnlineGameController {
     });
   }
 
-  async start(roomId: string, serverUrl: string = DEFAULT_SERVER_URL): Promise<void> {
+  async start(roomId: string, serverUrl: string = getServerUrl()): Promise<void> {
     if (this.isRunning) return;
 
     this.isRunning = true;
@@ -112,7 +118,7 @@ export class OnlineGameController {
     this.gameView.update(this.createEmptyGameState());
   }
 
-  async createAndJoin(serverUrl: string = DEFAULT_SERVER_URL): Promise<string> {
+  async createAndJoin(serverUrl: string = getServerUrl()): Promise<string> {
     if (this.isRunning) return '';
 
     this.isRunning = true;
@@ -126,7 +132,7 @@ export class OnlineGameController {
     return roomId;
   }
 
-  async joinOrCreateRoom(roomName: string = 'crown', serverUrl: string = DEFAULT_SERVER_URL): Promise<string> {
+  async joinOrCreateRoom(roomName: string = 'crown', serverUrl: string = getServerUrl()): Promise<string> {
     if (this.isRunning) return '';
 
     this.isRunning = true;
@@ -141,21 +147,21 @@ export class OnlineGameController {
   }
 
   private handleStateChange(schema: any): void {
-    console.log('[OnlineGameController] handleStateChange called');
-    console.log('[OnlineGameController] schema.roomCode:', schema?.roomCode);
-    console.log('[OnlineGameController] schema.phase:', schema?.phase);
-    console.log('[OnlineGameController] schema.adminSessionId:', schema?.adminSessionId);
-    console.log('[OnlineGameController] schema.players size:', schema?.players?.size);
-    
+    // Guard against partial state messages (e.g., room_expiry_warning)
+    if (!schema || !schema.players) {
+      return;
+    }
+
     this.serverState = schema;
     
     // Extract user's player index from session ID
     const clientSessionId = this.clientWrapper.sessionId;
-    
+
     if (clientSessionId) {
-      const playerMap = schema.players as unknown as Map<string, any>;
+      // PartyKit sends players as plain object, not MapSchema
+      const playerMap = schema.players as Record<string, any>;
       for (let i = 0; i < 4; i++) {
-        const ps = playerMap.get(String(i));
+        const ps = playerMap[String(i)];
         if (ps && ps.sessionId === clientSessionId) {
           this.userServerPlayerIndex = i;
           console.log('[OnlineGameController] User player index set to:', this.userServerPlayerIndex);
@@ -183,14 +189,19 @@ export class OnlineGameController {
 
   private transformToWaitingRoomState(schema: any): WaitingRoomState {
     const players = this.extractPlayers(schema);
+    const sessionId = this.clientWrapper.sessionId;
+    const adminSessionId = schema.adminSessionId || '';
+    const isAdmin = sessionId === adminSessionId;
+    console.log('[OnlineGameController] isAdmin:', isAdmin, 'sessionId:', sessionId?.substring(0, 8), 'adminSessionId:', adminSessionId?.substring(0, 8));
+
     return {
       roomId: this.clientWrapper.roomId || '',
       roomCode: schema.roomCode || '',
-      adminSessionId: schema.adminSessionId || '',
+      adminSessionId,
       players,
       timeRemaining: Math.max(0, Math.floor((schema.roomExpiryAt - Date.now()) / 1000)),
       isFull: players.length >= 4,
-      isAdmin: this.clientWrapper.sessionId === schema.adminSessionId,
+      isAdmin,
       playerCount: players.length,
       trumpDeclarer: schema.trumpDeclarer ?? undefined
     };
@@ -317,13 +328,15 @@ export class OnlineGameController {
   }
 
   private mapSchemaToGameState(schema: any): GameState {
-    const playerMap = schema.players as unknown as Map<string, any>;
+    // PartyKit sends plain JSON objects, not Colyseus Schema instances
+    // players is now a plain object with string keys, not a MapSchema
+    const playerMap = schema.players as Record<string, any>;
     const rawPlayerNames: string[] = [];
 
     // Step 1: Extract raw player data in server order
     const rawPlayers: GameState['players'] = [];
     for (let i = 0; i < 4; i++) {
-      const ps = playerMap.get(String(i));
+      const ps = playerMap[String(i)];
       if (ps) {
         rawPlayerNames[i] = ps.username || `Player ${i + 1}`;
         rawPlayers.push({
@@ -492,7 +505,7 @@ export class OnlineGameController {
     this.currentUsername = username;
   }
 
-  async createWaitingRoom(serverUrl: string = DEFAULT_SERVER_URL): Promise<{ roomId: string; roomCode: string }> {
+  async createWaitingRoom(serverUrl: string = getServerUrl()): Promise<{ roomId: string; roomCode: string }> {
     await this.clientWrapper.connect(serverUrl);
     console.log('Creating room with username:', this.currentUsername || 'Player');
     
@@ -529,7 +542,7 @@ export class OnlineGameController {
     });
   }
 
-  async joinWaitingRoom(roomId: string, serverUrl: string = DEFAULT_SERVER_URL): Promise<{
+  async joinWaitingRoom(roomId: string, serverUrl: string = getServerUrl()): Promise<{
     roomId: string;
     roomCode: string;
     isAdmin: boolean;
@@ -537,6 +550,8 @@ export class OnlineGameController {
     players: Array<{ playerIndex: number; username: string; sessionId: string; isBot: boolean; isAdmin: boolean; team: 0 | 1 }>;
   }> {
     await this.clientWrapper.connect(serverUrl);
+
+    // For PartyKit, the room code IS the room ID — join directly
     await this.clientWrapper.joinRoom(roomId, 'crown', {
       username: this.currentUsername || 'Player'
     });
@@ -569,10 +584,11 @@ export class OnlineGameController {
 
   private extractPlayers(state: any): Array<{ playerIndex: number; username: string; sessionId: string; isBot: boolean; isAdmin: boolean; team: 0 | 1 }> {
     const players: Array<any> = [];
-    const playerMap = state.players as unknown as Map<string, any>;
+    const playerMap = state.players as Record<string, any>;
     for (let i = 0; i < 4; i++) {
-      const ps = playerMap.get(String(i));
-      if (ps) {
+      const ps = playerMap[String(i)];
+      if (ps && ps.sessionId) {
+        // Include all players with valid sessionIds (humans and bots)
         players.push({
           playerIndex: ps.id,
           username: ps.username || `Player ${ps.id + 1}`,

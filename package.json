@@ -1,9 +1,9 @@
 {
   "name": "contract-crown-game",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Mobile-first PWA for Contract Crown trick-taking card game",
   "type": "module",
-  "main": "src/server/serve.ts",
+  "main": "src/server/party-server.ts",
   "scripts": {
     "dev": "lsof -ti:1999 | xargs kill -9 2>/dev/null; sleep 1; bun run build:copy && concurrently -n \"CSS,JS,PARTY\" -c \"blue,green,cyan\" \"bun run dev:css\" \"bun run dev:js\" \"bun run dev:party\" --kill-others-on-fail",
     "dev:party": "partykit dev",
@@ -35,9 +35,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.0",
-    "colyseus": "^0.17.8",
     "daisyui": "^4.12.14",
-    "elysia": "^1.1.16",
     "page": "^1.8.7",
     "partysocket": "^1.0.2",
     "tailwindcss": "^3.4.17"

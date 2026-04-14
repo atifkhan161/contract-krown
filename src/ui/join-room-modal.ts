@@ -2,6 +2,7 @@
 // Modal for joining existing rooms via code input or browsing available rooms
 
 import { ModalBottomSheet } from './modal-bottom-sheet.js';
+import page from 'page';
 
 export interface AvailableRoom {
   roomId: string;
@@ -98,26 +99,11 @@ export class JoinRoomModal {
       }
       this.hideError();
       joinBtn.setAttribute('disabled', 'true');
-      joinBtn.textContent = 'Resolving...';
+      joinBtn.textContent = 'Joining...';
 
-      fetch('/api/rooms/resolve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
-      })
-        .then(res => {
-          if (!res.ok) return res.json().then(d => { throw new Error(d.message || 'Room not found'); });
-          return res.json();
-        })
-        .then(data => {
-          this.onJoin(data.roomId);
-          this.hide();
-        })
-        .catch(err => {
-          this.showError(err.message || 'Room not found');
-          joinBtn.removeAttribute('disabled');
-          joinBtn.textContent = 'Join';
-        });
+      // For PartyKit, the room code IS the room ID — join directly
+      page.redirect(`/waiting/${code}`);
+      this.hide();
     });
 
     codeInput?.addEventListener('keydown', (e) => {

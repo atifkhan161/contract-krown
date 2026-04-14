@@ -93,7 +93,7 @@ export async function createGameRoom(page: Page): Promise<string> {
 
 /**
  * Joins a game room using the room code.
- * Resolves the display code to a Colyseus room ID via API, then navigates to /waiting/{roomId}.
+ * For PartyKit, navigates directly to /waiting/{roomCode} since room codes are used as room IDs.
  */
 export async function joinGameRoom(page: Page, roomCode: string, username: string): Promise<void> {
   // First ensure logged in
@@ -101,21 +101,12 @@ export async function joinGameRoom(page: Page, roomCode: string, username: strin
     await loginUser(page, username);
   }
 
-  // Resolve the 4-char display code to the actual Colyseus room ID
-  const res = await fetch('http://localhost:3000/api/rooms/resolve', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code: roomCode })
-  });
-  const data = await res.json();
-  if (!res.ok || !data.roomId) {
-    throw new Error(`Room code "${roomCode}" not found: ${data.message || 'unknown error'}`);
-  }
-  const roomId = data.roomId;
-  console.log(`  Resolved room code "${roomCode}" → roomId "${roomId}"`);
+  // For PartyKit, the room code IS the room identifier
+  // Navigate directly to the waiting room
+  console.log(`  Joining room code "${roomCode}"`);
 
-  // Navigate to the waiting room via the actual room ID
-  await page.goto(`/waiting/${roomId}`);
+  // Navigate to the waiting room
+  await page.goto(`/waiting/${roomCode}`);
 
   // Wait for the waiting room to load
   await page.locator('#wr-room-code').waitFor({ state: 'visible', timeout: 15000 });
@@ -143,7 +134,7 @@ export async function addBot(page: Page): Promise<void> {
 /**
  * Starts the game from the waiting room (admin only).
  * Clicks the "Start Game" button and waits for the game view to render with cards.
- * Uses a long timeout to handle Colyseus WebSocket state sync in headless mode.
+ * Uses a long timeout to handle PartyKit WebSocket state sync in headless mode.
  */
 export async function startGame(page: Page): Promise<void> {
   await page.locator('#wr-start-btn').waitFor({ state: 'visible', timeout: 10000 });
@@ -292,7 +283,7 @@ export async function waitForServer(timeout = 30000): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout) {
     try {
-      const res = await fetch('http://localhost:3000/health');
+      const res = await fetch('http://localhost:1999/health');
       if (res.ok) return;
     } catch {
       // Server not ready yet

@@ -1,5 +1,7 @@
 // Contract Crown Room Registry
-// Simple in-memory registry for room listing — avoids Colyseus matchMaker singleton issues
+// Persistent room registry using localStorage (works in PartyKit workerd)
+
+const STORAGE_KEY = 'contract-crown-rooms';
 
 interface RoomInfo {
   roomId: string;
@@ -15,14 +17,43 @@ interface RoomInfo {
 class RoomRegistry {
   private rooms: Map<string, RoomInfo> = new Map();
 
+  constructor() {
+    this.loadFromStorage();
+  }
+
+  private loadFromStorage(): void {
+    try {
+      const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+      if (stored) {
+        const data = JSON.parse(stored) as RoomInfo[];
+        this.rooms = new Map(data.map(r => [r.roomId, r]));
+      }
+    } catch (e) {
+      console.log('[RoomRegistry] Failed to load from storage:', e);
+    }
+  }
+
+  private saveToStorage(): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(this.rooms.values())));
+      }
+    } catch (e) {
+      console.log('[RoomRegistry] Failed to save to storage:', e);
+    }
+  }
+
   register(info: RoomInfo): void {
     this.rooms.set(info.roomId, { ...info });
+    this.saveToStorage();
+    console.log('[RoomRegistry] Registered room:', info.roomCode, 'roomId:', info.roomId);
   }
 
   updatePlayerCount(roomId: string, count: number): void {
     const room = this.rooms.get(roomId);
     if (room) {
       room.playerCount = count;
+      this.saveToStorage();
     }
   }
 
@@ -30,6 +61,7 @@ class RoomRegistry {
     const room = this.rooms.get(roomId);
     if (room) {
       room.adminUsername = username;
+      this.saveToStorage();
     }
   }
 
@@ -37,6 +69,7 @@ class RoomRegistry {
     const room = this.rooms.get(roomId);
     if (room) {
       room.phase = phase;
+      this.saveToStorage();
     }
   }
 
@@ -44,11 +77,13 @@ class RoomRegistry {
     const room = this.rooms.get(roomId);
     if (room) {
       room.adminSessionId = adminSessionId;
+      this.saveToStorage();
     }
   }
 
   remove(roomId: string): void {
     this.rooms.delete(roomId);
+    this.saveToStorage();
   }
 
   listAvailable(): Array<{
@@ -59,7 +94,6 @@ class RoomRegistry {
     maxPlayers: number;
     adminSessionId: string;
   }> {
-    console.log('[RoomRegistry] listAvailable called, total rooms:', this.rooms.size);
     const now = Date.now();
     const available: Array<{
       roomId: string;
@@ -71,7 +105,6 @@ class RoomRegistry {
     }> = [];
 
     for (const room of this.rooms.values()) {
-      console.log('[RoomRegistry] Checking room:', room.roomCode, 'phase:', room.phase, 'playerCount:', room.playerCount);
       // Only rooms waiting for players
       if (room.phase !== 'WAITING_FOR_PLAYERS') continue;
       // Skip full rooms
@@ -95,13 +128,9 @@ class RoomRegistry {
   }
 
   getByCode(code: string): RoomInfo | undefined {
-    console.log('[RoomRegistry] getByCode: searching for', code);
-    console.log('[RoomRegistry] getByCode: rooms in registry:', Array.from(this.rooms.entries()).map(([id, r]) => `${id} => ${r.roomCode}`));
     for (const room of this.rooms.values()) {
-      console.log('[RoomRegistry] getByCode: comparing', room.roomCode, '===', code, '?', room.roomCode === code);
       if (room.roomCode === code) return room;
     }
-    console.log('[RoomRegistry] getByCode: NOT FOUND');
     return undefined;
   }
 

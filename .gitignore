@@ -35,3 +35,6 @@ Thumbs.db
 
 # E2e test
 test-results
+
+#party-kit
+.partykit
