@@ -64,6 +64,7 @@
   font-size: var(--player-name-size);
   font-weight: 600;
   color: var(--game-text);
+  max-width: 6ch;
 }
 
 .card-count {

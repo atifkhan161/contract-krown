@@ -174,7 +174,7 @@ export class FeltGrid {
           ${isCrownHolder ? '<span class="crown-icon">👑</span>' : ''}
           ${isActive ? '<div class="active-ring"></div>' : ''}
         </div>
-        <div class="player-name">${partnerName}</div>
+        <div class="player-name" title="${partnerName}">${partnerName}</div>
         <div class="team-label ${teamClass}">${teamNumber}</div>
         <div class="card-count">${partner.hand.length} cards</div>
       </div>
@@ -319,7 +319,7 @@ export class FeltGrid {
           ${isCrownHolder ? '<span class="crown-icon">👑</span>' : ''}
           ${isActive ? '<div class="active-ring"></div>' : ''}
         </div>
-        <div class="player-name">${label}</div>
+<div class="player-name" title="${label}">${label}</div>
         <div class="team-label ${teamClass}">${teamNumber}</div>
         <div class="card-count">${player.hand.length} cards</div>
       </div>
@@ -451,7 +451,7 @@ export class FeltGrid {
           ${isCrownHolder ? '<span class="crown-icon">👑</span>' : ''}
           ${isActive ? '<div class="active-ring"></div>' : ''}
         </div>
-        <div class="player-name">${userName}</div>
+        <div class="player-name" title="${userName}">${userName}</div>
         <div class="team-label ${teamClass}">${teamNumber}</div>
         <div class="card-count">${user.hand.length} cards</div>
       </div>
