@@ -109,6 +109,18 @@ class SupabaseService {
     return { error: null, user: data.user };
   }
 
+  async resetPasswordForEmail(email: string) {
+    const { error } = await this.client.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://contract-crown.atifkhan161.partykit.dev/login'
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { error: null };
+  }
+
   async getProfile(userId: string): Promise<UserProfile | null> {
     const { data, error } = await this.client
       .from('profiles')

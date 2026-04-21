@@ -246,20 +246,20 @@
   text-decoration: underline;
 }
 
-.register-back-link {
+.register-back-link, .forgot-link, .back-link {
   font-size: 14px;
   color: var(--app-text-muted);
   text-align: center;
 }
 
-.register-back-link a {
+.register-back-link a, .forgot-link a, .back-link a {
   color: var(--app-primary);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
-.register-back-link a:hover {
+.register-back-link a:hover, .forgot-link a:hover, .back-link a:hover {
   color: var(--app-primary-hover);
   text-decoration: underline;
 }

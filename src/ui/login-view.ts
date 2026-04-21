@@ -10,6 +10,7 @@ export interface LoginViewConfig {
   onLoginSuccess?: () => void;
   onPlayOffline?: () => void;
   onRegister?: () => void;
+  onForgotPassword?: () => void;
 }
 
 interface BeforeInstallPromptEvent extends Event {
@@ -90,6 +91,9 @@ export class LoginView {
           <span>Don't have an account? </span>
           <a href="#" id="register-link">Register</a>
         </div>
+        <div class="forgot-link mt-2">
+          <a href="#" id="forgot-password-link">Forgot password?</a>
+        </div>
       </div>
     `;
 
@@ -130,6 +134,14 @@ export class LoginView {
       e.preventDefault();
       if (this.config.onRegister) {
         this.config.onRegister();
+      }
+    });
+
+    const forgotLink = this.container?.querySelector('#forgot-password-link') as HTMLAnchorElement;
+    forgotLink?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (this.config.onForgotPassword) {
+        this.config.onForgotPassword();
       }
     });
   }

@@ -284,6 +284,18 @@ server.onFetch = async (
     return jsonResponse({ success: true });
   }
 
+  if (path === '/api/auth/forgot-password' && method === 'POST') {
+    const body = await req.json();
+    const email = body?.email?.trim();
+
+    if (!email) {
+      return jsonResponse({ message: 'Email is required' }, 400);
+    }
+
+    await supabaseService.resetPasswordForEmail(email);
+    return jsonResponse({ success: true });
+  }
+
   if (path === '/api/auth/me' && method === 'GET') {
     const authHeader = req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
