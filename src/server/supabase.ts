@@ -111,8 +111,20 @@ class SupabaseService {
 
   async resetPasswordForEmail(email: string) {
     const { error } = await this.client.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://contract-crown.atifkhan161.partykit.dev/login'
+      redirectTo: 'https://contract-crown.atifkhan161.partykit.dev/reset-password'
     });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { error: null };
+  }
+
+  async updatePassword(accessToken: string, newPassword: string) {
+    const { error } = await this.client.auth.updateUser(accessToken, {
+      password: newPassword
+    } as any);
 
     if (error) {
       return { error: error.message };

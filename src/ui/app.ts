@@ -9,6 +9,7 @@ import { LobbyView } from './lobby-view.js';
 import { OfflineGameView } from './offline-game-view.js';
 import { RegistrationView } from './registration-view.js';
 import { ForgotPasswordView } from './forgot-password-view.js';
+import { ResetPasswordView } from './reset-password-view.js';
 import { ThemeManager } from './theme-manager.js';
 import { OnlineGameController } from './online-game-controller.js';
 import { WaitingRoomView } from './waiting-room-view.js';
@@ -72,6 +73,11 @@ class App {
     page('/forgot-password', () => {
       console.log('Route /forgot-password matched');
       this.showForgotPassword();
+    });
+
+    page('/reset-password', () => {
+      console.log('Route /reset-password matched');
+      this.showResetPassword();
     });
 
     page('/lobby', (ctx, next) => {
@@ -149,6 +155,22 @@ class App {
     });
 
     const viewContainer = forgotPasswordView.render();
+    this.container.appendChild(viewContainer);
+    this.currentView = viewContainer;
+  }
+
+  private showResetPassword(): void {
+    console.log('showResetPassword called');
+    this.clearCurrentView();
+    this.appHeader.hide();
+
+    if (!this.container) return;
+
+    const resetPasswordView = new ResetPasswordView({
+      onResetSuccess: () => page.redirect('/login')
+    });
+
+    const viewContainer = resetPasswordView.render();
     this.container.appendChild(viewContainer);
     this.currentView = viewContainer;
   }

@@ -296,6 +296,28 @@ server.onFetch = async (
     return jsonResponse({ success: true });
   }
 
+  if (path === '/api/auth/reset-password' && method === 'POST') {
+    const body = await req.json();
+    const accessToken = body?.access_token?.trim();
+    const password = body?.password?.trim();
+
+    if (!accessToken || !password) {
+      return jsonResponse({ message: 'Token and password are required' }, 400);
+    }
+
+    if (password.length < 6) {
+      return jsonResponse({ message: 'Password must be at least 6 characters' }, 400);
+    }
+
+    const result = await supabaseService.updatePassword(accessToken, password);
+
+    if (result.error) {
+      return jsonResponse({ message: result.error }, 400);
+    }
+
+    return jsonResponse({ success: true });
+  }
+
   if (path === '/api/auth/me' && method === 'GET') {
     const authHeader = req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
