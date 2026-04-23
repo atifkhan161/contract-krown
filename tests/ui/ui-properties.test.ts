@@ -383,6 +383,12 @@ describe('UI Component Unit Tests', () => {
     expect(typeof hapticController.triggerVictory).toBe('function');
     expect(typeof hapticController.isHapticSupported).toBe('function');
     expect(typeof hapticController.stop).toBe('function');
+    // New methods
+    expect(typeof hapticController.triggerCardSelected).toBe('function');
+    expect(typeof hapticController.triggerCardPlayed).toBe('function');
+    expect(typeof hapticController.triggerInvalidMove).toBe('function');
+    expect(typeof hapticController.triggerButtonTap).toBe('function');
+    expect(typeof hapticController.triggerNotification).toBe('function');
   });
 
   it('HapticController gracefully handles unsupported API', () => {
@@ -392,5 +398,11 @@ describe('UI Component Unit Tests', () => {
     expect(() => hapticController.triggerTrickWon()).not.toThrow();
     expect(() => hapticController.triggerTrumpDeclared()).not.toThrow();
     expect(() => hapticController.triggerVictory()).not.toThrow();
+    // New methods
+    expect(() => hapticController.triggerCardSelected()).not.toThrow();
+    expect(() => hapticController.triggerCardPlayed()).not.toThrow();
+    expect(() => hapticController.triggerInvalidMove()).not.toThrow();
+    expect(() => hapticController.triggerButtonTap()).not.toThrow();
+    expect(() => hapticController.triggerNotification()).not.toThrow();
   });
 });

@@ -239,11 +239,12 @@ export class GameView {
     );
 
     if (!isPlayable) {
+      this.hapticController.triggerInvalidMove();
       return;
     }
 
-    // Trigger haptic feedback
-    this.hapticController.triggerYourTurn();
+    // Trigger haptic feedback for card selection
+    this.hapticController.triggerCardSelected();
 
     // Animate card play
     this.animateCardPlay(card);

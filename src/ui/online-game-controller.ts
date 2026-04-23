@@ -293,6 +293,7 @@ export class OnlineGameController {
     // Use rotated gameState for legality check — user is at view position 0
     const gameState = this.mapSchemaToGameState(this.serverState);
     if (!canPlayCard(gameState, 0, card)) {
+      this.hapticController.triggerInvalidMove();
       return;
     }
 
@@ -302,7 +303,7 @@ export class OnlineGameController {
 
     try {
       this.clientWrapper.sendPlayCard(card);
-      this.hapticController.triggerYourTurn();
+      this.hapticController.triggerCardPlayed();
     } catch (error) {
       console.error('Failed to send card play:', error);
       this.isSendingCard = false;

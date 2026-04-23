@@ -287,13 +287,14 @@ export class OfflineGameController {
     if (this.gameState.currentPlayer !== this.userPlayerIndex) return;
 
     if (!canPlayCard(this.gameState, this.userPlayerIndex, card)) {
+      this.hapticController.triggerInvalidMove();
       return;
     }
 
     try {
       playCard(this.gameState, this.userPlayerIndex, card);
 
-      this.hapticController.triggerYourTurn();
+      this.hapticController.triggerCardPlayed();
 
       if (this.gameState.currentTrick.cards.length === 0 && this.gameState.completedTricks.length > 0) {
         const lastTrick = this.gameState.completedTricks[this.gameState.completedTricks.length - 1];
