@@ -179,3 +179,100 @@
     padding: 12px 16px;
   }
 }
+
+/* ===== Landscape: Game Table Overrides ===== */
+@media (orientation: landscape) {
+
+  /* --- Grid: give side columns more room --- */
+  .felt-grid {
+    grid-template-columns: 1fr 2.5fr 1fr;
+  }
+
+  /* --- Partner (top center): horizontal layout, spread across the wide center --- */
+  .partner-display {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 8px;
+    width: 100%;
+  }
+
+  .partner-display .player-info {
+    min-width: 60px;
+    padding: 4px 8px;
+    flex-direction: row;
+  }
+
+  .partner-display .player-name {
+    font-size: 10px;
+  }
+
+  .partner-display .opponent-hands {
+    margin-top: 0;
+    margin-left: 6px;
+  }
+
+  /* --- Side opponents: column layout, centered, use full cell height --- */
+  .opponent-display.left-opponent,
+  .opponent-display.right-opponent {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    overflow: visible;
+    padding: 4px;
+    height: 100%;
+  }
+
+  .opponent-display .player-info {
+    min-width: 56px;
+    padding: 4px 6px;
+  }
+
+  .opponent-display .player-name {
+    font-size: 10px;
+    max-width: 8ch;
+  }
+
+  .opponent-display .avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .opponent-display .team-label {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+
+  /* Opponent hands sit below player info, row of cards */
+  .opponent-display .opponent-hands {
+    margin-top: 4px;
+    justify-content: center;
+  }
+
+  /* Card-backs: slightly larger than before to fill space */
+  .card-back {
+    width: calc(var(--card-width) * 0.45);
+    height: calc(var(--card-height) * 0.45);
+  }
+
+  /* --- User hand: spread cards with breathing room --- */
+  .hand-cards .card {
+    margin: 0 2px; /* tiny positive gap, no overlap needed */
+  }
+
+  .user-hand {
+    align-items: flex-end;
+    padding: 0 12px 8px;
+  }
+
+  /* --- Trick area: use the extra vertical room --- */
+  .trick-area {
+    min-height: 120px;
+  }
+
+  .trick-area::before {
+    width: min(70%, 180px);
+  }
+}

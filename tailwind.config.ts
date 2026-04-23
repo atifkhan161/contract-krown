@@ -18,6 +18,7 @@ export default {
       },
       fontFamily: {
         sans: ['system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Cinzel', 'serif'],
       },
       animation: {
         'pulse-ring': 'pulse-ring 1.5s ease-in-out infinite',

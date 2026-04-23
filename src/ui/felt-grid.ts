@@ -13,7 +13,6 @@ export class FeltGrid {
   private trickArea: HTMLElement | null = null;
   private rightOpponentDisplay: HTMLElement | null = null;
   private bottomLeft: HTMLElement | null = null;
-  private userDisplay: HTMLElement | null = null;
   private userHand: HTMLElement | null = null;
   private bottomRight: HTMLElement | null = null;
 
@@ -66,10 +65,6 @@ export class FeltGrid {
     this.userHand = document.createElement('div');
     this.userHand.className = 'user-hand';
 
-    // User display (bottom-right of user hand)
-    this.userDisplay = document.createElement('div');
-    this.userDisplay.className = 'player-display user-display';
-
     // Bottom-right: Return to lobby button placeholder
     this.bottomRight = document.createElement('div');
     this.bottomRight.className = 'grid-cell bottom-right';
@@ -84,9 +79,6 @@ export class FeltGrid {
     this.container.appendChild(this.bottomLeft);
     this.container.appendChild(this.userHand);
     this.container.appendChild(this.bottomRight);
-
-    // Add user display as a child of user hand for proper positioning
-    this.userHand.appendChild(this.userDisplay);
   }
 
   /**
@@ -107,7 +99,6 @@ export class FeltGrid {
     // Note: Trick area is rendered separately via renderTrickDisplayBuffer()
     this.renderBottomLeft(state);
     this.renderUserHand(state, userPlayerIndex, playableCards);
-    this.renderUserDisplay(state, userPlayerIndex, playerNames);
     this.renderBottomRight();
   }
 
@@ -167,6 +158,8 @@ export class FeltGrid {
     const teamNumber = partner.team === 0 ? 'Team 1' : 'Team 2';
     const teamClass = partner.team === 0 ? 'team-0' : 'team-1';
     const partnerName = playerNames?.[partnerIndex] || 'Partner';
+    
+    const cardBacks = Array(partner.hand.length).fill('<div class="card-back"></div>').join('');
 
     this.partnerDisplay.innerHTML = `
       <div class="player-info ${isActive ? 'active' : ''} ${isCrownHolder ? 'crown-holder' : ''}">
@@ -176,7 +169,7 @@ export class FeltGrid {
         </div>
         <div class="player-name" title="${partnerName}">${partnerName}</div>
         <div class="team-label ${teamClass}">${teamNumber}</div>
-        <div class="card-count">${partner.hand.length} cards</div>
+        <div class="opponent-hands">${cardBacks}</div>
       </div>
     `;
   }
@@ -313,6 +306,8 @@ export class FeltGrid {
     const teamNumber = player.team === 0 ? 'Team 1' : 'Team 2';
     const teamClass = player.team === 0 ? 'team-0' : 'team-1';
 
+    const cardBacks = Array(player.hand.length).fill('<div class="card-back"></div>').join('');
+
     container.innerHTML = `
       <div class="player-info ${isActive ? 'active' : ''} ${isCrownHolder ? 'crown-holder' : ''}">
         <div class="player-avatar">
@@ -321,7 +316,7 @@ export class FeltGrid {
         </div>
 <div class="player-name" title="${label}">${label}</div>
         <div class="team-label ${teamClass}">${teamNumber}</div>
-        <div class="card-count">${player.hand.length} cards</div>
+        <div class="opponent-hands">${cardBacks}</div>
       </div>
     `;
   }
@@ -425,38 +420,9 @@ export class FeltGrid {
 
     // Set hand cards HTML
     this.userHand.innerHTML = handHtml;
-
-    // Re-append user display element at the bottom
-    if (this.userDisplay) {
-      this.userHand.appendChild(this.userDisplay);
-    }
   }
 
-  /**
-   * Renders user display element
-   */
-  private renderUserDisplay(state: GameState, userPlayerIndex: number, playerNames?: string[]): void {
-    if (!this.userDisplay) return;
 
-    const user = state.players[userPlayerIndex];
-    const isActive = state.currentPlayer === userPlayerIndex;
-    const isCrownHolder = state.crownHolder === userPlayerIndex;
-    const teamNumber = user.team === 0 ? 'Team 1' : 'Team 2';
-    const teamClass = user.team === 0 ? 'team-0' : 'team-1';
-    const userName = playerNames?.[userPlayerIndex] || 'You';
-
-    this.userDisplay.innerHTML = `
-      <div class="player-info ${isActive ? 'active' : ''} ${isCrownHolder ? 'crown-holder' : ''}">
-        <div class="player-avatar">
-          ${isCrownHolder ? '<span class="crown-icon">👑</span>' : ''}
-          ${isActive ? '<div class="active-ring"></div>' : ''}
-        </div>
-        <div class="player-name" title="${userName}">${userName}</div>
-        <div class="team-label ${teamClass}">${teamNumber}</div>
-        <div class="card-count">${user.hand.length} cards</div>
-      </div>
-    `;
-  }
 
   /**
    * Renders a single card element
@@ -472,9 +438,10 @@ export class FeltGrid {
            data-rank="${card.rank}"
            ${isPlayable ? 'clickable' : ''}>
         <div class="card-content">
-          <span class="card-rank">${rankDisplay}</span>
+          <span class="card-rank ${suitColor}">${rankDisplay}</span>
           <span class="card-suit ${suitColor}">${suitSymbol}</span>
         </div>
+        <div class="card-center ${suitColor}">${suitSymbol}</div>
       </div>
     `;
   }

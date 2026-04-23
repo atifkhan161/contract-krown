@@ -15,7 +15,7 @@
   grid-template-areas:
     "top-left partner top-right"
     "left-opponent trick-area right-opponent"
-    "bottom-left user-hand bottom-right";
+    "user-hand user-hand user-hand";
   grid-template-rows: var(--felt-rows);
   grid-template-columns: var(--felt-cols);
   gap: var(--felt-gap);
@@ -45,11 +45,18 @@
 }
 
 .bottom-left {
-  grid-area: bottom-left;
+  position: absolute;
+  bottom: var(--felt-padding);
+  left: var(--felt-padding);
+  z-index: 50;
+  pointer-events: none; /* Let clicks pass through to cards if overlapped */
 }
 
 .bottom-right {
-  grid-area: bottom-right;
+  position: absolute;
+  bottom: 30px;
+  right: 20px;
+  z-index: 50;
 }
 
 /* Trump Cell (top-left) */

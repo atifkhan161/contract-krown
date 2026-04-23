@@ -1,9 +1,11 @@
 /* ===== Player Displays ===== */
 .player-display {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow: visible;
 }
 
 .partner-display {
@@ -126,7 +128,20 @@
   position: relative;
   border-radius: var(--trick-area-radius);
   background: var(--game-trick-area-bg);
-  border: 1px solid var(--game-trick-area-border);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  /* Gold tinted border */
+}
+
+.trick-area::before {
+  content: '';
+  position: absolute;
+  width: min(80%, 150px);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0) 70%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .trick-placeholder {
@@ -146,6 +161,8 @@
   font-size: 24px;
   font-weight: 700;
   margin: 0 auto;
+  z-index: 1;
+  /* ensure cards appear on top of background */
 }
 
 /* ===== User Hand (Bottom - Thumb Zone) ===== */
@@ -153,21 +170,35 @@
   grid-area: user-hand;
   display: flex;
   align-items: center;
+  /* Drop cards to the shelf boundary */
   justify-content: center;
-  padding: var(--hand-padding);
-  background: linear-gradient(180deg, transparent 0%, var(--game-hand-gradient) 100%);
-  border-radius: var(--hand-radius);
+  padding: 0 4px 8px;
+  /* Remove thick top padding, ensure 8px bottom pad */
+  background: rgba(5, 10, 20, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  /* Casino gold outline */
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), 0 0 10px rgba(212, 175, 55, 0.05);
+  /* inner shadow */
+  border-radius: 8px;
+  /* Squared off a bit more */
+  margin: 4px;
 }
 
 .hand-cards {
   display: flex;
-  gap: var(--hand-gap);
   justify-content: center;
-  flex-wrap: wrap;
   align-content: center;
   max-width: 100%;
   max-height: 100%;
-  padding: 0 4px;
+  overflow: visible;
+  /* ensure overlapping cards aren't clipped */
+  padding: 0 20px;
+}
+
+/* Force horizontal overlap to fit 8 cards cleanly on narrow mobile devices seamlessly centered */
+.hand-cards .card {
+  margin: 0 max(-3vw, -12px);
+  /* reduced overlap to keep cards fully in view */
 }
 
 /* ===== Offline Game View ===== */
@@ -212,7 +243,8 @@
   border-radius: var(--return-btn-radius);
   font-size: var(--return-btn-size);
   font-weight: 500;
-  cursor: pointer;
+  overflow: visible;
+  /* allow large center suit and overlap to be fully visible */
   z-index: 20;
   transition: background 0.2s ease;
 }

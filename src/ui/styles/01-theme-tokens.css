@@ -45,12 +45,12 @@
   --felt-bg-gradient: #2a2a2a;
   --felt-glow: rgba(212, 175, 55, 0.08);
 
-  /* Game Theme - Always Green Felt */
-  --game-bg: #1a472a;
-  --game-bg-gradient-start: #1a472a;
-  --game-bg-gradient-center: #2d6b45;
-  --game-surface: rgba(0, 0, 0, 0.25);
-  --game-surface-border: rgba(255, 255, 255, 0.05);
+  /* Game Theme - Dynamic Casino Felt */
+  --game-bg: var(--felt-bg, #0A1428);
+  --game-bg-gradient-start: var(--felt-bg, #0A1428);
+  --game-bg-gradient-center: var(--felt-bg-gradient, #112A46);
+  --game-surface: rgba(0, 0, 0, 0.4);
+  --game-surface-border: rgba(212, 175, 55, 0.15);
   --game-text: #ffffff;
   --game-text-muted: rgba(255, 255, 255, 0.6);
   --game-text-dim: rgba(255, 255, 255, 0.4);
@@ -102,7 +102,7 @@
   /* Felt Grid */
   --felt-gap: 3px;
   --felt-padding: 3px;
-  --felt-rows: 12% 45% 43%;
+  --felt-rows: 15% 60% 25%;
   --felt-cols: 1fr 2.5fr 1fr;
 
   /* Cards */
@@ -502,7 +502,7 @@
     /* Felt Grid */
     --felt-gap: 2px;
     --felt-padding: 2px;
-    --felt-rows: 18% 52% 30%;
+    --felt-rows: 15% 60% 25%;
     --felt-cols: 1fr 3fr 1fr;
 
     /* Cards */
@@ -515,30 +515,30 @@
     --hand-gap: 1px;
     --hand-padding: 2px 3px 4px;
 
-    /* Player Info */
-    --player-info-min-width: 44px;
-    --player-info-padding: 2px 3px;
-    --player-info-gap: 1px;
-    --avatar-size: 20px;
-    --avatar-font-size: 10px;
-    --active-ring-inset: -2px;
-    --active-ring-width: 1px;
+    /* Player Info — larger to fill the space in landscape */
+    --player-info-min-width: 60px;
+    --player-info-padding: 4px 6px;
+    --player-info-gap: 2px;
+    --avatar-size: 28px;
+    --avatar-font-size: 13px;
+    --active-ring-inset: -3px;
+    --active-ring-width: 2px;
     --crown-icon-top: -6px;
-    --crown-icon-size: 8px;
-    --player-name-size: 7px;
-    --card-count-size: 6px;
+    --crown-icon-size: 10px;
+    --player-name-size: 10px;
+    --card-count-size: 8px;
 
     /* Team Labels */
-    --team-label-size: 6px;
-    --team-label-padding: 1px 2px;
+    --team-label-size: 8px;
+    --team-label-padding: 2px 6px;
 
     /* User Display */
-    --user-display-player-min-width: 44px;
-    --user-display-player-padding: 2px 3px;
-    --user-display-name-size: 7px;
-    --user-display-team-label-size: 6px;
-    --user-display-team-label-padding: 1px 2px;
-    --user-display-card-count-size: 6px;
+    --user-display-player-min-width: 60px;
+    --user-display-player-padding: 4px 6px;
+    --user-display-name-size: 10px;
+    --user-display-team-label-size: 8px;
+    --user-display-team-label-padding: 2px 6px;
+    --user-display-card-count-size: 8px;
 
     /* Corner Cells */
     --trump-cell-min-width: 28px;
@@ -886,24 +886,24 @@
 
 /* Theme: Midnight Sapphire */
 [data-theme="midnight-sapphire"] {
-  --app-bg: #0a1628;
-  --app-bg-gradient-start: #0a1628;
-  --app-bg-gradient-mid: #1e3a5f;
-  --app-bg-gradient-end: #0d1a2e;
+  --app-bg: #0A1428;
+  --app-bg-gradient-start: #0A1428;
+  --app-bg-gradient-mid: #14213d;
+  --app-bg-gradient-end: #050a14;
   --app-surface: rgba(255, 255, 255, 0.05);
-  --app-surface-border: rgba(59, 130, 246, 0.3);
+  --app-surface-border: rgba(212, 175, 55, 0.3);
   --app-surface-hover: rgba(255, 255, 255, 0.1);
   --app-text: #ffffff;
   --app-text-muted: rgba(255, 255, 255, 0.6);
   --app-text-dim: rgba(255, 255, 255, 0.4);
-  --app-primary: #3b82f6;
-  --app-primary-hover: #60a5fa;
-  --app-primary-active: #2563eb;
-  --app-primary-active-deep: #1d4ed8;
-  --app-primary-bg: rgba(59, 130, 246, 0.1);
-  --app-primary-bg-hover: rgba(59, 130, 246, 0.2);
-  --app-primary-shadow: rgba(59, 130, 246, 0.3);
-  --app-primary-shadow-hover: rgba(59, 130, 246, 0.4);
+  --app-primary: #d4af37;
+  --app-primary-hover: #fcd34d;
+  --app-primary-active: #b45309;
+  --app-primary-active-deep: #78350f;
+  --app-primary-bg: rgba(212, 175, 55, 0.1);
+  --app-primary-bg-hover: rgba(212, 175, 55, 0.2);
+  --app-primary-shadow: rgba(212, 175, 55, 0.3);
+  --app-primary-shadow-hover: rgba(212, 175, 55, 0.4);
   --app-secondary: rgba(255, 255, 255, 0.08);
   --app-secondary-border: rgba(255, 255, 255, 0.25);
   --app-secondary-hover: rgba(255, 255, 255, 0.15);
@@ -912,18 +912,18 @@
   --app-error-border: rgba(220, 38, 38, 0.3);
   --app-error-text: #fca5a5;
   --app-success: #22c55e;
-  --app-info: #3b82f6;
+  --app-info: #d4af37;
   --app-input-bg: rgba(255, 255, 255, 0.08);
   --app-input-border: rgba(255, 255, 255, 0.2);
   --app-input-focus-bg: rgba(255, 255, 255, 0.12);
-  --app-input-focus-ring: rgba(59, 130, 246, 0.15);
-  --app-glow-1: rgba(59, 130, 246, 0.08);
-  --app-glow-2: rgba(59, 130, 246, 0.05);
+  --app-input-focus-ring: rgba(212, 175, 55, 0.15);
+  --app-glow-1: rgba(212, 175, 55, 0.08);
+  --app-glow-2: rgba(212, 175, 55, 0.05);
 
   /* Felt Grid - Theme-Aware */
-  --felt-bg: #1e3a5f;
-  --felt-bg-gradient: #2a4a6f;
-  --felt-glow: rgba(59, 130, 246, 0.08);
+  --felt-bg: #0A1428;
+  --felt-bg-gradient: #112A46;
+  --felt-glow: rgba(212, 175, 55, 0.08);
 }
 
 /* Theme: Royal Amethyst */

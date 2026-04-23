@@ -177,6 +177,8 @@
 .trump-suit-symbol {
   font-size: var(--trump-suit-symbol-size);
   line-height: 1;
+  background: var(--game-card-bg);
+  border-radius: var(--trump-cell-radius);
 }
 
 .trump-suit-name {
