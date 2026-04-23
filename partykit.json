@@ -2,7 +2,11 @@
   "name": "contract-crown",
   "main": "src/server/party-server.ts",
   "compatibilityDate": "2025-04-10",
-  "serve": "dist/client",
+  "serve": {
+    "path": "dist/client",
+    "browserTTL": 0,
+    "edgeTTL": 0
+  },
   "parties": {
     "crown": "src/server/crown-room.ts"
   }

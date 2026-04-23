@@ -1,6 +1,6 @@
 // Contract Crown Trump Selector Modal
 // Modal component for trump suit selection with bottom sheet pattern
-// Non-dismissible: user must select a suit or press Cancel
+// Non-dismissible: user must select a suit (no cancel option)
 
 import type { Suit, Card } from '../engine/types.js';
 import type { TrumpSelectionHandler } from './types.js';
@@ -128,9 +128,6 @@ export class TrumpSelector {
         <div class="trump-suit-grid">
           ${suitButtonsHtml}
         </div>
-        <div class="trump-selector-actions">
-          <button class="trump-selector-cancel-btn">Cancel</button>
-        </div>
       </div>
     `;
   }
@@ -164,7 +161,7 @@ export class TrumpSelector {
   }
 
   /**
-   * Sets up click handlers for suit buttons and cancel
+   * Sets up click handlers for suit buttons
    */
   private setupSuitHandlers(): void {
     const sheetElement = this.bottomSheet.getSheetElement();
@@ -180,13 +177,5 @@ export class TrumpSelector {
         });
       }
     });
-
-    // Cancel button
-    const cancelBtn = sheetElement.querySelector('.trump-selector-cancel-btn');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
-        this.hide();
-      });
-    }
   }
 }
