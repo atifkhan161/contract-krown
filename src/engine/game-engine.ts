@@ -267,11 +267,13 @@ export function declareTrump(state: GameState, suit: Suit): void {
 
 /**
  * Sets up the first trick leader after final dealing
- * The lead player for the first trick is the player left of the dealer
+ * The lead player for the first trick is the trump declarer (who decided trump plays first)
+ * Falls back to player left of dealer if trumpDeclarer is not set
  */
 export function setFirstTrickLeader(state: GameState): void {
-  // First trick leader is player left of dealer
-  state.currentTrick.leadPlayer = (state.dealer + 1) % 4;
+  // First trick leader should be the trump declarer, not player left of dealer
+  // This ensures the player who decided trump plays first
+  state.currentTrick.leadPlayer = state.trumpDeclarer ?? ((state.dealer + 1) % 4);
   state.currentPlayer = state.currentTrick.leadPlayer;
 }
 
