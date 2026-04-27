@@ -4,8 +4,8 @@
   "compatibilityDate": "2025-04-10",
   "serve": {
     "path": "dist/client",
-    "browserTTL": 0,
-    "edgeTTL": 0
+    "browserTTL": 31536000,
+    "edgeTTL": 31536000
   },
   "parties": {
     "crown": "src/server/crown-room.ts"
